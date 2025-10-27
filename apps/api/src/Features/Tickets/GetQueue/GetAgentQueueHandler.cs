@@ -35,7 +35,7 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
         else
         {
             // Show all non-closed tickets for queue overview
-            ticketsQuery = ticketsQuery.Where(t => true);
+            // No additional filtering needed
         }
 
         // Sort by priority (Critical first) then by age (oldest first)
