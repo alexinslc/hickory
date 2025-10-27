@@ -52,6 +52,13 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .IsConcurrencyToken()
             .ValueGeneratedOnAddOrUpdate(); // Required for PostgreSQL to auto-update
         
+        // Full-text search vector (PostgreSQL tsvector)
+        builder.Property(t => t.SearchVector)
+            .HasColumnType("tsvector")
+            .HasComputedColumnSql(
+                "to_tsvector('english', coalesce(\"TicketNumber\", '') || ' ' || coalesce(\"Title\", '') || ' ' || coalesce(\"Description\", ''))",
+                stored: true);
+        
         // Relationships
         builder.HasOne(t => t.Submitter)
             .WithMany()
@@ -90,5 +97,9 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         
         // Composite index for agent queue queries
         builder.HasIndex(t => new { t.Status, t.Priority, t.CreatedAt });
+        
+        // GIN index for full-text search
+        builder.HasIndex(t => t.SearchVector)
+            .HasMethod("GIN");
     }
 }
