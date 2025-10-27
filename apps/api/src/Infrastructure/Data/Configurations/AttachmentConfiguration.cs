@@ -44,5 +44,6 @@ public class AttachmentConfiguration : IEntityTypeConfiguration<Attachment>
         // Indexes
         builder.HasIndex(a => a.TicketId);
         builder.HasIndex(a => a.UploadedAt);
+        builder.HasIndex(a => a.UploadedById);
     }
 }
