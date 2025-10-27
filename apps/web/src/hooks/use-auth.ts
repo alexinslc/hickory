@@ -3,6 +3,17 @@ import { apiClient, LoginRequest, RegisterRequest, AuthResponse } from '@/lib/ap
 import { useAuthStore } from '@/store/auth-store';
 import { useRouter } from 'next/navigation';
 
+export function useAuth() {
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  
+  return {
+    user,
+    isAuthenticated,
+    isLoading: false, // Auth state is synchronous from Zustand
+  };
+}
+
 export function useLogin() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const router = useRouter();

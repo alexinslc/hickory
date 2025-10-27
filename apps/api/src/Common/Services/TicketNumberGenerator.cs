@@ -20,14 +20,17 @@ public class TicketNumberGenerator : ITicketNumberGenerator
     public async Task<string> GenerateTicketNumberAsync(CancellationToken cancellationToken = default)
     {
         // Find the highest ticket number
-        // Find the highest numeric ticket number
-        var maxNumber = await _dbContext.Tickets
+        // Get all ticket numbers with the TKT- prefix and parse them in memory
+        var ticketNumbers = await _dbContext.Tickets
             .Where(t => t.TicketNumber.StartsWith("TKT-"))
             .Select(t => t.TicketNumber.Substring(4))
+            .ToListAsync(cancellationToken);
+
+        var maxNumber = ticketNumbers
             .Where(num => int.TryParse(num, out _))
             .Select(num => int.Parse(num))
             .DefaultIfEmpty(0)
-            .MaxAsync(cancellationToken);
+            .Max();
 
         int nextNumber = maxNumber + 1;
 

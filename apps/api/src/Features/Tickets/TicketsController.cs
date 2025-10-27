@@ -1,7 +1,14 @@
+using Hickory.Api.Features.Tickets.Assign;
+using Hickory.Api.Features.Tickets.Close;
 using Hickory.Api.Features.Tickets.Create;
 using Hickory.Api.Features.Tickets.Create.Models;
 using Hickory.Api.Features.Tickets.GetById;
 using Hickory.Api.Features.Tickets.GetBySubmitter;
+using Hickory.Api.Features.Tickets.GetQueue;
+using Hickory.Api.Features.Tickets.Reassign;
+using Hickory.Api.Features.Tickets.UpdatePriority;
+using Hickory.Api.Features.Tickets.UpdateStatus;
+using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +70,84 @@ public class TicketsController : ControllerBase
         var tickets = await _mediator.Send(query, cancellationToken);
 
         return Ok(tickets);
+    }
+
+    // Agent-only endpoints
+    [HttpGet("queue")]
+    [Authorize(Roles = "Agent,Administrator")]
+    public async Task<ActionResult<List<Models.TicketDto>>> GetAgentQueue(
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var query = new GetAgentQueueQuery(userId);
+        var tickets = await _mediator.Send(query, cancellationToken);
+
+        return Ok(tickets);
+    }
+
+    [HttpPut("{id}/assign")]
+    [Authorize(Roles = "Agent,Administrator")]
+    public async Task<IActionResult> AssignTicket(
+        Guid id,
+        [FromBody] AssignTicketRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new AssignTicketCommand(id, request.AgentId);
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/status")]
+    [Authorize(Roles = "Agent,Administrator")]
+    public async Task<IActionResult> UpdateTicketStatus(
+        Guid id,
+        [FromBody] UpdateTicketStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateTicketStatusCommand(id, request.NewStatus);
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/priority")]
+    [Authorize(Roles = "Agent,Administrator")]
+    public async Task<IActionResult> UpdateTicketPriority(
+        Guid id,
+        [FromBody] UpdateTicketPriorityRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateTicketPriorityCommand(id, request.NewPriority);
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("{id}/close")]
+    [Authorize(Roles = "Agent,Administrator")]
+    public async Task<IActionResult> CloseTicket(
+        Guid id,
+        [FromBody] CloseTicketRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new CloseTicketCommand(id, request.ResolutionNotes);
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/reassign")]
+    [Authorize(Roles = "Agent,Administrator")]
+    public async Task<IActionResult> ReassignTicket(
+        Guid id,
+        [FromBody] ReassignTicketRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ReassignTicketCommand(id, request.NewAgentId);
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
     }
 
     private Guid GetUserId()
