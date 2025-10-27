@@ -5,7 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hickory.Api.Features.Tickets.GetBySubmitter;
 
-public record GetTicketsBySubmitterQuery(Guid UserId) : IRequest<List<TicketDto>>;
+public record GetTicketsBySubmitterQuery(
+    Guid UserId, 
+    Guid? CategoryId = null,
+    List<string>? Tags = null
+) : IRequest<List<TicketDto>>;
 
 public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitterQuery, List<TicketDto>>
 {
@@ -18,11 +22,30 @@ public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitte
 
     public async Task<List<TicketDto>> Handle(GetTicketsBySubmitterQuery query, CancellationToken cancellationToken)
     {
-        var tickets = await _dbContext.Tickets
+        var ticketsQuery = _dbContext.Tickets
             .Include(t => t.Submitter)
             .Include(t => t.AssignedTo)
             .Include(t => t.Comments)
-            .Where(t => t.SubmitterId == query.UserId)
+            .Include(t => t.Category)
+            .Include(t => t.TicketTags)
+                .ThenInclude(tt => tt.Tag)
+            .Where(t => t.SubmitterId == query.UserId);
+
+        // Filter by category if provided
+        if (query.CategoryId.HasValue)
+        {
+            ticketsQuery = ticketsQuery.Where(t => t.CategoryId == query.CategoryId.Value);
+        }
+
+        // Filter by tags if provided
+        if (query.Tags != null && query.Tags.Any())
+        {
+            var normalizedTags = query.Tags.Select(t => t.ToLowerInvariant()).ToList();
+            ticketsQuery = ticketsQuery.Where(t => 
+                t.TicketTags.Any(tt => normalizedTags.Contains(tt.Tag.Name.ToLower())));
+        }
+
+        var tickets = await ticketsQuery
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
 
@@ -45,7 +68,10 @@ public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitte
             ClosedAt = ticket.ClosedAt,
             ResolutionNotes = ticket.ResolutionNotes,
             CommentCount = ticket.Comments.Count,
-            RowVersion = Convert.ToBase64String(ticket.RowVersion)
+            RowVersion = Convert.ToBase64String(ticket.RowVersion),
+            CategoryId = ticket.CategoryId,
+            CategoryName = ticket.Category?.Name,
+            Tags = ticket.TicketTags.Select(tt => tt.Tag.Name).ToList()
         }).ToList();
     }
 }

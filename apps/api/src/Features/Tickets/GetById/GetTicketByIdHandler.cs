@@ -22,6 +22,9 @@ public class GetTicketByIdHandler : IRequestHandler<GetTicketByIdQuery, TicketDt
             .Include(t => t.Submitter)
             .Include(t => t.AssignedTo)
             .Include(t => t.Comments)
+            .Include(t => t.Category)
+            .Include(t => t.TicketTags)
+                .ThenInclude(tt => tt.Tag)
             .Where(t => t.Id == query.TicketId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -58,7 +61,10 @@ public class GetTicketByIdHandler : IRequestHandler<GetTicketByIdQuery, TicketDt
             ClosedAt = ticket.ClosedAt,
             ResolutionNotes = ticket.ResolutionNotes,
             CommentCount = ticket.Comments.Count,
-            RowVersion = Convert.ToBase64String(ticket.RowVersion)
+            RowVersion = Convert.ToBase64String(ticket.RowVersion),
+            CategoryId = ticket.CategoryId,
+            CategoryName = ticket.Category?.Name,
+            Tags = ticket.TicketTags.Select(tt => tt.Tag.Name).ToList()
         };
     }
 }
