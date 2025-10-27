@@ -19,7 +19,7 @@ public class CreateCategoryValidator : AbstractValidator<CreateCategoryCommand>
             .GreaterThanOrEqualTo(0).WithMessage("Display order must be 0 or greater");
 
         RuleFor(x => x.Color)
-            .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage("Color must be a valid hex color code (e.g., #3B82F6)")
+            .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage("Color must be a valid hex color code (e.g. #3B82F6)")
             .When(x => !string.IsNullOrEmpty(x.Color));
     }
 }
