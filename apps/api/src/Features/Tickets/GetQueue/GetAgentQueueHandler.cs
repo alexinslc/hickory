@@ -62,7 +62,8 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
             UpdatedAt = ticket.UpdatedAt,
             ClosedAt = ticket.ClosedAt,
             ResolutionNotes = ticket.ResolutionNotes,
-            CommentCount = ticket.Comments.Count
+            CommentCount = ticket.Comments.Count,
+            RowVersion = Convert.ToBase64String(ticket.RowVersion)
         }).ToList();
     }
 }

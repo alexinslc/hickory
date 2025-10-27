@@ -46,6 +46,12 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(t => t.UpdatedAt)
             .IsRequired();
         
+        // Optimistic Concurrency
+        builder.Property(t => t.RowVersion)
+            .IsRowVersion()
+            .IsConcurrencyToken()
+            .ValueGeneratedOnAddOrUpdate(); // Required for PostgreSQL to auto-update
+        
         // Relationships
         builder.HasOne(t => t.Submitter)
             .WithMany()

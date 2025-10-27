@@ -49,7 +49,15 @@ public class ReassignTicketHandler : IRequestHandler<ReassignTicketCommand, Unit
         ticket.AssignedToId = command.NewAgentId;
         ticket.UpdatedAt = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new InvalidOperationException(
+                "The ticket was modified by another user. Please refresh and try again.");
+        }
 
         return Unit.Value;
     }

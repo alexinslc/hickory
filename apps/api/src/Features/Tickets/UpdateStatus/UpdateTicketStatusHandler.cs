@@ -32,7 +32,16 @@ public class UpdateTicketStatusHandler : IRequestHandler<UpdateTicketStatusComma
         ticket.Status = command.NewStatus;
         ticket.UpdatedAt = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Ticket was modified by another user - throw exception to return 409 Conflict
+            throw new InvalidOperationException(
+                "The ticket was modified by another user. Please refresh and try again.");
+        }
 
         return Unit.Value;
     }

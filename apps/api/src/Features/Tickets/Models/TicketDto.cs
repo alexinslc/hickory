@@ -19,6 +19,7 @@ public record TicketDto
     public DateTime? ClosedAt { get; init; }
     public string? ResolutionNotes { get; init; }
     public int CommentCount { get; init; }
+    public string RowVersion { get; init; } = string.Empty; // Base64 encoded for JSON
 }
 
 public record CommentDto

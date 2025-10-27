@@ -50,6 +50,7 @@ export interface TicketDto {
   closedAt?: string;
   resolutionNotes?: string;
   commentCount: number;
+  rowVersion: string; // Base64 encoded RowVersion for optimistic concurrency control
   // Note: Comments are not included in this DTO. Use a separate endpoint to fetch comments.
 }
 
@@ -92,22 +93,27 @@ export interface AddCommentRequest {
 
 export interface AssignTicketRequest {
   agentId: string;
+  rowVersion: string;
 }
 
 export interface UpdateTicketStatusRequest {
   newStatus: string;
+  rowVersion: string;
 }
 
 export interface UpdateTicketPriorityRequest {
   newPriority: string;
+  rowVersion: string;
 }
 
 export interface CloseTicketRequest {
   resolutionNotes: string;
+  rowVersion: string;
 }
 
 export interface ReassignTicketRequest {
   newAgentId: string;
+  rowVersion: string;
 }
 
 class ApiClient {

@@ -49,7 +49,15 @@ public class AssignTicketHandler : IRequestHandler<AssignTicketCommand, Unit>
             ticket.Status = Infrastructure.Data.Entities.TicketStatus.InProgress;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new InvalidOperationException(
+                "The ticket was modified by another user. Please refresh and try again.");
+        }
 
         return Unit.Value;
     }

@@ -25,8 +25,8 @@ export function useAssignTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ticketId, agentId }: { ticketId: string; agentId: string }) =>
-      apiClient.assignTicket(ticketId, { agentId }),
+    mutationFn: ({ ticketId, agentId, rowVersion }: { ticketId: string; agentId: string; rowVersion: string }) =>
+      apiClient.assignTicket(ticketId, { agentId, rowVersion }),
     onSuccess: (_, variables) => {
       // Invalidate agent queue and ticket details
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
@@ -41,8 +41,8 @@ export function useUpdateTicketStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ticketId, newStatus }: { ticketId: string; newStatus: string }) =>
-      apiClient.updateTicketStatus(ticketId, { newStatus }),
+    mutationFn: ({ ticketId, newStatus, rowVersion }: { ticketId: string; newStatus: string; rowVersion: string }) =>
+      apiClient.updateTicketStatus(ticketId, { newStatus, rowVersion }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
@@ -56,8 +56,8 @@ export function useUpdateTicketPriority() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ticketId, newPriority }: { ticketId: string; newPriority: string }) =>
-      apiClient.updateTicketPriority(ticketId, { newPriority }),
+    mutationFn: ({ ticketId, newPriority, rowVersion }: { ticketId: string; newPriority: string; rowVersion: string }) =>
+      apiClient.updateTicketPriority(ticketId, { newPriority, rowVersion }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
@@ -71,8 +71,8 @@ export function useCloseTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ticketId, resolutionNotes }: { ticketId: string; resolutionNotes: string }) =>
-      apiClient.closeTicket(ticketId, { resolutionNotes }),
+    mutationFn: ({ ticketId, resolutionNotes, rowVersion }: { ticketId: string; resolutionNotes: string; rowVersion: string }) =>
+      apiClient.closeTicket(ticketId, { resolutionNotes, rowVersion }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
@@ -86,8 +86,8 @@ export function useReassignTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ticketId, newAgentId }: { ticketId: string; newAgentId: string }) =>
-      apiClient.reassignTicket(ticketId, { newAgentId }),
+    mutationFn: ({ ticketId, newAgentId, rowVersion }: { ticketId: string; newAgentId: string; rowVersion: string }) =>
+      apiClient.reassignTicket(ticketId, { newAgentId, rowVersion }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
