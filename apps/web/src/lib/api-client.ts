@@ -34,6 +34,62 @@ export interface ErrorResponse {
   errors?: Record<string, string[]>;
 }
 
+export interface TicketDto {
+  id: string;
+  ticketNumber: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  submitterId: string;
+  submitterName: string;
+  assignedToId?: string;
+  assignedToName?: string;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string;
+  resolutionNotes?: string;
+  commentCount: number;
+  // Note: Comments are not included in this DTO. Use a separate endpoint to fetch comments.
+}
+
+/**
+ * Comment data transfer object
+ * Note: Currently used for the addComment API response.
+ * Comments are not returned with ticket details - a separate endpoint
+ * will be added in a future phase to fetch the comments list for a ticket.
+ */
+export interface CommentDto {
+  id: string;
+  content: string;
+  isInternal: boolean;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateTicketRequest {
+  title: string;
+  description: string;
+  priority: string;
+}
+
+export interface CreateTicketResponse {
+  id: string;
+  ticketNumber: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  createdAt: string;
+}
+
+export interface AddCommentRequest {
+  content: string;
+  isInternal: boolean;
+}
+
 class ApiClient {
   private client: AxiosInstance;
 
@@ -104,6 +160,30 @@ class ApiClient {
 
   async register(request: RegisterRequest): Promise<AuthResponse> {
     const response = await this.client.post<AuthResponse>('/api/auth/register', request);
+    return response.data;
+  }
+
+  // Ticket endpoints
+  async createTicket(request: CreateTicketRequest): Promise<CreateTicketResponse> {
+    const response = await this.client.post<CreateTicketResponse>('/api/tickets', request);
+    return response.data;
+  }
+
+  async getTicketById(id: string): Promise<TicketDto> {
+    const response = await this.client.get<TicketDto>(`/api/tickets/${id}`);
+    return response.data;
+  }
+
+  async getMyTickets(): Promise<TicketDto[]> {
+    const response = await this.client.get<TicketDto[]>('/api/tickets');
+    return response.data;
+  }
+
+  async addComment(ticketId: string, request: AddCommentRequest): Promise<CommentDto> {
+    const response = await this.client.post<CommentDto>(
+      `/api/tickets/${ticketId}/comments`,
+      request
+    );
     return response.data;
   }
 
