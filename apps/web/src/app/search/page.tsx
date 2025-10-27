@@ -1,19 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useSearchTickets } from '@/lib/queries/search';
 import { SearchInput } from '@/components/search/SearchInput';
 import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchResults } from '@/components/search/SearchResults';
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [status, setStatus] = useState<string>();
   const [priority, setPriority] = useState<string>();
   const [createdAfter, setCreatedAfter] = useState<string>();
   const [createdBefore, setCreatedBefore] = useState<string>();
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  // Update search query when URL param changes
+  useEffect(() => {
+    const urlQuery = searchParams.get('q') || '';
+    if (urlQuery && urlQuery !== searchQuery) {
+      setSearchQuery(urlQuery);
+      setPage(1);
+    }
+  }, [searchParams, searchQuery]);
 
   const { data, isLoading } = useSearchTickets(
     {
