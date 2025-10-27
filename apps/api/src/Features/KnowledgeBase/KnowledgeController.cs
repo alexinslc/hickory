@@ -98,8 +98,8 @@ public class KnowledgeController : ControllerBase
         // Now increment view count if requested and authorized
         if (incrementViewCount)
         {
-            var incrementQuery = new GetArticleByIdQuery(id, IncrementViewCount: true);
-            article = await _mediator.Send(incrementQuery, cancellationToken);
+            // Increment view count in a separate command, do not re-fetch the article
+            await _mediator.Send(new IncrementArticleViewCountCommand(id), cancellationToken);
         }
 
         return Ok(article);
