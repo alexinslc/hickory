@@ -18,6 +18,21 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<User> Users => Set<User>();
     
+    /// <summary>
+    /// Support tickets
+    /// </summary>
+    public DbSet<Ticket> Tickets => Set<Ticket>();
+    
+    /// <summary>
+    /// Comments on tickets
+    /// </summary>
+    public DbSet<Comment> Comments => Set<Comment>();
+    
+    /// <summary>
+    /// File attachments on tickets
+    /// </summary>
+    public DbSet<Attachment> Attachments => Set<Attachment>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -41,13 +56,44 @@ public class ApplicationDbContext : DbContext
     private void SetTimestamps()
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => e.Entity is User && e.State == EntityState.Added);
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+        
+        var now = DateTime.UtcNow;
         
         foreach (var entry in entries)
         {
-            if (entry.Entity is User user)
+            switch (entry.Entity)
             {
-                user.CreatedAt = DateTime.UtcNow;
+                case User user when entry.State == EntityState.Added:
+                    user.CreatedAt = now;
+                    break;
+                    
+                case Ticket ticket:
+                    if (entry.State == EntityState.Added)
+                    {
+                        ticket.CreatedAt = now;
+                        ticket.UpdatedAt = now;
+                    }
+                    else if (entry.State == EntityState.Modified)
+                    {
+                        ticket.UpdatedAt = now;
+                    }
+                    break;
+                    
+                case Comment comment:
+                    if (entry.State == EntityState.Added)
+                    {
+                        comment.CreatedAt = now;
+                    }
+                    else if (entry.State == EntityState.Modified)
+                    {
+                        comment.UpdatedAt = now;
+                    }
+                    break;
+                    
+                case Attachment attachment when entry.State == EntityState.Added:
+                    attachment.UploadedAt = now;
+                    break;
             }
         }
     }
