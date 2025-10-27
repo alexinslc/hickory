@@ -50,8 +50,15 @@ export interface TicketDto {
   closedAt?: string;
   resolutionNotes?: string;
   commentCount: number;
+  // Note: Comments are not included in this DTO. Use a separate endpoint to fetch comments.
 }
 
+/**
+ * Comment data transfer object
+ * Note: Currently used for the addComment API response.
+ * Comments are not returned with ticket details - a separate endpoint
+ * will be added in a future phase to fetch the comments list for a ticket.
+ */
 export interface CommentDto {
   id: string;
   content: string;

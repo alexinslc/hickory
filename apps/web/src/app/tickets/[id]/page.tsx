@@ -164,9 +164,13 @@ export default function TicketDetailPage() {
                     </div>
                   )}
 
-                  {/* Comments would go here - currently the backend doesn't return them with the ticket */}
-                  <div className="text-sm text-gray-500 text-center py-4">
-                    Comments will appear here
+                  {/* Comment list placeholder - will be implemented in a future phase */}
+                  <div className="text-sm text-gray-500 text-center py-8 bg-gray-50 rounded-md">
+                    <p className="font-medium mb-1">Comment History</p>
+                    <p className="text-xs">
+                      A separate API endpoint to fetch comments will be added in a future phase.
+                      Comments you add above are being saved successfully.
+                    </p>
                   </div>
                 </div>
               </div>
