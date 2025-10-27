@@ -94,7 +94,7 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
                 
                 if (!categoryExists)
                 {
-                    throw new ValidationException("Category not found");
+                    throw new InvalidOperationException("Category not found");
                 }
                 
                 article.CategoryId = request.CategoryId.Value;
