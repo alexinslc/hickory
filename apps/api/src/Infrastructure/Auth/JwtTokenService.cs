@@ -75,9 +75,7 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateRefreshToken()
     {
-        var randomBytes = new byte[32];
-        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-        rng.GetBytes(randomBytes);
+        var randomBytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
         return Convert.ToBase64String(randomBytes);
     }
 
