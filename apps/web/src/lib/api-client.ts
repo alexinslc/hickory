@@ -90,6 +90,26 @@ export interface AddCommentRequest {
   isInternal: boolean;
 }
 
+export interface AssignTicketRequest {
+  agentId: string;
+}
+
+export interface UpdateTicketStatusRequest {
+  newStatus: string;
+}
+
+export interface UpdateTicketPriorityRequest {
+  newPriority: string;
+}
+
+export interface CloseTicketRequest {
+  resolutionNotes: string;
+}
+
+export interface ReassignTicketRequest {
+  newAgentId: string;
+}
+
 class ApiClient {
   private client: AxiosInstance;
 
@@ -185,6 +205,32 @@ class ApiClient {
       request
     );
     return response.data;
+  }
+
+  // Agent endpoints
+  async getAgentQueue(): Promise<TicketDto[]> {
+    const response = await this.client.get<TicketDto[]>('/api/tickets/queue');
+    return response.data;
+  }
+
+  async assignTicket(ticketId: string, request: AssignTicketRequest): Promise<void> {
+    await this.client.put(`/api/tickets/${ticketId}/assign`, request);
+  }
+
+  async updateTicketStatus(ticketId: string, request: UpdateTicketStatusRequest): Promise<void> {
+    await this.client.put(`/api/tickets/${ticketId}/status`, request);
+  }
+
+  async updateTicketPriority(ticketId: string, request: UpdateTicketPriorityRequest): Promise<void> {
+    await this.client.put(`/api/tickets/${ticketId}/priority`, request);
+  }
+
+  async closeTicket(ticketId: string, request: CloseTicketRequest): Promise<void> {
+    await this.client.post(`/api/tickets/${ticketId}/close`, request);
+  }
+
+  async reassignTicket(ticketId: string, request: ReassignTicketRequest): Promise<void> {
+    await this.client.put(`/api/tickets/${ticketId}/reassign`, request);
   }
 
   // Health check
