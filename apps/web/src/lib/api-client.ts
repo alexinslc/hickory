@@ -163,24 +163,36 @@ export interface SearchTicketsResult {
 
 export interface NotificationPreferencesDto {
   emailEnabled: boolean;
+  emailOnTicketCreated: boolean;
+  emailOnTicketUpdated: boolean;
+  emailOnTicketAssigned: boolean;
+  emailOnCommentAdded: boolean;
+  
   inAppEnabled: boolean;
+  inAppOnTicketCreated: boolean;
+  inAppOnTicketUpdated: boolean;
+  inAppOnTicketAssigned: boolean;
+  inAppOnCommentAdded: boolean;
+  
   webhookEnabled: boolean;
-  notifyOnTicketCreated: boolean;
-  notifyOnTicketUpdated: boolean;
-  notifyOnTicketAssigned: boolean;
-  notifyOnCommentAdded: boolean;
   webhookUrl?: string;
-  webhookSecret?: string;
+  // Note: webhookSecret is write-only, not returned in GET responses
 }
 
 export interface UpdateNotificationPreferencesRequest {
   emailEnabled: boolean;
+  emailOnTicketCreated: boolean;
+  emailOnTicketUpdated: boolean;
+  emailOnTicketAssigned: boolean;
+  emailOnCommentAdded: boolean;
+  
   inAppEnabled: boolean;
+  inAppOnTicketCreated: boolean;
+  inAppOnTicketUpdated: boolean;
+  inAppOnTicketAssigned: boolean;
+  inAppOnCommentAdded: boolean;
+  
   webhookEnabled: boolean;
-  notifyOnTicketCreated: boolean;
-  notifyOnTicketUpdated: boolean;
-  notifyOnTicketAssigned: boolean;
-  notifyOnCommentAdded: boolean;
   webhookUrl?: string;
   webhookSecret?: string;
 }

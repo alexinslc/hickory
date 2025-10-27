@@ -4,17 +4,21 @@ import { useEffect, useState } from 'react';
 import { useNotificationPreferences, useUpdateNotificationPreferences } from '@/lib/queries/notification-preferences';
 
 export default function NotificationSettingsPage() {
-  const { data: preferences, isLoading } = useNotificationPreferences();
+  const { data: preferences, isLoading, isError } = useNotificationPreferences();
   const updatePreferences = useUpdateNotificationPreferences();
 
   const [formData, setFormData] = useState({
     emailEnabled: true,
+    emailOnTicketCreated: true,
+    emailOnTicketUpdated: true,
+    emailOnTicketAssigned: true,
+    emailOnCommentAdded: true,
     inAppEnabled: true,
+    inAppOnTicketCreated: true,
+    inAppOnTicketUpdated: true,
+    inAppOnTicketAssigned: true,
+    inAppOnCommentAdded: true,
     webhookEnabled: false,
-    notifyOnTicketCreated: true,
-    notifyOnTicketUpdated: true,
-    notifyOnTicketAssigned: true,
-    notifyOnCommentAdded: true,
     webhookUrl: '',
     webhookSecret: '',
   });
@@ -24,21 +28,61 @@ export default function NotificationSettingsPage() {
     if (preferences) {
       setFormData({
         emailEnabled: preferences.emailEnabled,
+        emailOnTicketCreated: preferences.emailOnTicketCreated,
+        emailOnTicketUpdated: preferences.emailOnTicketUpdated,
+        emailOnTicketAssigned: preferences.emailOnTicketAssigned,
+        emailOnCommentAdded: preferences.emailOnCommentAdded,
         inAppEnabled: preferences.inAppEnabled,
+        inAppOnTicketCreated: preferences.inAppOnTicketCreated,
+        inAppOnTicketUpdated: preferences.inAppOnTicketUpdated,
+        inAppOnTicketAssigned: preferences.inAppOnTicketAssigned,
+        inAppOnCommentAdded: preferences.inAppOnCommentAdded,
         webhookEnabled: preferences.webhookEnabled,
-        notifyOnTicketCreated: preferences.notifyOnTicketCreated,
-        notifyOnTicketUpdated: preferences.notifyOnTicketUpdated,
-        notifyOnTicketAssigned: preferences.notifyOnTicketAssigned,
-        notifyOnCommentAdded: preferences.notifyOnCommentAdded,
         webhookUrl: preferences.webhookUrl ?? '',
-        webhookSecret: preferences.webhookSecret ?? '',
+        webhookSecret: '', // Never populate from server
       });
     }
   }, [preferences]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updatePreferences.mutateAsync(formData);
+    // Map the simplified UI fields to the granular backend fields
+    const request = {
+      emailEnabled: formData.emailEnabled,
+      emailOnTicketCreated: formData.emailOnTicketCreated,
+      emailOnTicketUpdated: formData.emailOnTicketUpdated,
+      emailOnTicketAssigned: formData.emailOnTicketAssigned,
+      emailOnCommentAdded: formData.emailOnCommentAdded,
+      inAppEnabled: formData.inAppEnabled,
+      inAppOnTicketCreated: formData.inAppOnTicketCreated,
+      inAppOnTicketUpdated: formData.inAppOnTicketUpdated,
+      inAppOnTicketAssigned: formData.inAppOnTicketAssigned,
+      inAppOnCommentAdded: formData.inAppOnCommentAdded,
+      webhookEnabled: formData.webhookEnabled,
+      webhookUrl: formData.webhookUrl,
+      webhookSecret: formData.webhookSecret || undefined,
+    };
+    await updatePreferences.mutateAsync(request);
+  };
+
+  // Helper to check if ALL channels have a specific event enabled
+  const isEventEnabled = (event: 'Created' | 'Updated' | 'Assigned' | 'CommentAdded'): boolean => {
+    return !!(
+      formData[`emailOnTicket${event}` as keyof typeof formData] &&
+      formData[`inAppOnTicket${event}` as keyof typeof formData]
+    );
+  };
+
+  // Helper to toggle ALL channels for a specific event
+  const toggleEvent = (event: 'Created' | 'Updated' | 'Assigned' | 'CommentAdded') => {
+    const currentValue = isEventEnabled(event);
+    const newValue = !currentValue;
+    
+    setFormData({
+      ...formData,
+      [`emailOnTicket${event}`]: newValue,
+      [`inAppOnTicket${event}`]: newValue,
+    });
   };
 
   if (isLoading) {
@@ -52,6 +96,19 @@ export default function NotificationSettingsPage() {
             <div className="h-16 bg-gray-200 rounded"></div>
             <div className="h-16 bg-gray-200 rounded"></div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if preferences fail to load
+  if (isError) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-800">
+            Failed to load notification preferences. Please try refreshing the page.
+          </p>
         </div>
       </div>
     );
@@ -212,15 +269,15 @@ export default function NotificationSettingsPage() {
               <button
                 type="button"
                 role="switch"
-                aria-checked={formData.notifyOnTicketCreated}
-                onClick={() => setFormData({ ...formData, notifyOnTicketCreated: !formData.notifyOnTicketCreated })}
+                aria-checked={isEventEnabled('Created')}
+                onClick={() => toggleEvent('Created')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  formData.notifyOnTicketCreated ? 'bg-blue-600' : 'bg-gray-200'
+                  isEventEnabled('Created') ? 'bg-blue-600' : 'bg-gray-200'
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.notifyOnTicketCreated ? 'translate-x-6' : 'translate-x-1'
+                    isEventEnabled('Created') ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -239,15 +296,15 @@ export default function NotificationSettingsPage() {
               <button
                 type="button"
                 role="switch"
-                aria-checked={formData.notifyOnTicketUpdated}
-                onClick={() => setFormData({ ...formData, notifyOnTicketUpdated: !formData.notifyOnTicketUpdated })}
+                aria-checked={isEventEnabled('Updated')}
+                onClick={() => toggleEvent('Updated')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  formData.notifyOnTicketUpdated ? 'bg-blue-600' : 'bg-gray-200'
+                  isEventEnabled('Updated') ? 'bg-blue-600' : 'bg-gray-200'
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.notifyOnTicketUpdated ? 'translate-x-6' : 'translate-x-1'
+                    isEventEnabled('Updated') ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -266,15 +323,15 @@ export default function NotificationSettingsPage() {
               <button
                 type="button"
                 role="switch"
-                aria-checked={formData.notifyOnTicketAssigned}
-                onClick={() => setFormData({ ...formData, notifyOnTicketAssigned: !formData.notifyOnTicketAssigned })}
+                aria-checked={isEventEnabled('Assigned')}
+                onClick={() => toggleEvent('Assigned')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  formData.notifyOnTicketAssigned ? 'bg-blue-600' : 'bg-gray-200'
+                  isEventEnabled('Assigned') ? 'bg-blue-600' : 'bg-gray-200'
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.notifyOnTicketAssigned ? 'translate-x-6' : 'translate-x-1'
+                    isEventEnabled('Assigned') ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -293,15 +350,15 @@ export default function NotificationSettingsPage() {
               <button
                 type="button"
                 role="switch"
-                aria-checked={formData.notifyOnCommentAdded}
-                onClick={() => setFormData({ ...formData, notifyOnCommentAdded: !formData.notifyOnCommentAdded })}
+                aria-checked={isEventEnabled('CommentAdded')}
+                onClick={() => toggleEvent('CommentAdded')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  formData.notifyOnCommentAdded ? 'bg-blue-600' : 'bg-gray-200'
+                  isEventEnabled('CommentAdded') ? 'bg-blue-600' : 'bg-gray-200'
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.notifyOnCommentAdded ? 'translate-x-6' : 'translate-x-1'
+                    isEventEnabled('CommentAdded') ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>

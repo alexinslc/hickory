@@ -15,6 +15,7 @@ class SignalRService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 10;
   private reconnectDelay = 1000; // Start with 1 second
+  private isReconnecting = false; // Prevent recursive reconnection
 
   async connect(accessToken: string): Promise<void> {
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
@@ -46,12 +47,20 @@ class SignalRService {
     this.connection.onreconnected((connectionId) => {
       console.log('SignalR reconnected:', connectionId);
       this.reconnectAttempts = 0;
+      this.isReconnecting = false;
     });
 
     this.connection.onclose(async (error) => {
       console.error('SignalR connection closed:', error);
       
+      // Prevent recursive reconnection attempts
+      if (this.isReconnecting) {
+        console.log('Reconnection already in progress, skipping');
+        return;
+      }
+      
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.isReconnecting = true;
         const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
         this.reconnectAttempts++;
         
@@ -63,9 +72,11 @@ class SignalRService {
           await this.connect(accessToken);
         } catch (err) {
           console.error('Manual reconnect failed:', err);
+          this.isReconnecting = false;
         }
       } else {
         console.error('Max reconnect attempts reached');
+        this.isReconnecting = false;
       }
     });
 
@@ -73,8 +84,10 @@ class SignalRService {
       await this.connection.start();
       console.log('SignalR connected');
       this.reconnectAttempts = 0;
+      this.isReconnecting = false;
     } catch (err) {
       console.error('SignalR connection failed:', err);
+      this.isReconnecting = false;
       throw err;
     }
   }

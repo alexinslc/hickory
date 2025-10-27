@@ -144,6 +144,8 @@ public class ApplicationDbContext : DbContext
                     else if (entry.State == EntityState.Modified)
                     {
                         prefs.UpdatedAt = now;
+                        // Prevent CreatedAt from being modified
+                        entry.Property(nameof(NotificationPreferences.CreatedAt)).IsModified = false;
                     }
                     break;
             }

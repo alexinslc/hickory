@@ -149,7 +149,7 @@ public class SignalRNotificationConsumer :
                 TicketTitle = message.TicketTitle,
                 Author = message.AuthorName,
                 Content = message.CommentContent.Length > 100 
-                    ? message.CommentContent.Substring(0, 100) + "..." 
+                    ? message.CommentContent[..Math.Min(100, message.CommentContent.Length)] + "..." 
                     : message.CommentContent,
                 IsInternal = message.IsInternal
             }
