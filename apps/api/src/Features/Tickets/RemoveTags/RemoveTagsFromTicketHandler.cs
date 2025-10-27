@@ -6,7 +6,7 @@ namespace Hickory.Api.Features.Tickets.RemoveTags;
 
 public record RemoveTagsFromTicketCommand(
     Guid TicketId,
-    List<Guid> TagIds
+    List<string> TagNames
 ) : IRequest<Unit>;
 
 public class RemoveTagsFromTicketHandler : IRequestHandler<RemoveTagsFromTicketCommand, Unit>
@@ -20,8 +20,15 @@ public class RemoveTagsFromTicketHandler : IRequestHandler<RemoveTagsFromTicketC
 
     public async Task<Unit> Handle(RemoveTagsFromTicketCommand request, CancellationToken cancellationToken)
     {
+        // Find tag IDs by names (case-insensitive)
+        var normalizedNames = request.TagNames.Select(n => n.ToLowerInvariant()).ToList();
+        var tagIds = await _dbContext.Tags
+            .Where(t => normalizedNames.Contains(t.Name.ToLower()))
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken);
+
         var ticketTags = await _dbContext.TicketTags
-            .Where(tt => tt.TicketId == request.TicketId && request.TagIds.Contains(tt.TagId))
+            .Where(tt => tt.TicketId == request.TicketId && tagIds.Contains(tt.TagId))
             .ToListAsync(cancellationToken);
 
         if (ticketTags.Any())

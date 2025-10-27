@@ -1,3 +1,4 @@
+using Hickory.Api.Features.Tickets.AddTags;
 using Hickory.Api.Features.Tickets.Assign;
 using Hickory.Api.Features.Tickets.Close;
 using Hickory.Api.Features.Tickets.Create;
@@ -6,6 +7,7 @@ using Hickory.Api.Features.Tickets.GetById;
 using Hickory.Api.Features.Tickets.GetBySubmitter;
 using Hickory.Api.Features.Tickets.GetQueue;
 using Hickory.Api.Features.Tickets.Reassign;
+using Hickory.Api.Features.Tickets.RemoveTags;
 using Hickory.Api.Features.Tickets.UpdatePriority;
 using Hickory.Api.Features.Tickets.UpdateStatus;
 using Hickory.Api.Infrastructure.Data.Entities;
@@ -145,6 +147,30 @@ public class TicketsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new ReassignTicketCommand(id, request.NewAgentId);
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("{id}/tags")]
+    public async Task<IActionResult> AddTags(
+        Guid id,
+        [FromBody] List<string> tags,
+        CancellationToken cancellationToken)
+    {
+        var command = new AddTagsToTicketCommand(id, tags);
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}/tags")]
+    public async Task<IActionResult> RemoveTags(
+        Guid id,
+        [FromBody] List<string> tags,
+        CancellationToken cancellationToken)
+    {
+        var command = new RemoveTagsFromTicketCommand(id, tags);
         await _mediator.Send(command, cancellationToken);
 
         return NoContent();
