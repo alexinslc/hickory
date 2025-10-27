@@ -150,7 +150,7 @@ public class ApplicationDbContext : DbContext
                     {
                         prefs.UpdatedAt = now;
                         // Prevent CreatedAt from being modified
-                        entry.Property("CreatedAt").IsModified = false;
+                        entry.Property(nameof(prefs.CreatedAt)).IsModified = false;
                     }
                     break;
                     
@@ -164,7 +164,7 @@ public class ApplicationDbContext : DbContext
                     {
                         article.UpdatedAt = now;
                         // Prevent CreatedAt from being modified
-                        entry.Property("CreatedAt").IsModified = false;
+                        entry.Property(nameof(article.CreatedAt)).IsModified = false;
                     }
                     break;
             }
