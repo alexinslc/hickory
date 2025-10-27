@@ -19,17 +19,20 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, AuthResponse>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _tokenService;
     private readonly ILogger<RegisterHandler> _logger;
+    private readonly IConfiguration _configuration;
 
     public RegisterHandler(
         ApplicationDbContext context,
         IPasswordHasher passwordHasher,
         IJwtTokenService tokenService,
-        ILogger<RegisterHandler> logger)
+        ILogger<RegisterHandler> logger,
+        IConfiguration configuration)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -75,7 +78,8 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, AuthResponse>
             FirstName = user.FirstName,
             LastName = user.LastName,
             Role = user.Role.ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(60)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(
+                double.Parse(_configuration["JWT:ExpirationMinutes"] ?? "60"))
         };
     }
 }
