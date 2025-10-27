@@ -48,6 +48,11 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<TicketTag> TicketTags => Set<TicketTag>();
     
+    /// <summary>
+    /// User notification preferences
+    /// </summary>
+    public DbSet<NotificationPreferences> NotificationPreferences => Set<NotificationPreferences>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -128,6 +133,20 @@ public class ApplicationDbContext : DbContext
                     
                 case TicketTag ticketTag when entry.State == EntityState.Added:
                     ticketTag.AddedAt = now;
+                    break;
+                    
+                case NotificationPreferences prefs:
+                    if (entry.State == EntityState.Added)
+                    {
+                        prefs.CreatedAt = now;
+                        prefs.UpdatedAt = now;
+                    }
+                    else if (entry.State == EntityState.Modified)
+                    {
+                        prefs.UpdatedAt = now;
+                        // Prevent CreatedAt from being modified
+                        entry.Property(nameof(NotificationPreferences.CreatedAt)).IsModified = false;
+                    }
                     break;
             }
         }

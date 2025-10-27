@@ -4,7 +4,10 @@ using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Behaviors;
 using Hickory.Api.Infrastructure.Data;
+using Hickory.Api.Infrastructure.Messaging;
 using Hickory.Api.Infrastructure.Middleware;
+using Hickory.Api.Infrastructure.Notifications;
+using Hickory.Api.Infrastructure.RealTime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -40,6 +43,14 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 // Business Services
 builder.Services.AddScoped<ITicketNumberGenerator, TicketNumberGenerator>();
 
+// Notification Services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IWebhookService, WebhookService>();
+builder.Services.AddHttpClient("webhooks", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // MediatR with pipeline behaviors
 builder.Services.AddMediatR(cfg =>
 {
@@ -50,6 +61,9 @@ builder.Services.AddMediatR(cfg =>
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
+// MassTransit for event-driven messaging
+builder.Services.AddMessaging(builder.Configuration);
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["JWT:Secret"] 
@@ -95,6 +109,9 @@ builder.Services.AddOpenTelemetry()
         .AddSource("Hickory.Api"));
 
 builder.Services.AddControllers();
+
+// SignalR for real-time notifications
+builder.Services.AddSignalR();
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -175,5 +192,8 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
 });
 
 app.MapControllers();
+
+// SignalR hub endpoint
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 export function Navigation() {
   const router = useRouter();
@@ -44,6 +45,12 @@ export function Navigation() {
               >
                 Search
               </Link>
+              <Link
+                href="/settings/notifications"
+                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+              >
+                Settings
+              </Link>
             </div>
           </div>
 
@@ -78,7 +85,8 @@ export function Navigation() {
           </div>
 
           {/* User menu */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
+            <NotificationCenter />
             <Link
               href="/tickets/create"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

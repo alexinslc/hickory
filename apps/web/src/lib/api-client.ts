@@ -161,6 +161,42 @@ export interface SearchTicketsResult {
   totalPages: number;
 }
 
+export interface NotificationPreferencesDto {
+  emailEnabled: boolean;
+  emailOnTicketCreated: boolean;
+  emailOnTicketUpdated: boolean;
+  emailOnTicketAssigned: boolean;
+  emailOnCommentAdded: boolean;
+  
+  inAppEnabled: boolean;
+  inAppOnTicketCreated: boolean;
+  inAppOnTicketUpdated: boolean;
+  inAppOnTicketAssigned: boolean;
+  inAppOnCommentAdded: boolean;
+  
+  webhookEnabled: boolean;
+  webhookUrl?: string;
+  // Note: webhookSecret is write-only, not returned in GET responses
+}
+
+export interface UpdateNotificationPreferencesRequest {
+  emailEnabled: boolean;
+  emailOnTicketCreated: boolean;
+  emailOnTicketUpdated: boolean;
+  emailOnTicketAssigned: boolean;
+  emailOnCommentAdded: boolean;
+  
+  inAppEnabled: boolean;
+  inAppOnTicketCreated: boolean;
+  inAppOnTicketUpdated: boolean;
+  inAppOnTicketAssigned: boolean;
+  inAppOnCommentAdded: boolean;
+  
+  webhookEnabled: boolean;
+  webhookUrl?: string;
+  webhookSecret?: string;
+}
+
 class ApiClient {
   private client: AxiosInstance;
 
@@ -312,6 +348,22 @@ class ApiClient {
   // Search endpoints
   async searchTickets(params: SearchTicketsParams): Promise<SearchTicketsResult> {
     const response = await this.client.get<SearchTicketsResult>('/api/v1/search', { params });
+    return response.data;
+  }
+
+  // Notification preferences endpoints
+  async getNotificationPreferences(): Promise<NotificationPreferencesDto> {
+    const response = await this.client.get<NotificationPreferencesDto>('/api/v1/users/me/preferences');
+    return response.data;
+  }
+
+  async updateNotificationPreferences(
+    request: UpdateNotificationPreferencesRequest
+  ): Promise<NotificationPreferencesDto> {
+    const response = await this.client.put<NotificationPreferencesDto>(
+      '/api/v1/users/me/preferences',
+      request
+    );
     return response.data;
   }
 
