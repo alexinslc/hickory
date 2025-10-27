@@ -45,7 +45,8 @@ public class CreateTicketHandler : IRequestHandler<CreateTicketCommand, CreateTi
             Description = request.Description,
             Status = TicketStatus.Open,
             Priority = priority,
-            SubmitterId = command.UserId
+            SubmitterId = command.UserId,
+            CategoryId = request.CategoryId
         };
         
         _dbContext.Tickets.Add(ticket);

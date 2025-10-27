@@ -33,6 +33,21 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<Attachment> Attachments => Set<Attachment>();
     
+    /// <summary>
+    /// Categories for organizing tickets
+    /// </summary>
+    public DbSet<Category> Categories => Set<Category>();
+    
+    /// <summary>
+    /// Tags for labeling tickets
+    /// </summary>
+    public DbSet<Tag> Tags => Set<Tag>();
+    
+    /// <summary>
+    /// Many-to-many join table for tickets and tags
+    /// </summary>
+    public DbSet<TicketTag> TicketTags => Set<TicketTag>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -93,6 +108,26 @@ public class ApplicationDbContext : DbContext
                     
                 case Attachment attachment when entry.State == EntityState.Added:
                     attachment.UploadedAt = now;
+                    break;
+                    
+                case Category category:
+                    if (entry.State == EntityState.Added)
+                    {
+                        category.CreatedAt = now;
+                        category.UpdatedAt = now;
+                    }
+                    else if (entry.State == EntityState.Modified)
+                    {
+                        category.UpdatedAt = now;
+                    }
+                    break;
+                    
+                case Tag tag when entry.State == EntityState.Added:
+                    tag.CreatedAt = now;
+                    break;
+                    
+                case TicketTag ticketTag when entry.State == EntityState.Added:
+                    ticketTag.AddedAt = now;
                     break;
             }
         }

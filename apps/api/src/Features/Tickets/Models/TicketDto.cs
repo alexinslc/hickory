@@ -20,6 +20,11 @@ public record TicketDto
     public string? ResolutionNotes { get; init; }
     public int CommentCount { get; init; }
     public string RowVersion { get; init; } = string.Empty; // Base64 encoded for JSON
+    
+    // Category and Tags for organization
+    public Guid? CategoryId { get; init; }
+    public string? CategoryName { get; init; }
+    public List<string> Tags { get; init; } = new();
 }
 
 public record CommentDto

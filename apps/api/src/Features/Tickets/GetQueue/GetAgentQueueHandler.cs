@@ -6,7 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hickory.Api.Features.Tickets.GetQueue;
 
-public record GetAgentQueueQuery(Guid? AgentId = null) : IRequest<List<TicketDto>>;
+public record GetAgentQueueQuery(
+    Guid? AgentId = null,
+    Guid? CategoryId = null,
+    List<string>? Tags = null
+) : IRequest<List<TicketDto>>;
 
 public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<TicketDto>>
 {
@@ -24,6 +28,9 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
             .Include(t => t.Submitter)
             .Include(t => t.AssignedTo)
             .Include(t => t.Comments)
+            .Include(t => t.Category)
+            .Include(t => t.TicketTags)
+                .ThenInclude(tt => tt.Tag)
             .Where(t => t.Status != TicketStatus.Closed && t.Status != TicketStatus.Cancelled);
 
         if (query.AgentId.HasValue)
@@ -36,6 +43,20 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
         {
             // Show all non-closed tickets for queue overview
             // No additional filtering needed
+        }
+
+        // Filter by category if provided
+        if (query.CategoryId.HasValue)
+        {
+            ticketsQuery = ticketsQuery.Where(t => t.CategoryId == query.CategoryId.Value);
+        }
+
+        // Filter by tags if provided
+        if (query.Tags != null && query.Tags.Any())
+        {
+            var normalizedTags = query.Tags.Select(t => t.ToLowerInvariant()).ToList();
+            ticketsQuery = ticketsQuery.Where(t => 
+                t.TicketTags.Any(tt => normalizedTags.Contains(tt.Tag.Name.ToLower())));
         }
 
         // Sort by priority (Critical first) then by age (oldest first)
@@ -63,7 +84,10 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
             ClosedAt = ticket.ClosedAt,
             ResolutionNotes = ticket.ResolutionNotes,
             CommentCount = ticket.Comments.Count,
-            RowVersion = Convert.ToBase64String(ticket.RowVersion)
+            RowVersion = Convert.ToBase64String(ticket.RowVersion),
+            CategoryId = ticket.CategoryId,
+            CategoryName = ticket.Category?.Name,
+            Tags = ticket.TicketTags.Select(tt => tt.Tag.Name).ToList()
         }).ToList();
     }
 }
