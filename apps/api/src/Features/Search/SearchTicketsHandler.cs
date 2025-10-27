@@ -48,7 +48,7 @@ public class SearchTicketsHandler : IRequestHandler<SearchTicketsQuery, SearchTi
 
         // Parse search term once for reuse
         var searchTerm = !string.IsNullOrWhiteSpace(request.SearchQuery)
-            ? EF.Functions.ToTsQuery("english", string.Join(" & ", request.SearchQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries)))
+            ? EF.Functions.PlainToTsQuery("english", request.SearchQuery)
             : null;
 
         // Authorization: Users can only search their own tickets unless they're an agent/admin
