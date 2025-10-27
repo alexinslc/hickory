@@ -1,5 +1,6 @@
 using System.Text;
 using FluentValidation;
+using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Behaviors;
 using Hickory.Api.Infrastructure.Data;
@@ -35,6 +36,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Authentication Services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+// Business Services
+builder.Services.AddScoped<ITicketNumberGenerator, TicketNumberGenerator>();
 
 // MediatR with pipeline behaviors
 builder.Services.AddMediatR(cfg =>
