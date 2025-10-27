@@ -73,18 +73,25 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
             
             if (!string.IsNullOrWhiteSpace(searchText))
             {
-                var searchVector = NpgsqlTsQuery.Parse(searchText);
-                
-                var searchArticles = await articlesQuery
-                    .Where(a => a.SearchVector.Matches(searchVector))
-                    .OrderByDescending(a => a.SearchVector.Rank(searchVector))
-                    .ThenByDescending(a => a.HelpfulCount)
-                    .Take(query.Limit)
-                    .ToListAsync(cancellationToken);
-
-                if (searchArticles.Any())
+                try
                 {
-                    return searchArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
+                    var searchVector = NpgsqlTsQuery.Parse(searchText);
+
+                    var searchArticles = await articlesQuery
+                        .Where(a => a.SearchVector.Matches(searchVector))
+                        .OrderByDescending(a => a.SearchVector.Rank(searchVector))
+                        .ThenByDescending(a => a.HelpfulCount)
+                        .Take(query.Limit)
+                        .ToListAsync(cancellationToken);
+
+                    if (searchArticles.Any())
+                    {
+                        return searchArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
+                    }
+                }
+                catch (Exception)
+                {
+                    // If parsing fails, fall through to the fallback logic below
                 }
             }
         }
