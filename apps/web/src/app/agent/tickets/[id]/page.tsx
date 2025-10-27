@@ -85,15 +85,17 @@ export default function AgentTicketDetailPage() {
 
   const handleConflictRetry = async () => {
     setShowConflictDialog(false);
-    await refetch(); // Refresh ticket data to get latest rowVersion
-    if (conflictAction) {
-      conflictAction(); // Retry the original action
+    const result = await refetch(); // Refresh ticket data to get latest rowVersion
+    // Wait for refetch to complete and state to update
+    if (result.isSuccess && conflictAction) {
+      conflictAction(); // Retry the original action with fresh data
     }
   };
 
   const handleConcurrencyError = (error: unknown, retryAction: () => void) => {
     if (error instanceof AxiosError && error.response?.status === 409) {
-      setConflictAction(() => retryAction);
+      // Wrap in arrow function to prevent React from invoking it immediately
+      setConflictAction(() => () => retryAction());
       setShowConflictDialog(true);
       return true;
     }

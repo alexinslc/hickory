@@ -14,7 +14,6 @@ namespace Hickory.Api.src.Infrastructure.Data.Migrations
                 name: "RowVersion",
                 table: "Tickets",
                 type: "bytea",
-                rowVersion: true,
                 nullable: false,
                 defaultValue: new byte[0]);
         }
