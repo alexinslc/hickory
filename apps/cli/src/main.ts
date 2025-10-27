@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { login, logout, getConfig } from './commands/auth';
 import { createTicket, viewTicket, listTickets } from './commands/ticket';
+import { agentQueue, assignTicket, closeTicket } from './commands/agent';
 
 const program = new Command();
 
@@ -59,5 +60,26 @@ ticket
   .command('list')
   .description('List all your tickets')
   .action(listTickets);
+
+// Agent commands (requires Agent or Administrator role)
+const agent = program
+  .command('agent')
+  .description('Agent commands for managing support tickets');
+
+agent
+  .command('queue')
+  .description('View the agent ticket queue')
+  .option('-f, --filter <type>', 'Filter tickets: all, unassigned, mine', 'all')
+  .action((options) => agentQueue(options));
+
+agent
+  .command('assign <ticket>')
+  .description('Assign a ticket to yourself')
+  .action(assignTicket);
+
+agent
+  .command('close <ticket>')
+  .description('Close a ticket with resolution notes')
+  .action(closeTicket);
 
 program.parse(process.argv);
