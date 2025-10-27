@@ -41,6 +41,9 @@ public class Ticket
     // Resolution
     public string? ResolutionNotes { get; set; }
     
+    // Optimistic Concurrency
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+    
     // Collections
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();

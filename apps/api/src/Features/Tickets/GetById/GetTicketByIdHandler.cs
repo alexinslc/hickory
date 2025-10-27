@@ -57,7 +57,8 @@ public class GetTicketByIdHandler : IRequestHandler<GetTicketByIdQuery, TicketDt
             UpdatedAt = ticket.UpdatedAt,
             ClosedAt = ticket.ClosedAt,
             ResolutionNotes = ticket.ResolutionNotes,
-            CommentCount = ticket.Comments.Count
+            CommentCount = ticket.Comments.Count,
+            RowVersion = Convert.ToBase64String(ticket.RowVersion)
         };
     }
 }
