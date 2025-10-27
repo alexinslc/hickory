@@ -62,13 +62,9 @@ public class PasswordHasher : IPasswordHasher
             HashAlgorithmName.SHA256,
             HashSize);
         
-        // Compare hashes
-        for (int i = 0; i < HashSize; i++)
-        {
-            if (hashBytes[SaltSize + i] != computedHash[i])
-                return false;
-        }
-        
-        return true;
+        // Compare hashes in constant time
+        var storedHash = new byte[HashSize];
+        Array.Copy(hashBytes, SaltSize, storedHash, 0, HashSize);
+        return CryptographicOperations.FixedTimeEquals(storedHash, computedHash);
     }
 }
