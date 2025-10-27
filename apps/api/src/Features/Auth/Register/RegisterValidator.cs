@@ -22,7 +22,6 @@ public class RegisterValidator : AbstractValidator<RegisterRequest>
 
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("First name is required")
-            .MinimumLength(1).WithMessage("First name must be at least 1 character")
             .MaximumLength(100).WithMessage("First name must not exceed 100 characters");
 
         RuleFor(x => x.LastName)
