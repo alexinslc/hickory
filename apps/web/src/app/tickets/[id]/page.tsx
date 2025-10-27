@@ -6,49 +6,7 @@ import { useTicket } from '@/hooks/use-tickets';
 import { useAddComment } from '@/hooks/use-comments';
 import { AuthGuard } from '@/components/auth-guard';
 import Link from 'next/link';
-
-function getStatusColor(status: string) {
-  switch (status.toLowerCase()) {
-    case 'open':
-      return 'bg-blue-100 text-blue-800';
-    case 'inprogress':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'resolved':
-      return 'bg-green-100 text-green-800';
-    case 'closed':
-      return 'bg-gray-100 text-gray-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-}
-
-function getPriorityColor(priority: string) {
-  switch (priority.toLowerCase()) {
-    case 'critical':
-      return 'bg-red-100 text-red-800';
-    case 'high':
-      return 'bg-orange-100 text-orange-800';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'low':
-      return 'bg-green-100 text-green-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-}
-
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  }).format(date);
-}
+import { getStatusColor, getPriorityColor, formatDate } from '@/lib/ticket-utils';
 
 export default function TicketDetailPage() {
   const params = useParams();
@@ -156,7 +114,7 @@ export default function TicketDetailPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-500">Created</p>
-                      <p className="mt-1 text-sm text-gray-900">{formatDate(ticket.createdAt)}</p>
+                      <p className="mt-1 text-sm text-gray-900">{formatDate(ticket.createdAt, 'long')}</p>
                     </div>
                     {ticket.assignedToName && (
                       <div>
@@ -166,7 +124,7 @@ export default function TicketDetailPage() {
                     )}
                     <div>
                       <p className="text-sm font-medium text-gray-500">Last updated</p>
-                      <p className="mt-1 text-sm text-gray-900">{formatDate(ticket.updatedAt)}</p>
+                      <p className="mt-1 text-sm text-gray-900">{formatDate(ticket.updatedAt, 'long')}</p>
                     </div>
                   </div>
                 </div>
