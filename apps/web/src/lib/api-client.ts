@@ -197,6 +197,79 @@ export interface UpdateNotificationPreferencesRequest {
   webhookSecret?: string;
 }
 
+// Knowledge Base types
+export interface ArticleDto {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  status: string;
+  viewCount: number;
+  helpfulCount: number;
+  notHelpfulCount: number;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+}
+
+export interface ArticleListItemDto {
+  id: string;
+  title: string;
+  category: string;
+  tags: string[];
+  status: string;
+  viewCount: number;
+  helpfulCount: number;
+  notHelpfulCount: number;
+  publishedAt?: string;
+}
+
+export interface SearchArticlesRequest {
+  searchTerm?: string;
+  category?: string;
+  tags?: string[];
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SearchArticlesResult {
+  articles: ArticleListItemDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface CreateArticleRequest {
+  title: string;
+  content: string;
+  category: string;
+  tags?: string[];
+  status?: string;
+}
+
+export interface UpdateArticleRequest {
+  title?: string;
+  content?: string;
+  category?: string;
+  tags?: string[];
+  status?: string;
+}
+
+export interface RateArticleRequest {
+  isHelpful: boolean;
+}
+
+export interface GetSuggestedArticlesRequest {
+  categoryId?: string;
+  searchTerm?: string;
+  limit?: number;
+}
+
 class ApiClient {
   private client: AxiosInstance;
 
@@ -370,6 +443,40 @@ class ApiClient {
   // Health check
   async healthCheck(): Promise<{ status: string }> {
     const response = await this.client.get('/health');
+    return response.data;
+  }
+
+  // Knowledge Base endpoints
+  async searchArticles(request: SearchArticlesRequest): Promise<SearchArticlesResult> {
+    const response = await this.client.get<SearchArticlesResult>('/api/knowledge', {
+      params: request,
+    });
+    return response.data;
+  }
+
+  async getArticleById(id: string): Promise<ArticleDto> {
+    const response = await this.client.get<ArticleDto>(`/api/knowledge/${id}`);
+    return response.data;
+  }
+
+  async createArticle(request: CreateArticleRequest): Promise<ArticleDto> {
+    const response = await this.client.post<ArticleDto>('/api/knowledge', request);
+    return response.data;
+  }
+
+  async updateArticle(id: string, request: UpdateArticleRequest): Promise<ArticleDto> {
+    const response = await this.client.put<ArticleDto>(`/api/knowledge/${id}`, request);
+    return response.data;
+  }
+
+  async rateArticle(id: string, request: RateArticleRequest): Promise<void> {
+    await this.client.post(`/api/knowledge/${id}/rate`, request);
+  }
+
+  async getSuggestedArticles(request: GetSuggestedArticlesRequest): Promise<ArticleListItemDto[]> {
+    const response = await this.client.get<ArticleListItemDto[]>('/api/knowledge/suggested', {
+      params: request,
+    });
     return response.data;
   }
 }
