@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { login, logout, getConfig } from './commands/auth';
+import { createTicket, viewTicket, listTickets } from './commands/ticket';
 
 const program = new Command();
 
@@ -38,5 +39,25 @@ program
     console.log(`  Role: ${config.user.role}`);
     console.log(`  User ID: ${config.user.userId}`);
   });
+
+// Ticket commands
+const ticket = program
+  .command('ticket')
+  .description('Manage support tickets');
+
+ticket
+  .command('create')
+  .description('Create a new support ticket interactively')
+  .action(createTicket);
+
+ticket
+  .command('view <ticket>')
+  .description('View details of a specific ticket')
+  .action(viewTicket);
+
+ticket
+  .command('list')
+  .description('List all your tickets')
+  .action(listTickets);
 
 program.parse(process.argv);
