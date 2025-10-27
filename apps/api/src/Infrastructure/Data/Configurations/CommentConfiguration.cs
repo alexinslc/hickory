@@ -37,5 +37,6 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
         // Indexes
         builder.HasIndex(c => c.TicketId);
         builder.HasIndex(c => c.CreatedAt);
+        builder.HasIndex(c => c.AuthorId);
     }
 }
