@@ -46,7 +46,7 @@ public class AddTagsToTicketHandler : IRequestHandler<AddTagsToTicketCommand, Un
                     Name = tagName
                 };
                 _dbContext.Tags.Add(tag);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                // SaveChangesAsync will be called once after the loop
             }
 
             // Add tag to ticket if not already added
