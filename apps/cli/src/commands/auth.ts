@@ -82,12 +82,25 @@ function promptPassword(question: string): Promise<string> {
   });
 
   return new Promise((resolve) => {
-    // Hide password input
     const stdin = process.stdin;
-    stdin.setRawMode(true);
+    
+    // Only use raw mode if stdin is a TTY (interactive terminal)
+    const isTTY = stdin.isTTY;
+    if (isTTY) {
+      stdin.setRawMode(true);
+    }
     
     let password = '';
     process.stdout.write(question);
+    
+    // If not a TTY, use regular readline
+    if (!isTTY) {
+      rl.question('', (answer) => {
+        rl.close();
+        resolve(answer);
+      });
+      return;
+    }
     
     stdin.on('data', (char: Buffer) => {
       const c = char.toString('utf-8');

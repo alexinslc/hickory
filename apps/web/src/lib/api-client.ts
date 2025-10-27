@@ -48,7 +48,8 @@ class ApiClient {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       (config) => {
-        const token = this.getStoredToken();
+        // Get token from auth store (Zustand with persist middleware)
+        const token = this.getTokenFromStore();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -62,36 +63,47 @@ class ApiClient {
       (response) => response,
       async (error: AxiosError<ErrorResponse>) => {
         if (error.response?.status === 401) {
-          // Token expired, try to refresh or logout
-          this.clearStoredToken();
-          if (typeof window !== 'undefined') {
-            window.location.href = '/auth/login';
-          }
+          // Token expired - clear auth state and redirect
+          this.handleUnauthorized();
         }
         return Promise.reject(error);
       }
     );
   }
 
-  private getStoredToken(): string | null {
+  private getTokenFromStore(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('accessToken');
+    
+    // Read from the persisted auth store (localStorage key: 'hickory-auth-storage')
+    try {
+      const stored = localStorage.getItem('hickory-auth-storage');
+      if (!stored) return null;
+      
+      const parsed = JSON.parse(stored);
+      return parsed.state?.accessToken || null;
+    } catch {
+      return null;
+    }
   }
 
-  private clearStoredToken(): void {
+  private handleUnauthorized(): void {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    
+    // Clear the entire auth store by removing the persisted state
+    localStorage.removeItem('hickory-auth-storage');
+    
+    // Redirect to login
+    window.location.href = '/auth/login';
   }
 
   // Auth endpoints
   async login(request: LoginRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/api/v1/auth/login', request);
+    const response = await this.client.post<AuthResponse>('/api/auth/login', request);
     return response.data;
   }
 
   async register(request: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/api/v1/auth/register', request);
+    const response = await this.client.post<AuthResponse>('/api/auth/register', request);
     return response.data;
   }
 
