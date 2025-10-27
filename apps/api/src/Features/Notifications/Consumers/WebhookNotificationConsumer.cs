@@ -81,16 +81,12 @@ public class WebhookNotificationConsumer :
         }
     }
 
-    private Task<List<string>> GetWebhookUrlsAsync(CancellationToken cancellationToken)
+    private async Task<List<string>> GetWebhookUrlsAsync(CancellationToken cancellationToken)
     {
-        // TODO: Implement webhook URL storage in database (NotificationPreferences table)
-        // For now, return empty list or get from configuration
-        // Once NotificationPreferences entity is created, query it here:
-        // return await _dbContext.NotificationPreferences
-        //     .Where(p => p.WebhookEnabled && !string.IsNullOrEmpty(p.WebhookUrl))
-        //     .Select(p => p.WebhookUrl)
-        //     .ToListAsync(cancellationToken);
-        
-        return Task.FromResult(new List<string>());
+        // Query NotificationPreferences for enabled webhook URLs
+        return await _dbContext.NotificationPreferences
+            .Where(p => p.WebhookEnabled && !string.IsNullOrEmpty(p.WebhookUrl))
+            .Select(p => p.WebhookUrl!)
+            .ToListAsync(cancellationToken);
     }
 }

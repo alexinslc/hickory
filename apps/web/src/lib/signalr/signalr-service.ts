@@ -61,7 +61,7 @@ class SignalRService {
       
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         this.isReconnecting = true;
-        const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
+        const delay = Math.min(this.reconnectDelay * Math.pow(2, this.reconnectAttempts), 60000);
         this.reconnectAttempts++;
         
         console.log(`Attempting manual reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);

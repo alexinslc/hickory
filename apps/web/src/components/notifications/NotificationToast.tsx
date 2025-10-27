@@ -10,7 +10,10 @@ export function NotificationToast() {
 
   useEffect(() => {
     // Show only the most recent notification
-    if (notifications.length > 0 && notifications[0] !== visibleNotifications[0]) {
+    if (
+      notifications.length > 0 &&
+      notifications[0].timestamp !== visibleNotifications[0]?.timestamp
+    ) {
       setVisibleNotifications([notifications[0]]);
       
       // Auto-dismiss after 5 seconds

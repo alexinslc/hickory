@@ -66,6 +66,7 @@ export default function NotificationSettingsPage() {
   };
 
   // Helper to check if ALL channels have a specific event enabled
+  // Note: Webhooks don't have per-event preferences, only a global webhook toggle
   const isEventEnabled = (event: 'Created' | 'Updated' | 'Assigned' | 'CommentAdded'): boolean => {
     return !!(
       formData[`emailOnTicket${event}` as keyof typeof formData] &&
@@ -74,6 +75,7 @@ export default function NotificationSettingsPage() {
   };
 
   // Helper to toggle ALL channels for a specific event
+  // Note: Webhooks are controlled globally, not per-event, so they're excluded here
   const toggleEvent = (event: 'Created' | 'Updated' | 'Assigned' | 'CommentAdded') => {
     const currentValue = isEventEnabled(event);
     const newValue = !currentValue;
