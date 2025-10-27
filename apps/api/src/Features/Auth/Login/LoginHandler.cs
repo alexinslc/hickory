@@ -14,7 +14,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _tokenService;
     private readonly ILogger<LoginHandler> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly double _jwtExpirationMinutes;
 
     public LoginHandler(
         ApplicationDbContext context,
@@ -27,7 +27,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _logger = logger;
-        _configuration = configuration;
+        _jwtExpirationMinutes = double.Parse(configuration["JWT:ExpirationMinutes"] ?? "60");
     }
 
     public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -74,8 +74,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
             FirstName = user.FirstName,
             LastName = user.LastName,
             Role = user.Role.ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(
-                double.Parse(_configuration["JWT:ExpirationMinutes"] ?? "60"))
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtExpirationMinutes)
         };
     }
 }
