@@ -12,6 +12,7 @@ import {
   useCloseTicket,
 } from '@/hooks/use-agent';
 import { formatDistanceToNow } from 'date-fns';
+import { AxiosError } from 'axios';
 
 const STATUS_OPTIONS = ['Open', 'InProgress', 'Resolved'];
 const PRIORITY_OPTIONS = ['Low', 'Medium', 'High', 'Critical'];
@@ -21,13 +22,15 @@ export default function AgentTicketDetailPage() {
   const router = useRouter();
   const ticketId = params.id as string;
   const { user } = useAuth();
-  const { data: ticket, isLoading, error } = useTicket(ticketId);
+  const { data: ticket, isLoading, error, refetch } = useTicket(ticketId);
   
   const [commentContent, setCommentContent] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showConflictDialog, setShowConflictDialog] = useState(false);
+  const [conflictAction, setConflictAction] = useState<(() => void) | null>(null);
   
   const addComment = useAddComment(ticketId);
   const assignTicket = useAssignTicket();
@@ -80,25 +83,86 @@ export default function AgentTicketDetailPage() {
     }
   };
 
+  const handleConflictRetry = async () => {
+    setShowConflictDialog(false);
+    await refetch(); // Refresh ticket data to get latest rowVersion
+    if (conflictAction) {
+      conflictAction(); // Retry the original action
+    }
+  };
+
+  const handleConcurrencyError = (error: unknown, retryAction: () => void) => {
+    if (error instanceof AxiosError && error.response?.status === 409) {
+      setConflictAction(() => retryAction);
+      setShowConflictDialog(true);
+      return true;
+    }
+    return false;
+  };
+
   const handleAssignToMe = async () => {
-    if (user?.userId) {
-      await assignTicket.mutateAsync({ ticketId, agentId: user.userId });
+    if (user?.userId && ticket?.rowVersion) {
+      try {
+        await assignTicket.mutateAsync({ 
+          ticketId, 
+          agentId: user.userId,
+          rowVersion: ticket.rowVersion 
+        });
+      } catch (error) {
+        if (!handleConcurrencyError(error, handleAssignToMe)) {
+          throw error; // Re-throw if not a concurrency error
+        }
+      }
     }
   };
 
   const handleStatusChange = async (newStatus: string) => {
-    await updateStatus.mutateAsync({ ticketId, newStatus });
+    if (ticket?.rowVersion) {
+      try {
+        await updateStatus.mutateAsync({ 
+          ticketId, 
+          newStatus,
+          rowVersion: ticket.rowVersion 
+        });
+      } catch (error) {
+        if (!handleConcurrencyError(error, () => handleStatusChange(newStatus))) {
+          throw error;
+        }
+      }
+    }
   };
 
   const handlePriorityChange = async (newPriority: string) => {
-    await updatePriority.mutateAsync({ ticketId, newPriority });
+    if (ticket?.rowVersion) {
+      try {
+        await updatePriority.mutateAsync({ 
+          ticketId, 
+          newPriority,
+          rowVersion: ticket.rowVersion 
+        });
+      } catch (error) {
+        if (!handleConcurrencyError(error, () => handlePriorityChange(newPriority))) {
+          throw error;
+        }
+      }
+    }
   };
 
   const handleCloseTicket = async () => {
-    if (resolutionNotes.trim().length >= 10) {
-      await closeTicket.mutateAsync({ ticketId, resolutionNotes });
-      setShowCloseDialog(false);
-      setResolutionNotes('');
+    if (resolutionNotes.trim().length >= 10 && ticket?.rowVersion) {
+      try {
+        await closeTicket.mutateAsync({ 
+          ticketId, 
+          resolutionNotes,
+          rowVersion: ticket.rowVersion 
+        });
+        setShowCloseDialog(false);
+        setResolutionNotes('');
+      } catch (error) {
+        if (!handleConcurrencyError(error, handleCloseTicket)) {
+          throw error;
+        }
+      }
     }
   };
 
@@ -323,6 +387,39 @@ export default function AgentTicketDetailPage() {
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {closeTicket.isPending ? 'Closing...' : 'Close Ticket'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Conflict dialog */}
+        {showConflictDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Ticket Updated</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                This ticket was modified by another user. Please refresh to see the latest changes and try again.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowConflictDialog(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConflictRetry}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Refresh & Retry
                 </button>
               </div>
             </div>
