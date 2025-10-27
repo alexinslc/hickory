@@ -23,8 +23,7 @@ public class GetArticleByIdHandler : IRequestHandler<GetArticleByIdQuery, Articl
             .Include(a => a.Author)
             .Include(a => a.LastUpdatedBy)
             .Include(a => a.Category)
-            .Include(a => a.ArticleTags)
-                .ThenInclude(at => at.Tag)
+            .Include(a => a.Tags)
             .FirstOrDefaultAsync(a => a.Id == query.ArticleId, cancellationToken);
 
         if (article == null)
@@ -39,32 +38,6 @@ public class GetArticleByIdHandler : IRequestHandler<GetArticleByIdQuery, Articl
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        return MapToDto(article);
-    }
-
-    private static ArticleDto MapToDto(KnowledgeArticle article)
-    {
-        return new ArticleDto
-        {
-            Id = article.Id,
-            Title = article.Title,
-            Content = article.Content,
-            Status = article.Status.ToString(),
-            CategoryId = article.CategoryId,
-            CategoryName = article.Category?.Name,
-            Tags = article.ArticleTags.Select(at => at.Tag.Name).ToList(),
-            ViewCount = article.ViewCount,
-            HelpfulCount = article.HelpfulCount,
-            NotHelpfulCount = article.NotHelpfulCount,
-            AuthorId = article.AuthorId,
-            AuthorName = $"{article.Author.FirstName} {article.Author.LastName}",
-            LastUpdatedById = article.LastUpdatedById,
-            LastUpdatedByName = article.LastUpdatedBy != null 
-                ? $"{article.LastUpdatedBy.FirstName} {article.LastUpdatedBy.LastName}" 
-                : null,
-            CreatedAt = article.CreatedAt,
-            UpdatedAt = article.UpdatedAt,
-            PublishedAt = article.PublishedAt
-        };
+        return KnowledgeArticleHelpers.MapToDto(article);
     }
 }

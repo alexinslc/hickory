@@ -4,7 +4,6 @@ using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using NpgsqlTypes;
 
 namespace Hickory.Api.Features.KnowledgeBase.Update;
 
@@ -49,7 +48,7 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
         
         // Load article with related data
         var article = await _dbContext.KnowledgeArticles
-            .Include(a => a.ArticleTags)
+            .Include(a => a.Tags)
             .FirstOrDefaultAsync(a => a.Id == command.ArticleId, cancellationToken);
 
         if (article == null)
@@ -109,7 +108,7 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
         // Update search vector if title or content changed
         if (needsSearchVectorUpdate)
         {
-            article.SearchVector = GenerateSearchVector(article.Title, article.Content);
+            article.SearchVector = KnowledgeArticleHelpers.GenerateSearchVector(article.Title, article.Content);
         }
 
         // Track who updated the article
@@ -118,9 +117,8 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
         // Handle tags if provided
         if (request.Tags != null)
         {
-            // Remove all existing tag associations
-            _dbContext.RemoveRange(article.ArticleTags);
-            article.ArticleTags.Clear();
+            // Clear existing tags
+            article.Tags.Clear();
 
             if (request.Tags.Any())
             {
@@ -146,17 +144,11 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
                     _dbContext.Tags.AddRange(newTags);
                 }
                 
-                // Combine existing and new tags
+                // Combine existing and new tags and add to article
                 var allTags = existingTags.Concat(newTags).ToList();
-                
-                // Create ArticleTag associations
                 foreach (var tag in allTags)
                 {
-                    article.ArticleTags.Add(new ArticleTag
-                    {
-                        ArticleId = article.Id,
-                        TagId = tag.Id
-                    });
+                    article.Tags.Add(tag);
                 }
             }
         }
@@ -168,43 +160,9 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
             .Include(a => a.Author)
             .Include(a => a.LastUpdatedBy)
             .Include(a => a.Category)
-            .Include(a => a.ArticleTags)
-                .ThenInclude(at => at.Tag)
+            .Include(a => a.Tags)
             .FirstAsync(a => a.Id == article.Id, cancellationToken);
 
-        return MapToDto(updatedArticle);
-    }
-
-    private static NpgsqlTsVector GenerateSearchVector(string title, string content)
-    {
-        // Combine title and content with weight to make title more relevant
-        var searchText = $"{title} {title} {content}"; // Duplicate title for higher weight
-        return NpgsqlTsVector.Parse(searchText);
-    }
-
-    private static ArticleDto MapToDto(KnowledgeArticle article)
-    {
-        return new ArticleDto
-        {
-            Id = article.Id,
-            Title = article.Title,
-            Content = article.Content,
-            Status = article.Status.ToString(),
-            CategoryId = article.CategoryId,
-            CategoryName = article.Category?.Name,
-            Tags = article.ArticleTags.Select(at => at.Tag.Name).ToList(),
-            ViewCount = article.ViewCount,
-            HelpfulCount = article.HelpfulCount,
-            NotHelpfulCount = article.NotHelpfulCount,
-            AuthorId = article.AuthorId,
-            AuthorName = $"{article.Author.FirstName} {article.Author.LastName}",
-            LastUpdatedById = article.LastUpdatedById,
-            LastUpdatedByName = article.LastUpdatedBy != null 
-                ? $"{article.LastUpdatedBy.FirstName} {article.LastUpdatedBy.LastName}" 
-                : null,
-            CreatedAt = article.CreatedAt,
-            UpdatedAt = article.UpdatedAt,
-            PublishedAt = article.PublishedAt
-        };
+        return KnowledgeArticleHelpers.MapToDto(updatedArticle);
     }
 }

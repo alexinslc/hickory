@@ -30,8 +30,7 @@ public class SearchArticlesHandler : IRequestHandler<SearchArticlesQuery, Search
         var articlesQuery = _dbContext.KnowledgeArticles
             .Include(a => a.Author)
             .Include(a => a.Category)
-            .Include(a => a.ArticleTags)
-                .ThenInclude(at => at.Tag)
+            .Include(a => a.Tags)
             .AsQueryable();
 
         // Apply status filter (default to Published for public searches)
@@ -55,7 +54,7 @@ public class SearchArticlesHandler : IRequestHandler<SearchArticlesQuery, Search
         if (query.Tags != null && query.Tags.Any())
         {
             articlesQuery = articlesQuery.Where(a => 
-                a.ArticleTags.Any(at => query.Tags.Contains(at.Tag.Name)));
+                a.Tags.Any(t => query.Tags.Contains(t.Name)));
         }
 
         // Apply full-text search if provided
@@ -88,29 +87,11 @@ public class SearchArticlesHandler : IRequestHandler<SearchArticlesQuery, Search
 
         return new SearchArticlesResult
         {
-            Articles = articles.Select(MapToListItemDto).ToList(),
+            Articles = articles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList(),
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize,
             TotalPages = totalPages
-        };
-    }
-
-    private static ArticleListItemDto MapToListItemDto(KnowledgeArticle article)
-    {
-        return new ArticleListItemDto
-        {
-            Id = article.Id,
-            Title = article.Title,
-            Status = article.Status.ToString(),
-            CategoryId = article.CategoryId,
-            CategoryName = article.Category?.Name,
-            Tags = article.ArticleTags.Select(at => at.Tag.Name).ToList(),
-            ViewCount = article.ViewCount,
-            HelpfulCount = article.HelpfulCount,
-            AuthorName = $"{article.Author.FirstName} {article.Author.LastName}",
-            CreatedAt = article.CreatedAt,
-            PublishedAt = article.PublishedAt
         };
     }
 }

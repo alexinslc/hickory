@@ -29,8 +29,7 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
         var articlesQuery = _dbContext.KnowledgeArticles
             .Include(a => a.Author)
             .Include(a => a.Category)
-            .Include(a => a.ArticleTags)
-                .ThenInclude(at => at.Tag)
+            .Include(a => a.Tags)
             .Where(a => a.Status == ArticleStatus.Published)
             .AsQueryable();
 
@@ -46,7 +45,7 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
 
             if (categoryArticles.Count >= query.Limit)
             {
-                return categoryArticles.Select(MapToListItemDto).ToList();
+                return categoryArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
             }
         }
 
@@ -54,8 +53,8 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
         if (query.Tags != null && query.Tags.Any())
         {
             var tagArticles = await articlesQuery
-                .Where(a => a.ArticleTags.Any(at => query.Tags.Contains(at.Tag.Name)))
-                .OrderByDescending(a => a.ArticleTags.Count(at => query.Tags.Contains(at.Tag.Name))) // More matching tags = higher priority
+                .Where(a => a.Tags.Any(t => query.Tags.Contains(t.Name)))
+                .OrderByDescending(a => a.Tags.Count(t => query.Tags.Contains(t.Name))) // More matching tags = higher priority
                 .ThenByDescending(a => a.HelpfulCount)
                 .ThenByDescending(a => a.ViewCount)
                 .Take(query.Limit)
@@ -63,7 +62,7 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
 
             if (tagArticles.Count >= query.Limit)
             {
-                return tagArticles.Select(MapToListItemDto).ToList();
+                return tagArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
             }
         }
 
@@ -85,7 +84,7 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
 
                 if (searchArticles.Any())
                 {
-                    return searchArticles.Select(MapToListItemDto).ToList();
+                    return searchArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
                 }
             }
         }
@@ -98,24 +97,6 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
             .Take(query.Limit)
             .ToListAsync(cancellationToken);
 
-        return popularArticles.Select(MapToListItemDto).ToList();
-    }
-
-    private static ArticleListItemDto MapToListItemDto(KnowledgeArticle article)
-    {
-        return new ArticleListItemDto
-        {
-            Id = article.Id,
-            Title = article.Title,
-            Status = article.Status.ToString(),
-            CategoryId = article.CategoryId,
-            CategoryName = article.Category?.Name,
-            Tags = article.ArticleTags.Select(at => at.Tag.Name).ToList(),
-            ViewCount = article.ViewCount,
-            HelpfulCount = article.HelpfulCount,
-            AuthorName = $"{article.Author.FirstName} {article.Author.LastName}",
-            CreatedAt = article.CreatedAt,
-            PublishedAt = article.PublishedAt
-        };
+        return popularArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
     }
 }
