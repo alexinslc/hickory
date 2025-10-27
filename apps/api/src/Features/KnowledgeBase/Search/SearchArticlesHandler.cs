@@ -60,7 +60,15 @@ public class SearchArticlesHandler : IRequestHandler<SearchArticlesQuery, Search
         // Apply full-text search if provided
         if (!string.IsNullOrWhiteSpace(query.SearchQuery))
         {
-            var searchVector = NpgsqlTsQuery.Parse(query.SearchQuery);
+            NpgsqlTsQuery searchVector;
+            try
+            {
+                searchVector = NpgsqlTsQuery.Parse(query.SearchQuery);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Malformed search query. Please check your search syntax.", nameof(query.SearchQuery), ex);
+            }
             
             // Use PostgreSQL full-text search on the SearchVector column
             articlesQuery = articlesQuery
