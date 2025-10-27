@@ -53,6 +53,11 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<NotificationPreferences> NotificationPreferences => Set<NotificationPreferences>();
     
+    /// <summary>
+    /// Knowledge base articles
+    /// </summary>
+    public DbSet<KnowledgeArticle> KnowledgeArticles => Set<KnowledgeArticle>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -145,7 +150,21 @@ public class ApplicationDbContext : DbContext
                     {
                         prefs.UpdatedAt = now;
                         // Prevent CreatedAt from being modified
-                        entry.Property(nameof(NotificationPreferences.CreatedAt)).IsModified = false;
+                        entry.Property(nameof(prefs.CreatedAt)).IsModified = false;
+                    }
+                    break;
+                    
+                case KnowledgeArticle article:
+                    if (entry.State == EntityState.Added)
+                    {
+                        article.CreatedAt = now;
+                        article.UpdatedAt = now;
+                    }
+                    else if (entry.State == EntityState.Modified)
+                    {
+                        article.UpdatedAt = now;
+                        // Prevent CreatedAt from being modified
+                        entry.Property(nameof(article.CreatedAt)).IsModified = false;
                     }
                     break;
             }
