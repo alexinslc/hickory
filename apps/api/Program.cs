@@ -7,6 +7,7 @@ using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Messaging;
 using Hickory.Api.Infrastructure.Middleware;
 using Hickory.Api.Infrastructure.Notifications;
+using Hickory.Api.Infrastructure.RealTime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -109,6 +110,9 @@ builder.Services.AddOpenTelemetry()
 
 builder.Services.AddControllers();
 
+// SignalR for real-time notifications
+builder.Services.AddSignalR();
+
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -188,5 +192,8 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
 });
 
 app.MapControllers();
+
+// SignalR hub endpoint
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();
