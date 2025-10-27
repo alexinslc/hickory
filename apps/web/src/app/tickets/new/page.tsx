@@ -134,7 +134,7 @@ export default function NewTicketPage() {
                       rows={8}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      onBlur={() => setTouched({ ...touched, description: true })}
+                      onBlur={() => setTouched(prev => ({ ...prev, description: true }))}
                       className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none sm:text-sm ${
                         descriptionError
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
