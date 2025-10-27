@@ -1,0 +1,6 @@
+@Hickory.Api_HostAddress = http://localhost:5091
+
+GET {{Hickory.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
