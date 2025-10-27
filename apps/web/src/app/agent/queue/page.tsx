@@ -34,7 +34,7 @@ export default function AgentQueuePage() {
     }
   }, [user, authLoading, router]);
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
