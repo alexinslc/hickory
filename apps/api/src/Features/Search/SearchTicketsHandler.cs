@@ -46,6 +46,11 @@ public class SearchTicketsHandler : IRequestHandler<SearchTicketsQuery, SearchTi
                 .ThenInclude(tt => tt.Tag)
             .AsQueryable();
 
+        // Parse search term once for reuse
+        var searchTerm = !string.IsNullOrWhiteSpace(request.SearchQuery)
+            ? EF.Functions.ToTsQuery("english", string.Join(" & ", request.SearchQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries)))
+            : null;
+
         // Authorization: Users can only search their own tickets unless they're an agent/admin
         var isAgent = request.UserRole == "Agent" || request.UserRole == "Admin";
         if (!isAgent)
@@ -54,10 +59,8 @@ public class SearchTicketsHandler : IRequestHandler<SearchTicketsQuery, SearchTi
         }
 
         // Full-text search using PostgreSQL tsvector
-        if (!string.IsNullOrWhiteSpace(request.SearchQuery))
+        if (searchTerm != null)
         {
-            // Use EF.Functions.ToTsQuery for full-text search
-            var searchTerm = EF.Functions.ToTsQuery("english", string.Join(" & ", request.SearchQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries)));
             query = query.Where(t => t.SearchVector.Matches(searchTerm));
         }
 
@@ -94,9 +97,8 @@ public class SearchTicketsHandler : IRequestHandler<SearchTicketsQuery, SearchTi
         var totalCount = await query.CountAsync(cancellationToken);
 
         // Order by relevance (rank) if searching, otherwise by created date
-        if (!string.IsNullOrWhiteSpace(request.SearchQuery))
+        if (searchTerm != null)
         {
-            var searchTerm = EF.Functions.ToTsQuery("english", string.Join(" & ", request.SearchQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries)));
             query = query.OrderByDescending(t => t.SearchVector.Rank(searchTerm));
         }
         else

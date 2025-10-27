@@ -26,7 +26,7 @@ export default function SearchPage() {
       setSearchQuery(urlQuery);
       setPage(1);
     }
-  }, [searchParams, searchQuery]);
+  }, [searchParams]);
 
   const { data, isLoading } = useSearchTickets(
     {
