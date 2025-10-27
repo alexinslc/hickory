@@ -75,11 +75,11 @@ builder.Services.AddAuthorization();
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ApplicationDbContext>("database")
+    .AddDbContextCheck<ApplicationDbContext>("database", tags: new[] { "ready", "db" })
     .AddNpgSql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
         name: "postgres",
-        tags: new[] { "db", "sql" });
+        tags: new[] { "ready", "db", "sql" });
 
 // OpenTelemetry
 builder.Services.AddOpenTelemetry()
