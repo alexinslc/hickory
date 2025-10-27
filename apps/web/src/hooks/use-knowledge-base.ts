@@ -38,6 +38,7 @@ export function useArticle(id: string): UseQueryResult<ArticleDto, Error> {
     queryKey: knowledgeBaseKeys.detail(id),
     queryFn: () => apiClient.getArticleById(id),
     staleTime: 60000,
+    enabled: !!id,
   });
 }
 
