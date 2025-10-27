@@ -339,7 +339,7 @@ export async function listTickets() {
       const title = (ticket.title.length > 35 ? ticket.title.substring(0, 32) + '...' : ticket.title).padEnd(35);
       const status = ticket.status.padEnd(12);
       const priority = ticket.priority.padEnd(10);
-      const created = formatDate(ticket.createdAt).substring(0, 20).padEnd(20);
+      const created = new Date(ticket.createdAt).toISOString().replace('T', ' ').substring(0, 16).padEnd(20);
       const comments = ticket.commentCount.toString().padEnd(8);
 
       console.log(
