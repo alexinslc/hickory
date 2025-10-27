@@ -1,6 +1,8 @@
 import './global.css';
 import { QueryProvider } from '@/providers/query-provider';
 import { Navigation } from '@/components/layout/Navigation';
+import { NotificationProvider } from '@/components/notifications/NotificationProvider';
+import { NotificationToast } from '@/components/notifications/NotificationToast';
 
 export const metadata = {
   title: 'Hickory Help Desk',
@@ -16,8 +18,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <QueryProvider>
-          <Navigation />
-          <main>{children}</main>
+          <NotificationProvider>
+            <Navigation />
+            <main>{children}</main>
+            <NotificationToast />
+          </NotificationProvider>
         </QueryProvider>
       </body>
     </html>
