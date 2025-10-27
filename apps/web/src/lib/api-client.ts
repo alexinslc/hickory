@@ -51,6 +51,9 @@ export interface TicketDto {
   resolutionNotes?: string;
   commentCount: number;
   rowVersion: string; // Base64 encoded RowVersion for optimistic concurrency control
+  categoryId?: string;
+  categoryName?: string;
+  tags: string[];
   // Note: Comments are not included in this DTO. Use a separate endpoint to fetch comments.
 }
 
@@ -74,6 +77,7 @@ export interface CreateTicketRequest {
   title: string;
   description: string;
   priority: string;
+  categoryId?: string;
 }
 
 export interface CreateTicketResponse {
@@ -114,6 +118,28 @@ export interface CloseTicketRequest {
 export interface ReassignTicketRequest {
   newAgentId: string;
   rowVersion: string;
+}
+
+export interface CategoryDto {
+  id: string;
+  name: string;
+  description?: string;
+  displayOrder: number;
+  color?: string;
+  isActive: boolean;
+}
+
+export interface CreateCategoryCommand {
+  name: string;
+  description?: string;
+  displayOrder: number;
+  color?: string;
+}
+
+export interface TagDto {
+  id: string;
+  name: string;
+  color?: string;
 }
 
 class ApiClient {
@@ -237,6 +263,31 @@ class ApiClient {
 
   async reassignTicket(ticketId: string, request: ReassignTicketRequest): Promise<void> {
     await this.client.put(`/api/tickets/${ticketId}/reassign`, request);
+  }
+
+  // Category endpoints
+  async getAllCategories(): Promise<CategoryDto[]> {
+    const response = await this.client.get<CategoryDto[]>('/api/v1/categories');
+    return response.data;
+  }
+
+  async createCategory(command: CreateCategoryCommand): Promise<CategoryDto> {
+    const response = await this.client.post<CategoryDto>('/api/v1/categories', command);
+    return response.data;
+  }
+
+  // Tag endpoints
+  async getAllTags(): Promise<TagDto[]> {
+    const response = await this.client.get<TagDto[]>('/api/v1/tags');
+    return response.data;
+  }
+
+  async addTagsToTicket(ticketId: string, tags: string[]): Promise<void> {
+    await this.client.post(`/api/v1/tickets/${ticketId}/tags`, tags);
+  }
+
+  async removeTagsFromTicket(ticketId: string, tags: string[]): Promise<void> {
+    await this.client.delete(`/api/v1/tickets/${ticketId}/tags`, { data: tags });
   }
 
   // Health check
