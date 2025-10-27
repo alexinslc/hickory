@@ -33,6 +33,10 @@ public class Ticket
     public Guid? AssignedToId { get; set; }
     public User? AssignedTo { get; set; }
     
+    // Category
+    public Guid? CategoryId { get; set; }
+    public Category? Category { get; set; }
+    
     // Timestamps
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -47,4 +51,5 @@ public class Ticket
     // Collections
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+    public ICollection<TicketTag> TicketTags { get; set; } = new List<TicketTag>();
 }

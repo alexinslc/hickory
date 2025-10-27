@@ -74,11 +74,18 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .HasForeignKey(a => a.TicketId)
             .OnDelete(DeleteBehavior.Cascade);
         
+        // Many-to-many relationship with Tags through TicketTag
+        builder.HasMany(t => t.TicketTags)
+            .WithOne(tt => tt.Ticket)
+            .HasForeignKey(tt => tt.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
         // Indexes for performance
         builder.HasIndex(t => t.SubmitterId);
         builder.HasIndex(t => t.AssignedToId);
         builder.HasIndex(t => t.Status);
         builder.HasIndex(t => t.Priority);
+        builder.HasIndex(t => t.CategoryId);
         builder.HasIndex(t => t.CreatedAt);
         
         // Composite index for agent queue queries
