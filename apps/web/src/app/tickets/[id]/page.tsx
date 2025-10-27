@@ -29,7 +29,7 @@ export default function TicketDetailPage() {
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (commentContent.trim() && commentContent.length >= 1) {
+    if (commentContent.trim()) {
       try {
         await addComment.mutateAsync({
           content: commentContent,
