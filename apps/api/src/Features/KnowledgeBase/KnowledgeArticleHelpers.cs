@@ -17,10 +17,9 @@ public static class KnowledgeArticleHelpers
     /// <returns>NpgsqlTsVector for full-text search</returns>
     public static NpgsqlTsVector GenerateSearchVector(string title, string content)
     {
-        // Use native weighting: title (A), content (B)
-        var titleVector = NpgsqlTsVector.Parse(title).SetWeight(NpgsqlTsVector.LexemeWeight.A);
-        var contentVector = NpgsqlTsVector.Parse(content).SetWeight(NpgsqlTsVector.LexemeWeight.B);
-        return titleVector + contentVector;
+        // Combine title and content with weight to make title more relevant
+        var searchText = $"{title} {title} {content}"; // Duplicate title for higher weight
+        return NpgsqlTsVector.Parse(searchText);
     }
 
     /// <summary>

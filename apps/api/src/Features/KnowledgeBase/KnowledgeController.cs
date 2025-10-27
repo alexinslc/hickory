@@ -18,6 +18,10 @@ namespace Hickory.Api.Features.KnowledgeBase;
 [Authorize]
 public class KnowledgeController : ControllerBase
 {
+    private const string AgentRole = "Agent";
+    private const string AdministratorRole = "Administrator";
+    private const string PublishedStatus = "Published";
+    
     private readonly IMediator _mediator;
 
     public KnowledgeController(IMediator mediator)
@@ -43,7 +47,7 @@ public class KnowledgeController : ControllerBase
         if (status.HasValue && status.Value != ArticleStatus.Published)
         {
             var userRole = GetUserRole();
-            if (userRole != "Agent" && userRole != "Administrator")
+            if (userRole != AgentRole && userRole != AdministratorRole)
             {
                 return Forbid();
             }
@@ -72,7 +76,8 @@ public class KnowledgeController : ControllerBase
         [FromQuery] bool incrementViewCount = true,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetArticleByIdQuery(id, incrementViewCount);
+        // First, get article without incrementing view count to check authorization
+        var query = new GetArticleByIdQuery(id, IncrementViewCount: false);
         var article = await _mediator.Send(query, cancellationToken);
 
         if (article == null)
@@ -81,13 +86,20 @@ public class KnowledgeController : ControllerBase
         }
 
         // Only allow viewing non-Published articles for agents/admins
-        if (article.Status != ArticleStatus.Published.ToString())
+        if (article.Status != PublishedStatus)
         {
             var userRole = GetUserRole();
-            if (userRole != "Agent" && userRole != "Administrator")
+            if (userRole != AgentRole && userRole != AdministratorRole)
             {
                 return NotFound(); // Return 404 to avoid leaking existence
             }
+        }
+
+        // Now increment view count if requested and authorized
+        if (incrementViewCount)
+        {
+            var incrementQuery = new GetArticleByIdQuery(id, IncrementViewCount: true);
+            article = await _mediator.Send(incrementQuery, cancellationToken);
         }
 
         return Ok(article);
