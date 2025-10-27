@@ -142,6 +142,25 @@ export interface TagDto {
   color?: string;
 }
 
+export interface SearchTicketsParams {
+  q?: string;
+  status?: string;
+  priority?: string;
+  assignedToId?: string;
+  createdAfter?: string;
+  createdBefore?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SearchTicketsResult {
+  tickets: TicketDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 class ApiClient {
   private client: AxiosInstance;
 
@@ -288,6 +307,12 @@ class ApiClient {
 
   async removeTagsFromTicket(ticketId: string, tags: string[]): Promise<void> {
     await this.client.delete(`/api/v1/tickets/${ticketId}/tags`, { data: tags });
+  }
+
+  // Search endpoints
+  async searchTickets(params: SearchTicketsParams): Promise<SearchTicketsResult> {
+    const response = await this.client.get<SearchTicketsResult>('/api/v1/search', { params });
+    return response.data;
   }
 
   // Health check

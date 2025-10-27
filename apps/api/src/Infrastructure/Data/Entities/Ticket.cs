@@ -48,6 +48,9 @@ public class Ticket
     // Optimistic Concurrency
     public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     
+    // Full-text search vector (PostgreSQL tsvector)
+    public NpgsqlTypes.NpgsqlTsVector SearchVector { get; set; } = null!;
+    
     // Collections
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
