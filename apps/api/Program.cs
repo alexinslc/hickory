@@ -6,6 +6,7 @@ using Hickory.Api.Infrastructure.Behaviors;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Messaging;
 using Hickory.Api.Infrastructure.Middleware;
+using Hickory.Api.Infrastructure.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -40,6 +41,14 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 // Business Services
 builder.Services.AddScoped<ITicketNumberGenerator, TicketNumberGenerator>();
+
+// Notification Services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IWebhookService, WebhookService>();
+builder.Services.AddHttpClient("webhooks", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // MediatR with pipeline behaviors
 builder.Services.AddMediatR(cfg =>
