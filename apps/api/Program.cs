@@ -4,6 +4,7 @@ using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Behaviors;
 using Hickory.Api.Infrastructure.Data;
+using Hickory.Api.Infrastructure.Messaging;
 using Hickory.Api.Infrastructure.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,9 @@ builder.Services.AddMediatR(cfg =>
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
+// MassTransit for event-driven messaging
+builder.Services.AddMessaging(builder.Configuration);
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["JWT:Secret"] 
