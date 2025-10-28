@@ -1,14 +1,14 @@
 # Build stage
-FROM node:20-alpine AS deps
+FROM node:25-alpine3.21 AS deps
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 COPY apps/web/package*.json ./apps/web/
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:25-alpine3.21 AS builder
 WORKDIR /app
 
 # Copy dependencies
@@ -24,7 +24,7 @@ WORKDIR /app/apps/web
 RUN npm run build
 
 # Runtime stage
-FROM node:20-alpine AS runtime
+FROM node:25-alpine3.21 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
