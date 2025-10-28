@@ -91,6 +91,18 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
 // Health Checks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>("database", tags: new[] { "ready", "db" })
@@ -176,6 +188,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// CORS must be placed after UseRouting and before UseAuthentication
+app.UseCors("AllowWebApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
