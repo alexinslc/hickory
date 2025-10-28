@@ -19,7 +19,7 @@ The test suite covers all three applications in the monorepo:
 - `Hickory.Api.Tests` - Unit tests
 - `Hickory.Api.IntegrationTests` - Integration tests (structure created)
 
-#### Tests Implemented (48 total tests, **48 passing** ✅)
+#### Tests Implemented (82 total tests, **82 passing** ✅)
 
 **Authentication (15 tests)**
 - ✅ LoginHandler: 7 tests
@@ -50,7 +50,7 @@ The test suite covers all three applications in the monorepo:
 - ✅ Expired token returns null
 - ✅ Wrong issuer returns null
 
-**Ticket Management (15 tests)**
+**Ticket Management (41 tests)**
 - ✅ CreateTicketHandler: 9 tests
   - Creates ticket with valid request
   - Different priorities handled correctly (4 test cases)
@@ -60,6 +60,26 @@ The test suite covers all three applications in the monorepo:
   - Publishes ticket created event
   - Sets correct defaults
 
+- ✅ AssignTicketHandler: 8 tests
+  - Assigns ticket to agent
+  - Changes status from Open to InProgress
+  - Handles reassignment
+  - Validates agent role
+  - Supports Administrator role
+  - Throws exceptions for invalid tickets/agents
+
+- ✅ CloseTicketHandler: 7 tests
+  - Closes tickets with resolution notes
+  - Validates ticket state transitions
+  - Requires resolution notes
+  - Prevents closing already closed/cancelled tickets
+
+- ✅ UpdateTicketStatusHandler: 7 tests
+  - Updates ticket status
+  - Validates status transitions
+  - Prevents reopening closed/cancelled tickets
+  - Enforces use of CloseTicket command for closing
+
 - ✅ TicketNumberGenerator: 6 tests
   - Returns first number when no tickets exist
   - Returns next number with existing tickets
@@ -67,6 +87,14 @@ The test suite covers all three applications in the monorepo:
   - Ignores invalid ticket numbers
   - Formats with leading zeros
   - Handles concurrent calls
+
+**Comments (8 tests)**
+- ✅ AddCommentHandler: 8 tests
+  - Adds comments to tickets
+  - Handles internal notes (agent/admin only)
+  - Enforces role-based permissions
+  - Validates ticket existence
+  - Supports multiple comments per ticket
 
 #### Configuration Fixes Applied
 - ✅ Created TestApplicationDbContext that ignores PostgreSQL-specific properties (NpgsqlTsVector)
@@ -79,8 +107,13 @@ Hickory.Api.Tests/
 ├── Features/
 │   ├── Auth/
 │   │   └── LoginHandlerTests.cs (7 tests) ✅
-│   └── Tickets/
-│       └── CreateTicketHandlerTests.cs (9 tests) ⚠️
+│   ├── Tickets/
+│   │   ├── CreateTicketHandlerTests.cs (9 tests) ✅
+│   │   ├── AssignTicketHandlerTests.cs (8 tests) ✅
+│   │   ├── CloseTicketHandlerTests.cs (7 tests) ✅
+│   │   └── UpdateTicketStatusHandlerTests.cs (7 tests) ✅
+│   └── Comments/
+│       └── AddCommentHandlerTests.cs (8 tests) ✅
 ├── Infrastructure/
 │   ├── Auth/
 │   │   └── JwtTokenServiceTests.cs (8 tests) ✅
@@ -303,7 +336,7 @@ it('should login successfully with valid credentials', async () => {
 
 | Application | Current | Target | Priority |
 |-------------|---------|--------|----------|
-| API (.NET) | ~45% | 60% | High |
+| API (.NET) | ~55% | 60% | High |
 | Web (React) | ~15% | 60% | High |
 | CLI (Node) | ~5% | 50% | Medium |
 | E2E (Playwright) | Good | Maintain | Medium |
@@ -347,16 +380,43 @@ When adding new tests:
 
 ## CI/CD Integration
 
-**Recommended GitHub Actions workflow:**
-```yaml
-- name: Run .NET Tests
-  run: dotnet test --no-build --verbosity normal
+✅ **GitHub Actions workflows configured!**
 
-- name: Run Web Tests
-  run: npx nx test web --coverage
+### Workflows Created
 
-- name: Run E2E Tests
-  run: npx nx e2e web-e2e
+#### 1. `test.yml` - Full Test Suite
+Runs on: `push` to main/develop, `pull_request`
+
+**Jobs:**
+- `test-api`: .NET API tests with coverage
+- `test-web`: Web unit tests with coverage
+- `test-cli`: CLI unit tests
+- `test-e2e`: Playwright E2E tests (runs after unit tests pass)
+- `test-summary`: Aggregates results
+
+**Features:**
+- ✅ Parallel test execution
+- ✅ Code coverage reporting (Codecov)
+- ✅ Test result artifacts
+- ✅ Fail-fast on test failures
+- ✅ Playwright report uploads
+
+#### 2. `quick-test.yml` - Fast Feedback
+Runs on: `push` to feature branches
+
+**Jobs:**
+- Quick unit tests only (no E2E)
+- Fast feedback loop (~2-3 minutes)
+- Ideal for development
+
+### Usage
+
+```bash
+# Workflows trigger automatically on:
+git push origin feature/my-feature  # Triggers quick-test.yml
+git push origin main                # Triggers test.yml
+
+# Or manually via GitHub Actions UI
 ```
 
 ---
