@@ -13,9 +13,8 @@ export default function ArticleEditorPage() {
   const articleId = params.id as string;
   const isNewArticle = articleId === 'new';
 
-  // Only fetch if editing existing article
-  const shouldFetchArticle = !isNewArticle && !!articleId;
-  const { data: article, isLoading } = useArticle(articleId, { enabled: shouldFetchArticle });
+  // Only fetch if editing existing article (useArticle has enabled check built-in)
+  const { data: article, isLoading } = useArticle(articleId);
   
   const updateArticle = useUpdateArticle(articleId);
   const createArticle = useCreateArticle();

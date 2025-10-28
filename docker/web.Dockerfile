@@ -1,30 +1,30 @@
 # Build stage
-FROM node:20-alpine AS deps
+FROM node:25-alpine3.21 AS deps
 WORKDIR /app
 
-# Copy package files
+# Copy package files (root only - monorepo structure)
 COPY package*.json ./
-COPY apps/web/package*.json ./apps/web/
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:25-alpine3.21 AS builder
 WORKDIR /app
 
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+
+# Copy root package.json for npm scripts
+COPY package*.json ./
 
 # Copy source
 COPY apps/web ./apps/web
 COPY nx.json tsconfig.base.json ./
 
-# Build app
-WORKDIR /app/apps/web
-RUN npm run build
+# Build app using nx from root
+RUN npx nx build web
 
 # Runtime stage
-FROM node:20-alpine AS runtime
+FROM node:25-alpine3.21 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production

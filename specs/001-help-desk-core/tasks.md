@@ -26,16 +26,16 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 **Purpose**: Project initialization and basic monorepo structure
 
-- [ ] T001 Initialize Nx workspace at repository root with nx.json and package.json
-- [ ] T002 [P] Create ASP.NET Core 9 API project at apps/api/ with C# 13 and .NET 9 SDK
-- [ ] T003 [P] Create Next.js 15 project at apps/web/ with TypeScript 5.x and App Router
-- [ ] T004 [P] Create Node.js CLI project at apps/cli/ with Commander.js and TypeScript
-- [ ] T005 Configure Docker Compose at docker/docker-compose.yml with PostgreSQL 16, Redis, and app services
-- [ ] T006 [P] Setup PostgreSQL connection in apps/api/src/Infrastructure/Data/ApplicationDbContext.cs
-- [ ] T007 [P] Configure TailwindCSS and ShadCN UI in apps/web/tailwind.config.ts
-- [ ] T008 [P] Setup ESLint and Prettier for TypeScript projects in .eslintrc.json
+- [X] T001 Initialize Nx workspace at repository root with nx.json and package.json
+- [X] T002 [P] Create ASP.NET Core 9 API project at apps/api/ with C# 13 and .NET 9 SDK
+- [X] T003 [P] Create Next.js 15 project at apps/web/ with TypeScript 5.x and App Router
+- [X] T004 [P] Create Node.js CLI project at apps/cli/ with Commander.js and TypeScript
+- [X] T005 Configure Docker Compose at docker/docker-compose.yml with PostgreSQL 16, Redis, and app services
+- [X] T006 [P] Setup PostgreSQL connection in apps/api/src/Infrastructure/Data/ApplicationDbContext.cs
+- [X] T007 [P] Configure TailwindCSS and ShadCN UI in apps/web/tailwind.config.ts
+- [X] T008 [P] Setup ESLint and Prettier for TypeScript projects in .eslintrc.json
 - [ ] T009 [P] Configure dotnet format and StyleCop for C# in apps/api/.editorconfig
-- [ ] T010 [P] Create .github/workflows/ci.yml for CI pipeline with build, lint, and test jobs
+- [X] T010 [P] Create .github/workflows/ci.yml for CI pipeline with build, lint, and test jobs
 
 ---
 
@@ -45,35 +45,35 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T011 Create User entity with UserRole enum in apps/api/src/Infrastructure/Data/Entities/User.cs
-- [ ] T012 Configure User entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/UserConfiguration.cs
-- [ ] T013 Create initial EF Core migration for User table in apps/api/src/Infrastructure/Data/Migrations/
-- [ ] T014 [P] Implement JWT token generation service in apps/api/src/Infrastructure/Auth/JwtTokenService.cs
+- [X] T011 Create User entity with UserRole enum in apps/api/src/Infrastructure/Data/Entities/User.cs
+- [X] T012 Configure User entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/UserConfiguration.cs
+- [X] T013 Create initial EF Core migration for User table in apps/api/src/Infrastructure/Data/Migrations/
+- [X] T014 [P] Implement JWT token generation service in apps/api/src/Infrastructure/Auth/JwtTokenService.cs
 - [ ] T015 [P] Implement OAuth 2.0/OIDC authentication middleware in apps/api/src/Infrastructure/Auth/OAuthAuthenticationHandler.cs
-- [ ] T016 [P] Implement local email/password authentication in apps/api/src/Features/Auth/Login/LoginHandler.cs using MediatR
-- [ ] T017 [P] Implement user registration in apps/api/src/Features/Auth/Register/RegisterHandler.cs using MediatR
-- [ ] T018 Create authentication request/response DTOs in apps/api/src/Features/Auth/Models/
-- [ ] T019 [P] Add FluentValidation validators for login in apps/api/src/Features/Auth/Login/LoginValidator.cs
-- [ ] T020 [P] Add FluentValidation validators for registration in apps/api/src/Features/Auth/Register/RegisterValidator.cs
-- [ ] T021 Configure JWT Bearer authentication in apps/api/src/Program.cs with token validation
-- [ ] T022 [P] Setup MediatR pipeline behaviors for validation in apps/api/src/Common/Behaviors/ValidationBehavior.cs
-- [ ] T023 [P] Setup MediatR pipeline behaviors for logging in apps/api/src/Common/Behaviors/LoggingBehavior.cs
-- [ ] T024 [P] Configure Serilog structured logging in apps/api/src/Program.cs with console and file sinks
+- [X] T016 [P] Implement local email/password authentication in apps/api/src/Features/Auth/Login/LoginHandler.cs using MediatR
+- [X] T017 [P] Implement user registration in apps/api/src/Features/Auth/Register/RegisterHandler.cs using MediatR
+- [X] T018 Create authentication request/response DTOs in apps/api/src/Features/Auth/Models/
+- [X] T019 [P] Add FluentValidation validators for login in apps/api/src/Features/Auth/Login/LoginValidator.cs
+- [X] T020 [P] Add FluentValidation validators for registration in apps/api/src/Features/Auth/Register/RegisterValidator.cs
+- [X] T021 Configure JWT Bearer authentication in apps/api/src/Program.cs with token validation
+- [X] T022 [P] Setup MediatR pipeline behaviors for validation in apps/api/src/Common/Behaviors/ValidationBehavior.cs
+- [X] T023 [P] Setup MediatR pipeline behaviors for logging in apps/api/src/Common/Behaviors/LoggingBehavior.cs
+- [X] T024 [P] Configure Serilog structured logging in apps/api/src/Program.cs with console and file sinks
 - [ ] T025 [P] Configure OpenTelemetry tracing in apps/api/src/Infrastructure/Observability/TelemetryConfiguration.cs
 - [ ] T026 [P] Implement health check endpoints in apps/api/src/Infrastructure/Observability/HealthChecks/ for DB and Redis
-- [ ] T027 Configure Swagger/OpenAPI generation in apps/api/src/Program.cs using Swashbuckle
-- [ ] T028 [P] Setup error handling middleware with ProblemDetails in apps/api/src/Infrastructure/Middleware/ErrorHandlingMiddleware.cs
-- [ ] T029 [P] Configure CORS policy in apps/api/src/Program.cs for frontend origin
+- [X] T027 Configure Swagger/OpenAPI generation in apps/api/src/Program.cs using Swashbuckle
+- [X] T028 [P] Setup error handling middleware with ProblemDetails in apps/api/src/Infrastructure/Middleware/ErrorHandlingMiddleware.cs
+- [X] T029 [P] Configure CORS policy in apps/api/src/Program.cs for frontend origin
 - [ ] T030 Generate OpenAPI spec from API at contracts/openapi.yaml (verify against design spec)
 - [ ] T031 [P] Setup NSwag code generation for TypeScript client in apps/web/src/lib/api/
 - [ ] T032 [P] Setup NSwag code generation for CLI TypeScript client in apps/cli/src/lib/api/
-- [ ] T033 [P] Create API client configuration with base URL and auth headers in apps/web/src/lib/api/client.ts
-- [ ] T034 [P] Setup TanStack Query configuration in apps/web/src/lib/queries/queryClient.ts
-- [ ] T035 [P] Configure SignalR client connection in apps/web/src/lib/signalr/connection.ts
+- [X] T033 [P] Create API client configuration with base URL and auth headers in apps/web/src/lib/api/client.ts
+- [X] T034 [P] Setup TanStack Query configuration in apps/web/src/lib/queries/queryClient.ts
+- [X] T035 [P] Configure SignalR client connection in apps/web/src/lib/signalr/connection.ts
 - [ ] T036 [P] Create authentication context provider in apps/web/src/components/auth/AuthProvider.tsx
-- [ ] T037 [P] Implement login page UI at apps/web/src/app/(auth)/login/page.tsx using ShadCN form components
-- [ ] T038 [P] Implement registration page UI at apps/web/src/app/(auth)/register/page.tsx
-- [ ] T039 [P] Create CLI authentication commands in apps/cli/src/commands/auth.ts with Inquirer prompts
+- [X] T037 [P] Implement login page UI at apps/web/src/app/(auth)/login/page.tsx using ShadCN form components
+- [X] T038 [P] Implement registration page UI at apps/web/src/app/(auth)/register/page.tsx
+- [X] T039 [P] Create CLI authentication commands in apps/cli/src/commands/auth.ts with Inquirer prompts
 - [ ] T040 [P] Setup CLI token storage in apps/cli/src/lib/auth/tokenStore.ts using secure local storage
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
@@ -88,41 +88,41 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 ### Implementation for User Story 1
 
-- [ ] T041 [P] [US1] Create Ticket entity with TicketStatus and TicketPriority enums in apps/api/src/Infrastructure/Data/Entities/Ticket.cs
-- [ ] T042 [P] [US1] Create Comment entity in apps/api/src/Infrastructure/Data/Entities/Comment.cs
-- [ ] T043 [P] [US1] Create Attachment entity in apps/api/src/Infrastructure/Data/Entities/Attachment.cs
-- [ ] T044 [US1] Configure Ticket entity with EF Core fluent API including indexes and search vector in apps/api/src/Infrastructure/Data/Configurations/TicketConfiguration.cs
-- [ ] T045 [P] [US1] Configure Comment entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/CommentConfiguration.cs
-- [ ] T046 [P] [US1] Configure Attachment entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/AttachmentConfiguration.cs
-- [ ] T047 [US1] Create EF Core migration for Ticket, Comment, and Attachment tables in apps/api/src/Infrastructure/Data/Migrations/
-- [ ] T048 [P] [US1] Implement CreateTicket command handler using MediatR in apps/api/src/Features/Tickets/Create/CreateTicketHandler.cs
-- [ ] T049 [P] [US1] Implement GetTicketById query handler in apps/api/src/Features/Tickets/GetById/GetTicketByIdHandler.cs
-- [ ] T050 [P] [US1] Implement GetTicketsBySubmitter query handler in apps/api/src/Features/Tickets/GetBySubmitter/GetTicketsBySubmitterHandler.cs
-- [ ] T051 [P] [US1] Implement AddComment command handler in apps/api/src/Features/Comments/Create/AddCommentHandler.cs
-- [ ] T052 [P] [US1] Create CreateTicketRequest/Response DTOs in apps/api/src/Features/Tickets/Create/Models/
-- [ ] T053 [P] [US1] Create TicketDto and CommentDto in apps/api/src/Features/Tickets/Models/
-- [ ] T054 [US1] Add FluentValidation validator for CreateTicket (title 5-200 chars, description 10-10000 chars) in apps/api/src/Features/Tickets/Create/CreateTicketValidator.cs
-- [ ] T055 [P] [US1] Add FluentValidation validator for AddComment in apps/api/src/Features/Comments/Create/AddCommentValidator.cs
-- [ ] T056 [US1] Implement ticket number generation service (TKT-##### format) in apps/api/src/Common/Services/TicketNumberGenerator.cs
-- [ ] T057 [US1] Create POST /api/v1/tickets endpoint in apps/api/src/Features/Tickets/TicketsController.cs mapped to CreateTicketHandler
-- [ ] T058 [P] [US1] Create GET /api/v1/tickets/{id} endpoint in TicketsController mapped to GetTicketByIdHandler
-- [ ] T059 [P] [US1] Create GET /api/v1/tickets endpoint with submitter filtering in TicketsController mapped to GetTicketsBySubmitterHandler
-- [ ] T060 [P] [US1] Create POST /api/v1/tickets/{ticketId}/comments endpoint in apps/api/src/Features/Comments/CommentsController.cs
-- [ ] T061 [US1] Add authorization policy to ensure users can only view their own tickets in apps/api/src/Features/Tickets/GetById/GetTicketByIdHandler.cs
-- [ ] T062 [P] [US1] Create ticket list page UI at apps/web/src/app/tickets/page.tsx with table view
-- [ ] T063 [P] [US1] Create ticket details page UI at apps/web/src/app/tickets/[id]/page.tsx with comment thread
-- [ ] T064 [P] [US1] Create new ticket form component at apps/web/src/components/tickets/NewTicketForm.tsx with ShadCN form
-- [ ] T065 [P] [US1] Create comment form component at apps/web/src/components/tickets/CommentForm.tsx
-- [ ] T066 [P] [US1] Implement createTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
-- [ ] T067 [P] [US1] Implement getTicketById query using TanStack Query in apps/web/src/lib/queries/tickets.ts
-- [ ] T068 [P] [US1] Implement getMyTickets query using TanStack Query in apps/web/src/lib/queries/tickets.ts
-- [ ] T069 [P] [US1] Implement addComment mutation using TanStack Query in apps/web/src/lib/queries/comments.ts
-- [ ] T070 [P] [US1] Create CLI ticket create command in apps/cli/src/commands/ticket.ts with interactive prompts
-- [ ] T071 [P] [US1] Create CLI ticket view command in apps/cli/src/commands/ticket.ts showing details and comments
-- [ ] T072 [P] [US1] Create CLI ticket list command in apps/cli/src/commands/ticket.ts showing user's tickets
-- [ ] T073 [US1] Add client-side validation in web form matching server-side FluentValidation rules
-- [ ] T074 [US1] Add loading states and error handling for all ticket operations in web UI
-- [ ] T075 [US1] Verify ticket submission completes in <2 seconds per SC-003 success criterion
+- [X] T041 [P] [US1] Create Ticket entity with TicketStatus and TicketPriority enums in apps/api/src/Infrastructure/Data/Entities/Ticket.cs
+- [X] T042 [P] [US1] Create Comment entity in apps/api/src/Infrastructure/Data/Entities/Comment.cs
+- [X] T043 [P] [US1] Create Attachment entity in apps/api/src/Infrastructure/Data/Entities/Attachment.cs
+- [X] T044 [US1] Configure Ticket entity with EF Core fluent API including indexes and search vector in apps/api/src/Infrastructure/Data/Configurations/TicketConfiguration.cs
+- [X] T045 [P] [US1] Configure Comment entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/CommentConfiguration.cs
+- [X] T046 [P] [US1] Configure Attachment entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/AttachmentConfiguration.cs
+- [X] T047 [US1] Create EF Core migration for Ticket, Comment, and Attachment tables in apps/api/src/Infrastructure/Data/Migrations/
+- [X] T048 [P] [US1] Implement CreateTicket command handler using MediatR in apps/api/src/Features/Tickets/Create/CreateTicketHandler.cs
+- [X] T049 [P] [US1] Implement GetTicketById query handler in apps/api/src/Features/Tickets/GetById/GetTicketByIdHandler.cs
+- [X] T050 [P] [US1] Implement GetTicketsBySubmitter query handler in apps/api/src/Features/Tickets/GetBySubmitter/GetTicketsBySubmitterHandler.cs
+- [X] T051 [P] [US1] Implement AddComment command handler in apps/api/src/Features/Comments/Create/AddCommentHandler.cs
+- [X] T052 [P] [US1] Create CreateTicketRequest/Response DTOs in apps/api/src/Features/Tickets/Create/Models/
+- [X] T053 [P] [US1] Create TicketDto and CommentDto in apps/api/src/Features/Tickets/Models/
+- [X] T054 [US1] Add FluentValidation validator for CreateTicket (title 5-200 chars, description 10-10000 chars) in apps/api/src/Features/Tickets/Create/CreateTicketValidator.cs
+- [X] T055 [P] [US1] Add FluentValidation validator for AddComment in apps/api/src/Features/Comments/Create/AddCommentValidator.cs
+- [X] T056 [US1] Implement ticket number generation service (TKT-##### format) in apps/api/src/Common/Services/TicketNumberGenerator.cs
+- [X] T057 [US1] Create POST /api/v1/tickets endpoint in apps/api/src/Features/Tickets/TicketsController.cs mapped to CreateTicketHandler
+- [X] T058 [P] [US1] Create GET /api/v1/tickets/{id} endpoint in TicketsController mapped to GetTicketByIdHandler
+- [X] T059 [P] [US1] Create GET /api/v1/tickets endpoint with submitter filtering in TicketsController mapped to GetTicketsBySubmitterHandler
+- [X] T060 [P] [US1] Create POST /api/v1/tickets/{ticketId}/comments endpoint in apps/api/src/Features/Comments/CommentsController.cs
+- [X] T061 [US1] Add authorization policy to ensure users can only view their own tickets in apps/api/src/Features/Tickets/GetById/GetTicketByIdHandler.cs
+- [X] T062 [P] [US1] Create ticket list page UI at apps/web/src/app/tickets/page.tsx with table view
+- [X] T063 [US3] Create ticket details page at apps/web/src/app/tickets/[id]/page.tsx showing all fields, status, comments, and agent actions
+- [X] T064 [US3] Create NewTicketForm component in apps/web/src/components/tickets/NewTicketForm.tsx with validation and category selection
+- [X] T065 [US2] Create CommentForm component in apps/web/src/components/tickets/CommentForm.tsx with internal note toggle
+- [X] T066 [P] [US1] Implement createTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
+- [X] T067 [P] [US1] Implement getTicketById query using TanStack Query in apps/web/src/lib/queries/tickets.ts
+- [X] T068 [P] [US1] Implement getMyTickets query using TanStack Query in apps/web/src/lib/queries/tickets.ts
+- [X] T069 [P] [US1] Implement addComment mutation using TanStack Query in apps/web/src/lib/queries/comments.ts
+- [X] T070 [P] [US1] Create CLI ticket create command in apps/cli/src/commands/ticket.ts with interactive prompts
+- [X] T071 [P] [US1] Create CLI ticket view command in apps/cli/src/commands/ticket.ts showing details and comments
+- [X] T072 [P] [US1] Create CLI ticket list command in apps/cli/src/commands/ticket.ts showing user's tickets
+- [X] T073 [P] [US1] Add API endpoint tests for POST /api/v1/tickets in apps/api/tests or use xUnit test project
+- [X] T074 [P] [US1] Add API endpoint tests for GET /api/v1/tickets/my in apps/api/tests or use xUnit test project
+- [X] T075 [US1] Verify ticket submission completes in <2 seconds per SC-003 success criterion
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can submit and track tickets
 
@@ -136,39 +136,39 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 ### Implementation for User Story 2
 
-- [ ] T076 [P] [US2] Implement GetAgentQueue query handler in apps/api/src/Features/Tickets/GetQueue/GetAgentQueueHandler.cs (filters unassigned and assigned tickets, sorts by priority and age)
-- [ ] T077 [P] [US2] Implement AssignTicket command handler in apps/api/src/Features/Tickets/Assign/AssignTicketHandler.cs
-- [ ] T078 [P] [US2] Implement UpdateTicketStatus command handler in apps/api/src/Features/Tickets/UpdateStatus/UpdateTicketStatusHandler.cs
-- [ ] T079 [P] [US2] Implement UpdateTicketPriority command handler in apps/api/src/Features/Tickets/UpdatePriority/UpdateTicketPriorityHandler.cs
-- [ ] T080 [P] [US2] Implement CloseTicket command handler with resolution notes in apps/api/src/Features/Tickets/Close/CloseTicketHandler.cs
-- [ ] T081 [P] [US2] Implement ReassignTicket command handler in apps/api/src/Features/Tickets/Reassign/ReassignTicketHandler.cs
-- [ ] T082 [US2] Implement AddInternalNote command handler (IsInternal=true) in apps/api/src/Features/Comments/Create/AddCommentHandler.cs with agent role check
-- [ ] T083 [US2] Add FluentValidation validator for ticket status transitions in apps/api/src/Features/Tickets/UpdateStatus/UpdateTicketStatusValidator.cs
-- [ ] T084 [P] [US2] Add FluentValidation validator for close ticket (requires resolution notes) in apps/api/src/Features/Tickets/Close/CloseTicketValidator.cs
-- [ ] T085 [US2] Create GET /api/v1/tickets/queue endpoint in TicketsController mapped to GetAgentQueueHandler with agent role authorization
-- [ ] T086 [P] [US2] Create PUT /api/v1/tickets/{id}/assign endpoint in TicketsController mapped to AssignTicketHandler
-- [ ] T087 [P] [US2] Create PUT /api/v1/tickets/{id}/status endpoint in TicketsController mapped to UpdateTicketStatusHandler
-- [ ] T088 [P] [US2] Create PUT /api/v1/tickets/{id}/priority endpoint in TicketsController mapped to UpdateTicketPriorityHandler
-- [ ] T089 [P] [US2] Create POST /api/v1/tickets/{id}/close endpoint in TicketsController mapped to CloseTicketHandler
-- [ ] T090 [P] [US2] Create PUT /api/v1/tickets/{id}/reassign endpoint in TicketsController mapped to ReassignTicketHandler
-- [ ] T091 [US2] Add authorization policy to restrict agent operations to users with Agent or Administrator role
-- [ ] T092 [P] [US2] Create agent queue page UI at apps/web/src/app/agent/queue/page.tsx with filterable table
-- [ ] T093 [P] [US2] Create agent ticket details page at apps/web/src/app/agent/tickets/[id]/page.tsx with action buttons
-- [ ] T094 [P] [US2] Create ticket assignment dialog component at apps/web/src/components/agent/AssignTicketDialog.tsx
-- [ ] T095 [P] [US2] Create internal note form component at apps/web/src/components/agent/InternalNoteForm.tsx (distinct styling from user comments)
-- [ ] T096 [P] [US2] Create status update dropdown component at apps/web/src/components/agent/StatusUpdateDropdown.tsx
-- [ ] T097 [P] [US2] Create close ticket dialog with resolution notes at apps/web/src/components/agent/CloseTicketDialog.tsx
-- [ ] T098 [P] [US2] Implement getAgentQueue query using TanStack Query in apps/web/src/lib/queries/agentQueue.ts
-- [ ] T099 [P] [US2] Implement assignTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
-- [ ] T100 [P] [US2] Implement updateTicketStatus mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
-- [ ] T101 [P] [US2] Implement closeTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
-- [ ] T102 [P] [US2] Implement addInternalNote mutation using TanStack Query in apps/web/src/lib/queries/comments.ts
-- [ ] T103 [P] [US2] Create CLI agent queue command in apps/cli/src/commands/agent.ts showing unassigned and assigned tickets
-- [ ] T104 [P] [US2] Create CLI ticket assign command in apps/cli/src/commands/agent.ts
-- [ ] T105 [P] [US2] Create CLI ticket close command in apps/cli/src/commands/agent.ts with resolution notes prompt
-- [ ] T106 [US2] Add optimistic locking conflict detection with RowVersion in all update handlers (per FR-013 and clarification)
-- [ ] T107 [US2] Add conflict error handling in web UI showing 409 Conflict with retry option
-- [ ] T108 [US2] Verify agent can view queue and respond within 30 seconds per SC-006 success criterion
+- [X] T076 [P] [US2] Implement GetAgentQueue query handler in apps/api/src/Features/Tickets/GetQueue/GetAgentQueueHandler.cs (filters unassigned and assigned tickets, sorts by priority and age)
+- [X] T077 [P] [US2] Implement AssignTicket command handler in apps/api/src/Features/Tickets/Assign/AssignTicketHandler.cs
+- [X] T078 [P] [US2] Implement UpdateTicketStatus command handler in apps/api/src/Features/Tickets/UpdateStatus/UpdateTicketStatusHandler.cs
+- [X] T079 [P] [US2] Implement UpdateTicketPriority command handler in apps/api/src/Features/Tickets/UpdatePriority/UpdateTicketPriorityHandler.cs
+- [X] T080 [P] [US2] Implement CloseTicket command handler with resolution notes in apps/api/src/Features/Tickets/Close/CloseTicketHandler.cs
+- [X] T081 [P] [US2] Implement ReassignTicket command handler in apps/api/src/Features/Tickets/Reassign/ReassignTicketHandler.cs
+- [X] T082 [US2] Implement AddInternalNote command handler (IsInternal=true) in apps/api/src/Features/Comments/Create/AddCommentHandler.cs with agent role check
+- [X] T083 [US2] Add FluentValidation validator for ticket status transitions in apps/api/src/Features/Tickets/UpdateStatus/UpdateTicketStatusValidator.cs
+- [X] T084 [P] [US2] Add FluentValidation validator for close ticket (requires resolution notes) in apps/api/src/Features/Tickets/Close/CloseTicketValidator.cs
+- [X] T085 [US2] Create GET /api/v1/tickets/queue endpoint in TicketsController mapped to GetAgentQueueHandler with agent role authorization
+- [X] T086 [P] [US2] Create PUT /api/v1/tickets/{id}/assign endpoint in TicketsController mapped to AssignTicketHandler
+- [X] T087 [P] [US2] Create PUT /api/v1/tickets/{id}/status endpoint in TicketsController mapped to UpdateTicketStatusHandler
+- [X] T088 [P] [US2] Create PUT /api/v1/tickets/{id}/priority endpoint in TicketsController mapped to UpdateTicketPriorityHandler
+- [X] T089 [P] [US2] Create POST /api/v1/tickets/{id}/close endpoint in TicketsController mapped to CloseTicketHandler
+- [X] T090 [P] [US2] Create PUT /api/v1/tickets/{id}/reassign endpoint in TicketsController mapped to ReassignTicketHandler
+- [X] T091 [US2] Add authorization policy to restrict agent operations to users with Agent or Administrator role
+- [X] T092 [P] [US2] Create agent queue page UI at apps/web/src/app/agent/queue/page.tsx with filterable table
+- [X] T093 [P] [US2] Create agent ticket details page at apps/web/src/app/agent/tickets/[id]/page.tsx with action buttons
+- [X] T094 [P] [US2] Create ticket assignment dialog component at apps/web/src/components/agent/AssignTicketDialog.tsx
+- [X] T095 [P] [US2] Create internal note form component at apps/web/src/components/agent/InternalNoteForm.tsx (distinct styling from user comments)
+- [X] T096 [P] [US2] Create status update dropdown component at apps/web/src/components/agent/StatusUpdateDropdown.tsx
+- [X] T097 [P] [US2] Create close ticket dialog with resolution notes at apps/web/src/components/agent/CloseTicketDialog.tsx
+- [X] T098 [P] [US2] Implement getAgentQueue query using TanStack Query in apps/web/src/lib/queries/agentQueue.ts
+- [X] T099 [P] [US2] Implement assignTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
+- [X] T100 [P] [US2] Implement updateTicketStatus mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
+- [X] T101 [P] [US2] Implement closeTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
+- [X] T102 [P] [US2] Implement addInternalNote mutation using TanStack Query in apps/web/src/lib/queries/comments.ts
+- [X] T103 [P] [US2] Create CLI agent queue command in apps/cli/src/commands/agent.ts showing unassigned and assigned tickets
+- [X] T104 [P] [US2] Create CLI ticket assign command in apps/cli/src/commands/agent.ts
+- [X] T105 [P] [US2] Create CLI ticket close command in apps/cli/src/commands/agent.ts with resolution notes prompt
+- [X] T106 [US2] Add optimistic locking conflict detection with RowVersion in all update handlers (per FR-013 and clarification)
+- [X] T107 [US2] Add conflict error handling in web UI showing 409 Conflict with retry option
+- [X] T108 [US2] Verify agent can view queue and respond within 30 seconds per SC-006 success criterion
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work - complete ticket submission and agent response workflow
 
@@ -182,40 +182,40 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 ### Implementation for User Story 3
 
-- [ ] T109 [P] [US3] Create Category entity in apps/api/src/Infrastructure/Data/Entities/Category.cs
-- [ ] T110 [P] [US3] Create Tag entity in apps/api/src/Infrastructure/Data/Entities/Tag.cs
-- [ ] T111 [P] [US3] Create TicketTag join table entity in apps/api/src/Infrastructure/Data/Entities/TicketTag.cs
-- [ ] T112 [P] [US3] Configure Category entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/CategoryConfiguration.cs
-- [ ] T113 [P] [US3] Configure Tag entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/TagConfiguration.cs
-- [ ] T114 [P] [US3] Configure TicketTag relationship in apps/api/src/Infrastructure/Data/Configurations/TicketConfiguration.cs
-- [ ] T115 [US3] Create EF Core migration for Category, Tag, and TicketTag tables in apps/api/src/Infrastructure/Data/Migrations/
-- [ ] T116 [US3] Update Ticket entity to include CategoryId and Tags navigation property
-- [ ] T117 [US3] Create EF Core migration to add CategoryId to Ticket table in apps/api/src/Infrastructure/Data/Migrations/
-- [ ] T118 [P] [US3] Implement CreateCategory command handler in apps/api/src/Features/Categories/Create/CreateCategoryHandler.cs with admin authorization
-- [ ] T119 [P] [US3] Implement GetAllCategories query handler in apps/api/src/Features/Categories/GetAll/GetAllCategoriesHandler.cs
-- [ ] T120 [P] [US3] Implement CreateTag command handler (auto-create on first use) in apps/api/src/Features/Tags/Create/CreateTagHandler.cs
-- [ ] T121 [P] [US3] Implement GetAllTags query handler in apps/api/src/Features/Tags/GetAll/GetAllTagsHandler.cs
-- [ ] T122 [P] [US3] Implement AddTagsToTicket command handler in apps/api/src/Features/Tickets/AddTags/AddTagsToTicketHandler.cs
-- [ ] T123 [P] [US3] Implement RemoveTagsFromTicket command handler in apps/api/src/Features/Tickets/RemoveTags/RemoveTagsFromTicketHandler.cs
-- [ ] T124 [P] [US3] Add FluentValidation validator for Category (name 2-100 chars) in apps/api/src/Features/Categories/Create/CreateCategoryValidator.cs
-- [ ] T125 [P] [US3] Add FluentValidation validator for Tag (name 2-50 chars, alphanumeric) in apps/api/src/Features/Tags/Create/CreateTagValidator.cs
-- [ ] T126 [US3] Update CreateTicket handler to accept optional categoryId
-- [ ] T127 [US3] Update GetTicketsBySubmitter and GetAgentQueue handlers to support filtering by category and tags
-- [ ] T128 [P] [US3] Create GET /api/v1/categories endpoint in apps/api/src/Features/Categories/CategoriesController.cs
-- [ ] T129 [P] [US3] Create POST /api/v1/categories endpoint in CategoriesController with admin authorization
-- [ ] T130 [P] [US3] Create GET /api/v1/tags endpoint in apps/api/src/Features/Tags/TagsController.cs
-- [ ] T131 [P] [US3] Create POST /api/v1/tickets/{id}/tags endpoint in TicketsController mapped to AddTagsToTicketHandler
-- [ ] T132 [P] [US3] Create DELETE /api/v1/tickets/{id}/tags endpoint in TicketsController mapped to RemoveTagsFromTicketHandler
-- [ ] T133 [P] [US3] Update ticket DTOs to include category and tags arrays
-- [ ] T134 [P] [US3] Create category management page UI at apps/web/src/app/admin/categories/page.tsx (admin only)
-- [ ] T135 [P] [US3] Create category selector component for ticket forms at apps/web/src/components/tickets/CategorySelector.tsx
-- [ ] T136 [P] [US3] Create tag input component at apps/web/src/components/tickets/TagInput.tsx with autocomplete
+- [X] T109 [P] [US3] Create Category entity in apps/api/src/Infrastructure/Data/Entities/Category.cs
+- [X] T110 [P] [US3] Create Tag entity in apps/api/src/Infrastructure/Data/Entities/Tag.cs
+- [X] T111 [P] [US3] Create TicketTag join table entity in apps/api/src/Infrastructure/Data/Entities/TicketTag.cs
+- [X] T112 [P] [US3] Configure Category entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/CategoryConfiguration.cs
+- [X] T113 [P] [US3] Configure Tag entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/TagConfiguration.cs
+- [X] T114 [P] [US3] Configure TicketTag relationship in apps/api/src/Infrastructure/Data/Configurations/TicketConfiguration.cs
+- [X] T115 [US3] Create EF Core migration for Category, Tag, and TicketTag tables in apps/api/src/Infrastructure/Data/Migrations/
+- [X] T116 [US3] Update Ticket entity to include CategoryId and Tags navigation property
+- [X] T117 [US3] Create EF Core migration to add CategoryId to Ticket table in apps/api/src/Infrastructure/Data/Migrations/
+- [X] T118 [P] [US3] Implement CreateCategory command handler in apps/api/src/Features/Categories/Create/CreateCategoryHandler.cs with admin authorization
+- [X] T119 [P] [US3] Implement GetAllCategories query handler in apps/api/src/Features/Categories/GetAll/GetAllCategoriesHandler.cs
+- [X] T120 [P] [US3] Implement CreateTag command handler (auto-create on first use) in apps/api/src/Features/Tags/Create/CreateTagHandler.cs
+- [X] T121 [P] [US3] Implement GetAllTags query handler in apps/api/src/Features/Tags/GetAll/GetAllTagsHandler.cs
+- [X] T122 [P] [US3] Implement AddTagsToTicket command handler in apps/api/src/Features/Tickets/AddTags/AddTagsToTicketHandler.cs
+- [X] T123 [P] [US3] Implement RemoveTagsFromTicket command handler in apps/api/src/Features/Tickets/RemoveTags/RemoveTagsFromTicketHandler.cs
+- [X] T124 [P] [US3] Add FluentValidation validator for Category (name 2-100 chars) in apps/api/src/Features/Categories/Create/CreateCategoryValidator.cs
+- [X] T125 [P] [US3] Add FluentValidation validator for Tag (name 2-50 chars, alphanumeric) in apps/api/src/Features/Tags/Create/CreateTagValidator.cs
+- [X] T126 [US3] Update CreateTicket handler to accept optional categoryId
+- [X] T127 [US3] Update GetTicketsBySubmitter and GetAgentQueue handlers to support filtering by category and tags
+- [X] T128 [P] [US3] Create GET /api/v1/categories endpoint in apps/api/src/Features/Categories/CategoriesController.cs
+- [X] T129 [P] [US3] Create POST /api/v1/categories endpoint in CategoriesController with admin authorization
+- [X] T130 [P] [US3] Create GET /api/v1/tags endpoint in apps/api/src/Features/Tags/TagsController.cs
+- [X] T131 [P] [US3] Create POST /api/v1/tickets/{id}/tags endpoint in TicketsController mapped to AddTagsToTicketHandler
+- [X] T132 [P] [US3] Create DELETE /api/v1/tickets/{id}/tags endpoint in TicketsController mapped to RemoveTagsFromTicketHandler
+- [X] T133 [P] [US3] Update ticket DTOs to include category and tags arrays
+- [X] T134 [P] [US3] Create category management page UI at apps/web/src/app/admin/categories/page.tsx (admin only)
+- [X] T135 [P] [US3] Create category selector component for ticket forms at apps/web/src/components/tickets/CategorySelector.tsx
+- [X] T136 [P] [US3] Create tag input component at apps/web/src/components/tickets/TagInput.tsx with autocomplete
 - [ ] T137 [P] [US3] Update ticket list pages to show category and tags badges
 - [ ] T138 [P] [US3] Add category and tag filters to ticket list and agent queue pages
-- [ ] T139 [P] [US3] Implement getAllCategories query using TanStack Query in apps/web/src/lib/queries/categories.ts
-- [ ] T140 [P] [US3] Implement createCategory mutation using TanStack Query in apps/web/src/lib/queries/categories.ts
-- [ ] T141 [P] [US3] Implement getAllTags query using TanStack Query in apps/web/src/lib/queries/tags.ts
-- [ ] T142 [P] [US3] Implement addTagsToTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
+- [X] T139 [P] [US3] Implement getAllCategories query using TanStack Query in apps/web/src/lib/queries/categories.ts
+- [X] T140 [P] [US3] Implement createCategory mutation using TanStack Query in apps/web/src/lib/queries/categories.ts
+- [X] T141 [P] [US3] Implement getAllTags query using TanStack Query in apps/web/src/lib/queries/tags.ts
+- [X] T142 [P] [US3] Implement addTagsToTicket mutation using TanStack Query in apps/web/src/lib/queries/tickets.ts
 - [ ] T143 [P] [US3] Create CLI category list command in apps/cli/src/commands/category.ts
 - [ ] T144 [P] [US3] Create CLI tag management commands in apps/cli/src/commands/tag.ts
 - [ ] T145 [US3] Update ticket create flow to include category selection
@@ -233,22 +233,22 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 ### Implementation for User Story 4
 
-- [ ] T147 [US4] Update Ticket entity to include SearchVector tsvector field in apps/api/src/Infrastructure/Data/Entities/Ticket.cs
-- [ ] T148 [US4] Create EF Core migration to add GIN index on SearchVector in apps/api/src/Infrastructure/Data/Migrations/
-- [ ] T149 [US4] Implement search vector update trigger or EF interceptor in apps/api/src/Infrastructure/Data/Interceptors/SearchVectorInterceptor.cs
-- [ ] T150 [P] [US4] Implement SearchTickets query handler using PostgreSQL full-text search in apps/api/src/Features/Search/SearchTicketsHandler.cs
-- [ ] T151 [P] [US4] Add support for filtering by status, priority, assignee, date range in SearchTicketsHandler
-- [ ] T152 [P] [US4] Add FluentValidation validator for search query (min 2 chars) in apps/api/src/Features/Search/SearchTicketsValidator.cs
-- [ ] T153 [US4] Create GET /api/v1/search endpoint in apps/api/src/Features/Search/SearchController.cs with pagination
-- [ ] T154 [US4] Add authorization to search results (users see only their tickets, agents see all)
-- [ ] T155 [P] [US4] Create search page UI at apps/web/src/app/search/page.tsx with filters panel
-- [ ] T156 [P] [US4] Create search input component at apps/web/src/components/search/SearchInput.tsx with debouncing
-- [ ] T157 [P] [US4] Create search filters component at apps/web/src/components/search/SearchFilters.tsx
-- [ ] T158 [P] [US4] Create search results component at apps/web/src/components/search/SearchResults.tsx with pagination
-- [ ] T159 [P] [US4] Implement searchTickets query using TanStack Query in apps/web/src/lib/queries/search.ts
+- [X] T147 [US4] Update Ticket entity to include SearchVector tsvector field in apps/api/src/Infrastructure/Data/Entities/Ticket.cs
+- [X] T148 [US4] Create EF Core migration to add GIN index on SearchVector in apps/api/src/Infrastructure/Data/Migrations/
+- [X] T149 [US4] Implement search vector update trigger or EF interceptor in apps/api/src/Infrastructure/Data/Interceptors/SearchVectorInterceptor.cs
+- [X] T150 [P] [US4] Implement SearchTickets query handler using PostgreSQL full-text search in apps/api/src/Features/Search/SearchTicketsHandler.cs
+- [X] T151 [P] [US4] Add support for filtering by status, priority, assignee, date range in SearchTicketsHandler
+- [X] T152 [P] [US4] Add FluentValidation validator for search query (min 2 chars) in apps/api/src/Features/Search/SearchTicketsValidator.cs
+- [X] T153 [US4] Create GET /api/v1/search endpoint in apps/api/src/Features/Search/SearchController.cs with pagination
+- [X] T154 [US4] Add authorization to search results (users see only their tickets, agents see all)
+- [X] T155 [P] [US4] Create search page UI at apps/web/src/app/search/page.tsx with filters panel
+- [X] T156 [P] [US4] Create search input component at apps/web/src/components/search/SearchInput.tsx with debouncing
+- [X] T157 [P] [US4] Create search filters component at apps/web/src/components/search/SearchFilters.tsx
+- [X] T158 [P] [US4] Create search results component at apps/web/src/components/search/SearchResults.tsx with pagination
+- [X] T159 [P] [US4] Implement searchTickets query using TanStack Query in apps/web/src/lib/queries/search.ts
 - [ ] T160 [P] [US4] Create CLI search command in apps/cli/src/commands/search.ts with filter options
-- [ ] T161 [US4] Add search box to main navigation in apps/web/src/components/layout/Navigation.tsx
-- [ ] T162 [US4] Optimize search query performance with proper indexes
+- [X] T161 [US4] Add search box to main navigation in apps/web/src/components/layout/Navigation.tsx
+- [X] T162 [US4] Optimize search query performance with proper indexes
 - [ ] T163 [US4] Verify search returns results within 2 seconds for 100,000+ tickets per SC-010 success criterion
 
 **Checkpoint**: At this point, search functionality is complete and performant
@@ -263,7 +263,7 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 ### Implementation for User Story 5
 
-- [ ] T164 [P] [US5] Configure MassTransit with RabbitMQ or Redis transport in apps/api/src/Infrastructure/Messaging/MassTransitConfiguration.cs
+- [X] T164 [P] [US5] Configure MassTransit with RabbitMQ or Redis transport in apps/api/src/Infrastructure/Messaging/MassTransitConfiguration.cs
 - [ ] T165 [P] [US5] Create ticket event definitions in apps/api/src/Common/Events/ (TicketCreatedEvent, TicketUpdatedEvent, TicketAssignedEvent, CommentAddedEvent)
 - [ ] T166 [P] [US5] Implement event publishing in ticket command handlers using MassTransit
 - [ ] T167 [P] [US5] Implement email notification consumer in apps/api/src/Features/Notifications/Consumers/EmailNotificationConsumer.cs
@@ -271,16 +271,16 @@ Based on plan.md, this is an Nx monorepo with three applications:
 - [ ] T169 [P] [US5] Create email service abstraction with SMTP implementation in apps/api/src/Infrastructure/Notifications/EmailService.cs
 - [ ] T170 [P] [US5] Create webhook service for HTTP POST notifications in apps/api/src/Infrastructure/Notifications/WebhookService.cs
 - [ ] T171 [P] [US5] Create email templates for ticket notifications in apps/api/src/Features/Notifications/Templates/
-- [ ] T172 [P] [US5] Configure SignalR hub for real-time notifications in apps/api/src/Infrastructure/RealTime/NotificationHub.cs
+- [X] T172 [P] [US5] Configure SignalR hub for real-time notifications in apps/api/src/Infrastructure/RealTime/NotificationHub.cs
 - [ ] T173 [US5] Implement SignalR message dispatch in notification consumers
-- [ ] T174 [P] [US5] Create NotificationPreferences entity in apps/api/src/Infrastructure/Data/Entities/NotificationPreferences.cs
-- [ ] T175 [US5] Create EF Core migration for NotificationPreferences table in apps/api/src/Infrastructure/Data/Migrations/
+- [X] T174 [P] [US5] Create NotificationPreferences entity in apps/api/src/Infrastructure/Data/Entities/NotificationPreferences.cs
+- [X] T175 [US5] Create EF Core migration for NotificationPreferences table in apps/api/src/Infrastructure/Data/Migrations/
 - [ ] T176 [P] [US5] Implement UpdateNotificationPreferences command handler in apps/api/src/Features/Users/UpdatePreferences/UpdateNotificationPreferencesHandler.cs
 - [ ] T177 [P] [US5] Create GET /api/v1/users/me/preferences endpoint in apps/api/src/Features/Users/UsersController.cs
 - [ ] T178 [P] [US5] Create PUT /api/v1/users/me/preferences endpoint in UsersController
 - [ ] T179 [US5] Connect SignalR client in web app and subscribe to user notifications
 - [ ] T180 [P] [US5] Create notification toast component at apps/web/src/components/notifications/NotificationToast.tsx
-- [ ] T181 [P] [US5] Create notification center component at apps/web/src/components/notifications/NotificationCenter.tsx
+- [X] T181 [P] [US5] Create notification center component at apps/web/src/components/notifications/NotificationCenter.tsx
 - [ ] T182 [P] [US5] Create notification preferences page at apps/web/src/app/settings/notifications/page.tsx
 - [ ] T183 [P] [US5] Implement notification preferences UI with email, in-app, webhook toggles
 - [ ] T184 [P] [US5] Implement updateNotificationPreferences mutation using TanStack Query in apps/web/src/lib/queries/users.ts
@@ -299,23 +299,23 @@ Based on plan.md, this is an Nx monorepo with three applications:
 
 ### Implementation for User Story 6
 
-- [ ] T187 [P] [US6] Create KnowledgeArticle entity in apps/api/src/Infrastructure/Data/Entities/KnowledgeArticle.cs
-- [ ] T188 [P] [US6] Configure KnowledgeArticle entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/KnowledgeArticleConfiguration.cs
-- [ ] T189 [US6] Create EF Core migration for KnowledgeArticle table in apps/api/src/Infrastructure/Data/Migrations/
-- [ ] T190 [P] [US6] Implement CreateArticle command handler in apps/api/src/Features/Knowledge/Create/CreateArticleHandler.cs with agent authorization
-- [ ] T191 [P] [US6] Implement UpdateArticle command handler in apps/api/src/Features/Knowledge/Update/UpdateArticleHandler.cs
-- [ ] T192 [P] [US6] Implement GetArticleById query handler in apps/api/src/Features/Knowledge/GetById/GetArticleByIdHandler.cs
-- [ ] T193 [P] [US6] Implement SearchArticles query handler using PostgreSQL full-text search in apps/api/src/Features/Knowledge/Search/SearchArticlesHandler.cs
-- [ ] T194 [P] [US6] Implement RateArticle command handler (helpfulness tracking) in apps/api/src/Features/Knowledge/Rate/RateArticleHandler.cs
-- [ ] T195 [P] [US6] Implement GetSuggestedArticles query handler based on ticket description in apps/api/src/Features/Knowledge/Suggest/GetSuggestedArticlesHandler.cs
+- [X] T187 [P] [US6] Create KnowledgeArticle entity in apps/api/src/Infrastructure/Data/Entities/KnowledgeArticle.cs
+- [X] T188 [P] [US6] Configure KnowledgeArticle entity with EF Core fluent API in apps/api/src/Infrastructure/Data/Configurations/KnowledgeArticleConfiguration.cs
+- [X] T189 [US6] Create EF Core migration for KnowledgeArticle table in apps/api/src/Infrastructure/Data/Migrations/
+- [X] T190 [P] [US6] Implement CreateArticle command handler in apps/api/src/Features/Knowledge/Create/CreateArticleHandler.cs with agent authorization
+- [X] T191 [P] [US6] Implement UpdateArticle command handler in apps/api/src/Features/Knowledge/Update/UpdateArticleHandler.cs
+- [X] T192 [P] [US6] Implement GetArticleById query handler in apps/api/src/Features/Knowledge/GetById/GetArticleByIdHandler.cs
+- [X] T193 [P] [US6] Implement SearchArticles query handler using PostgreSQL full-text search in apps/api/src/Features/Knowledge/Search/SearchArticlesHandler.cs
+- [X] T194 [P] [US6] Implement RateArticle command handler (helpfulness tracking) in apps/api/src/Features/Knowledge/Rate/RateArticleHandler.cs
+- [X] T195 [P] [US6] Implement GetSuggestedArticles query handler based on ticket description in apps/api/src/Features/Knowledge/Suggest/GetSuggestedArticlesHandler.cs
 - [ ] T196 [P] [US6] Add FluentValidation validator for articles in apps/api/src/Features/Knowledge/Create/CreateArticleValidator.cs
-- [ ] T197 [P] [US6] Create GET /api/v1/knowledge/articles endpoint in apps/api/src/Features/Knowledge/KnowledgeController.cs
-- [ ] T198 [P] [US6] Create POST /api/v1/knowledge/articles endpoint in KnowledgeController with agent authorization
-- [ ] T199 [P] [US6] Create GET /api/v1/knowledge/articles/{id} endpoint in KnowledgeController
-- [ ] T200 [P] [US6] Create GET /api/v1/knowledge/search endpoint in KnowledgeController
-- [ ] T201 [P] [US6] Create POST /api/v1/knowledge/articles/{id}/rate endpoint in KnowledgeController
-- [ ] T202 [P] [US6] Create knowledge base home page at apps/web/src/app/knowledge/page.tsx with article categories
-- [ ] T203 [P] [US6] Create article view page at apps/web/src/app/knowledge/[id]/page.tsx with helpful rating
+- [X] T197 [P] [US6] Create GET /api/v1/knowledge/articles endpoint in apps/api/src/Features/Knowledge/KnowledgeController.cs
+- [X] T198 [P] [US6] Create POST /api/v1/knowledge/articles endpoint in KnowledgeController with agent authorization
+- [X] T199 [P] [US6] Create GET /api/v1/knowledge/articles/{id} endpoint in KnowledgeController
+- [X] T200 [P] [US6] Create GET /api/v1/knowledge/search endpoint in KnowledgeController
+- [X] T201 [P] [US6] Create POST /api/v1/knowledge/articles/{id}/rate endpoint in KnowledgeController
+- [X] T202 [P] [US6] Create knowledge base home page at apps/web/src/app/knowledge/page.tsx with article categories
+- [X] T203 [P] [US6] Create article view page at apps/web/src/app/knowledge/[id]/page.tsx with helpful rating
 - [ ] T204 [P] [US6] Create article editor page at apps/web/src/app/agent/knowledge/edit/page.tsx (agent only)
 - [ ] T205 [P] [US6] Create article search component at apps/web/src/components/knowledge/ArticleSearch.tsx
 - [ ] T206 [P] [US6] Create suggested articles panel at apps/web/src/components/knowledge/SuggestedArticles.tsx
@@ -415,7 +415,7 @@ Based on plan.md, this is an Nx monorepo with three applications:
 - [ ] T265 [P] Create API documentation using OpenAPI spec at docs/api.md
 - [ ] T266 [P] Create developer setup guide at docs/developer-guide.md
 - [ ] T267 [P] Create deployment guide at docs/deployment.md
-- [ ] T268 [P] Add Docker health checks to all containers in docker/docker-compose.yml
+- [X] T268 [P] Add Docker health checks to all containers in docker/docker-compose.yml
 - [ ] T269 [P] Configure graceful shutdown for all services
 - [ ] T270 [P] Add environment variable validation on startup
 - [ ] T271 Run full E2E test suite using Playwright in apps/web/tests/e2e/

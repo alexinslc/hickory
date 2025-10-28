@@ -1,6 +1,10 @@
 version: '3.8'
 
+# Hickory Help Desk - Docker Compose Configuration
+# Complete local development environment with all services
+
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: hickory-postgres
@@ -12,12 +16,17 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d  # Optional: DB initialization scripts
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hickory"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - hickory-network
+    restart: unless-stopped
 
+  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: hickory-redis
@@ -30,7 +39,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - hickory-network
+    restart: unless-stopped
 
+  # .NET API Backend
   api:
     build:
       context: ..
@@ -43,11 +56,15 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=hickory;Username=hickory;Password=hickory_dev_password
       - ConnectionStrings__Redis=redis:6379
-      - JWT__Secret=your-super-secret-jwt-key-change-this-in-production
+      - JWT__Secret=your-super-secret-jwt-key-change-this-in-production-min-32-chars
       - JWT__Issuer=hickory-api
       - JWT__Audience=hickory-web
       - JWT__ExpirationMinutes=60
       - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Warning
+      - SMTP__Host=mailhog
+      - SMTP__Port=1025
+      - SMTP__From=noreply@hickory.local
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,7 +76,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - hickory-network
+    restart: unless-stopped
+    volumes:
+      - api_logs:/app/logs  # Persist logs
 
+  # Next.js Web Frontend
   web:
     build:
       context: ..
@@ -68,18 +91,46 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
       - NEXT_PUBLIC_WS_URL=ws://localhost:5000
+      - NEXT_TELEMETRY_DISABLED=1
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - hickory-network
+    restart: unless-stopped
 
+  # MailHog - Email testing (optional but useful for development)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: hickory-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - hickory-network
+    restart: unless-stopped
+
+# Persistent volumes
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
+  api_logs:
+    driver: local
+
+# Network configuration
+networks:
+  hickory-network:
+    driver: bridge
+    name: hickory-network
+

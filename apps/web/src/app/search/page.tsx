@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSearchTickets } from '@/lib/queries/search';
 import { SearchInput } from '@/components/search/SearchInput';
 import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchResults } from '@/components/search/SearchResults';
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   
@@ -26,7 +26,7 @@ export default function SearchPage() {
       setSearchQuery(urlQuery);
       setPage(1);
     }
-  }, [searchParams]);
+  }, [searchParams, searchQuery]);
 
   const { data, isLoading } = useSearchTickets(
     {
@@ -114,5 +114,23 @@ export default function SearchPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+        <div className="h-10 bg-gray-200 rounded w-full mb-6"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1 h-64 bg-gray-200 rounded"></div>
+          <div className="lg:col-span-3 h-96 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    </div>}>
+      <SearchPageContent />
+    </Suspense>
   );
 }
