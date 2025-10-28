@@ -367,6 +367,13 @@ class ApiClient {
     return response.data;
   }
 
+  async getComments(ticketId: string): Promise<CommentDto[]> {
+    const response = await this.client.get<CommentDto[]>(
+      `/api/tickets/${ticketId}/comments`
+    );
+    return response.data;
+  }
+
   // Agent endpoints
   async getAgentQueue(): Promise<TicketDto[]> {
     const response = await this.client.get<TicketDto[]>('/api/tickets/queue');

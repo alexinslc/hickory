@@ -1,4 +1,5 @@
 using Hickory.Api.Features.Comments.Create;
+using Hickory.Api.Features.Comments.List;
 using Hickory.Api.Features.Tickets.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -17,6 +18,18 @@ public class CommentsController : ControllerBase
     public CommentsController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<CommentDto>>> GetComments(
+        Guid ticketId,
+        CancellationToken cancellationToken)
+    {
+        var userRole = GetUserRole();
+        var query = new GetCommentsQuery(ticketId, userRole);
+        
+        var comments = await _mediator.Send(query, cancellationToken);
+        return Ok(comments);
     }
 
     [HttpPost]

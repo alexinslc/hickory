@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useGetTicketById, useUpdateTicketStatus, useAssignTicket, useCloseTicket } from '@/lib/queries/tickets';
-import { useAddComment, useAddInternalNote } from '@/lib/queries/comments';
+import { useGetComments, useAddComment, useAddInternalNote } from '@/lib/queries/comments';
 import { useAuthStore } from '@/store/auth-store';
 import { AuthGuard } from '@/components/auth-guard';
 
@@ -52,6 +52,7 @@ export default function TicketDetailPage() {
   const router = useRouter();
   const ticketId = params.id as string;
   const { data: ticket, isLoading, error } = useGetTicketById(ticketId);
+  const { data: comments, isLoading: commentsLoading } = useGetComments(ticketId);
   const { user } = useAuthStore();
   const addCommentMutation = useAddComment(ticketId);
   const addInternalNoteMutation = useAddInternalNote(ticketId);
@@ -266,16 +267,82 @@ export default function TicketDetailPage() {
 
                 <div className="border-t border-gray-200 my-6"></div>
 
-                {/* Comment History Placeholder */}
-                <div className="text-center py-8 bg-gray-50 rounded-lg">
-                  <svg className="h-12 w-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  <p className="font-medium text-sm text-gray-600 mb-1">Comment History</p>
-                  <p className="text-xs text-gray-500 max-w-md mx-auto">
-                    A separate API endpoint to fetch comments will be added in a future phase.
-                    Comments you add above are being saved successfully.
-                  </p>
+                {/* Comment History */}
+                <div className="space-y-4">
+                  {commentsLoading && (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="text-sm text-gray-500 mt-2">Loading comments...</p>
+                    </div>
+                  )}
+                  
+                  {!commentsLoading && comments && comments.length === 0 && (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <svg className="h-12 w-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <p className="font-medium text-sm text-gray-600 mb-1">No comments yet</p>
+                      <p className="text-xs text-gray-500 max-w-md mx-auto">
+                        Be the first to add a comment to this ticket.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {!commentsLoading && comments && comments.length > 0 && (
+                    <>
+                      {comments.filter(c => !c.isInternal).map((comment) => (
+                        <div key={comment.id} className="flex gap-3 p-4 bg-gray-50 rounded-lg">
+                          <div className="flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <span className="text-blue-700 font-semibold text-sm">
+                                {comment.authorName.split(' ').map(n => n[0]).join('')}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-semibold text-gray-900">{comment.authorName}</p>
+                              <span className="text-xs text-gray-500">•</span>
+                              <p className="text-xs text-gray-500">{formatDate(comment.createdAt, 'long')}</p>
+                            </div>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {isAgent && comments.filter(c => c.isInternal).length > 0 && (
+                        <div className="mt-6 pt-6 border-t-2 border-yellow-200">
+                          <h3 className="text-sm font-semibold text-yellow-900 mb-4 flex items-center gap-2">
+                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                            </svg>
+                            Internal Notes (Agent Only)
+                          </h3>
+                          <div className="space-y-3">
+                            {comments.filter(c => c.isInternal).map((note) => (
+                              <div key={note.id} className="flex gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div className="flex-shrink-0">
+                                  <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                    <span className="text-yellow-700 font-semibold text-sm">
+                                      {note.authorName.split(' ').map(n => n[0]).join('')}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="text-sm font-semibold text-yellow-900">{note.authorName}</p>
+                                    <span className="text-xs text-yellow-600">•</span>
+                                    <p className="text-xs text-yellow-600">{formatDate(note.createdAt, 'long')}</p>
+                                  </div>
+                                  <p className="text-sm text-yellow-900 whitespace-pre-wrap">{note.content}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
