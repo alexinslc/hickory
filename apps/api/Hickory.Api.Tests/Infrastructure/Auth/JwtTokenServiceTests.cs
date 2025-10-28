@@ -130,8 +130,13 @@ public class JwtTokenServiceTests
 
         // Assert
         principal.Should().NotBeNull();
-        principal!.Claims.Should().Contain(c => c.Type == JwtRegisteredClaimNames.Email && c.Value == "test@example.com");
-        principal.Claims.Should().Contain(c => c.Type == JwtRegisteredClaimNames.Sub && c.Value == user.Id.ToString());
+        // JWT claims use the full URI format, not short names
+        principal!.Claims.Should().Contain(c =>
+            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" &&
+            c.Value == "test@example.com");
+        principal.Claims.Should().Contain(c =>
+            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" &&
+            c.Value == user.Id.ToString());
     }
 
     [Fact]
