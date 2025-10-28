@@ -15,12 +15,20 @@ public static class KnowledgeArticleHelpers
     /// <param name="title">Article title (weighted 2x for higher relevance)</param>
     /// <param name="content">Article content</param>
     /// <returns>NpgsqlTsVector for full-text search</returns>
-    public static NpgsqlTsVector GenerateSearchVector(string title, string content)
+    public static NpgsqlTsVector? GenerateSearchVector(string title, string content)
     {
-        // Use PostgreSQL native weighting: title (A), content (default)
-        var titleVector = NpgsqlTsVector.Parse(title).SetWeight(NpgsqlTsVector.LexemeWeight.A);
-        var contentVector = NpgsqlTsVector.Parse(content);
-        return titleVector + contentVector;
+        // TODO: Fix this implementation - SetWeight and LexemeWeight APIs have changed
+        // The Npgsql API for text search vectors has been updated
+        // Need to use server-side to_tsvector functions instead of client-side parsing
+        // See: https://www.npgsql.org/doc/types/fulltextse arch.html
+        
+        // Temporary workaround: return null and handle on server side
+        return null;
+        
+        // Original code (commented out due to API changes):
+        // var titleVector = NpgsqlTsVector.Parse(title).SetWeight(NpgsqlTsVector.LexemeWeight.A);
+        // var contentVector = NpgsqlTsVector.Parse(content);
+        // return titleVector + contentVector;
     }
 
     /// <summary>
