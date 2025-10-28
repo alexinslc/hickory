@@ -304,10 +304,6 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground">User ID</p>
                     <p className="text-sm font-mono text-xs">{user?.userId}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Member since</p>
-                    <p className="text-sm">January 2025</p>
-                  </div>
                 </div>
 
                 <Button className="w-full mt-4" variant="outline">
