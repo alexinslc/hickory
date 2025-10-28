@@ -211,4 +211,14 @@ app.MapControllers();
 // SignalR hub endpoint
 app.MapHub<NotificationHub>("/hubs/notifications");
 
+// Seed database with admin user on startup
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    await DbSeeder.SeedAdminUser(context, passwordHasher, logger);
+}
+
 app.Run();
