@@ -20,7 +20,7 @@ public static class KnowledgeArticleHelpers
         // TODO: Fix this implementation - SetWeight and LexemeWeight APIs have changed
         // The Npgsql API for text search vectors has been updated
         // Need to use server-side to_tsvector functions instead of client-side parsing
-        // See: https://www.npgsql.org/doc/types/fulltextse arch.html
+        // See: https://www.npgsql.org/doc/types/fulltext-search.html
         
         // Temporary workaround: return null and handle on server side
         return null;
