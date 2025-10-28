@@ -198,7 +198,7 @@ async function runPerformanceTest(): Promise<void> {
   await setupAuth();
   
   console.log(`\nStep 2: Running ${TEST_ITERATIONS} ticket submission tests...`);
-  console.log('Progress: ', { end: '' });
+  process.stdout.write('Progress: ');
   
   const results: PerformanceResult[] = [];
   
