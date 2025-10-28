@@ -2,9 +2,8 @@
 FROM node:25-alpine3.21 AS deps
 WORKDIR /app
 
-# Copy package files
+# Copy package files (root only - monorepo structure)
 COPY package*.json ./
-COPY apps/web/package*.json ./apps/web/
 RUN npm install --legacy-peer-deps
 
 # Build stage
@@ -13,7 +12,6 @@ WORKDIR /app
 
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 # Copy source
 COPY apps/web ./apps/web
