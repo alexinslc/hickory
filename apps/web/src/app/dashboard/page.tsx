@@ -2,6 +2,7 @@
 
 import { useAuthStore } from '@/store/auth-store';
 import { useLogout } from '@/hooks/use-auth';
+import { useMyTickets } from '@/hooks/use-tickets';
 import { AuthGuard } from '@/components/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,54 +28,106 @@ import {
   BarChart3,
   MessageSquare,
   BookOpen,
+  Loader2,
 } from 'lucide-react';
+import { useMemo } from 'react';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const logout = useLogout();
+  const { data: tickets, isLoading, isError } = useMyTickets();
 
   const getInitials = (firstName?: string, lastName?: string) => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
 
-  const stats = [
-    {
-      title: 'Open Tickets',
-      value: '24',
-      description: '+3 from last week',
-      icon: TicketIcon,
-      trend: 'up',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'In Progress',
-      value: '12',
-      description: '6 assigned to you',
-      icon: Clock,
-      trend: 'neutral',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
-    },
-    {
-      title: 'Resolved Today',
-      value: '8',
-      description: '+2 from yesterday',
-      icon: CheckCircle2,
-      trend: 'up',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Urgent',
-      value: '3',
-      description: 'Requires attention',
-      icon: AlertCircle,
-      trend: 'down',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-    },
-  ];
+  // Calculate real stats from ticket data
+  const stats = useMemo(() => {
+    if (!tickets) {
+      return [
+        {
+          title: 'Open Tickets',
+          value: '0',
+          description: 'Loading...',
+          icon: TicketIcon,
+          trend: 'neutral' as const,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+        },
+        {
+          title: 'In Progress',
+          value: '0',
+          description: 'Loading...',
+          icon: Clock,
+          trend: 'neutral' as const,
+          color: 'text-yellow-600',
+          bgColor: 'bg-yellow-50',
+        },
+        {
+          title: 'Resolved',
+          value: '0',
+          description: 'Loading...',
+          icon: CheckCircle2,
+          trend: 'neutral' as const,
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+        },
+        {
+          title: 'High Priority',
+          value: '0',
+          description: 'Loading...',
+          icon: AlertCircle,
+          trend: 'neutral' as const,
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+        },
+      ];
+    }
+
+    const openTickets = tickets.filter(t => t.status === 'Open').length;
+    const inProgressTickets = tickets.filter(t => t.status === 'InProgress').length;
+    const resolvedTickets = tickets.filter(t => t.status === 'Resolved').length;
+    const highPriorityTickets = tickets.filter(t => t.priority === 'High' || t.priority === 'Urgent').length;
+
+    return [
+      {
+        title: 'Open Tickets',
+        value: openTickets.toString(),
+        description: `${tickets.length} total tickets`,
+        icon: TicketIcon,
+        trend: 'neutral' as const,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+      },
+      {
+        title: 'In Progress',
+        value: inProgressTickets.toString(),
+        description: inProgressTickets > 0 ? 'Being worked on' : 'None active',
+        icon: Clock,
+        trend: 'neutral' as const,
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-50',
+      },
+      {
+        title: 'Resolved',
+        value: resolvedTickets.toString(),
+        description: `${Math.round((resolvedTickets / Math.max(tickets.length, 1)) * 100)}% of total`,
+        icon: CheckCircle2,
+        trend: 'neutral' as const,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+      },
+      {
+        title: 'High Priority',
+        value: highPriorityTickets.toString(),
+        description: highPriorityTickets > 0 ? 'Requires attention' : 'All good',
+        icon: AlertCircle,
+        trend: 'neutral' as const,
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+      },
+    ];
+  }, [tickets]);
 
   const quickActions = [
     {
@@ -245,30 +298,54 @@ export default function DashboardPage() {
             {/* Recent Activity */}
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>Recent Tickets</CardTitle>
                 <CardDescription>
-                  Latest updates on your tickets
+                  Your latest support tickets
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="flex items-start gap-4 pb-4 border-b last:border-0">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <TicketIcon className="h-4 w-4 text-blue-600" />
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                  </div>
+                ) : tickets && tickets.length > 0 ? (
+                  <div className="space-y-4">
+                    {tickets.slice(0, 5).map((ticket) => (
+                      <div key={ticket.id} className="flex items-start gap-4 pb-4 border-b last:border-0">
+                        <div className={`p-2 rounded-full ${
+                          ticket.status === 'Open' ? 'bg-blue-100' :
+                          ticket.status === 'InProgress' ? 'bg-yellow-100' :
+                          ticket.status === 'Resolved' ? 'bg-green-100' :
+                          'bg-gray-100'
+                        }`}>
+                          <TicketIcon className={`h-4 w-4 ${
+                            ticket.status === 'Open' ? 'text-blue-600' :
+                            ticket.status === 'InProgress' ? 'text-yellow-600' :
+                            ticket.status === 'Resolved' ? 'text-green-600' :
+                            'text-gray-600'
+                          }`} />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <p className="text-sm font-medium">
+                            {ticket.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {ticket.ticketNumber} • {ticket.status} • {ticket.priority} priority
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Created {new Date(ticket.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium">
-                          Ticket #{1000 + i} updated
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Status changed to {i % 2 === 0 ? 'In Progress' : 'Resolved'}
-                        </p>
-                        <p className="text-xs text-gray-400">{i} hours ago</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <TicketIcon className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                    <p className="text-sm text-muted-foreground">No tickets yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Create your first ticket to get started</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
