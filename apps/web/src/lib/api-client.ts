@@ -334,12 +334,12 @@ class ApiClient {
 
   // Auth endpoints
   async login(request: LoginRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/api/auth/login', request);
+    const response = await this.client.post<AuthResponse>('/api/v1/auth/login', request);
     return response.data;
   }
 
   async register(request: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/api/auth/register', request);
+    const response = await this.client.post<AuthResponse>('/api/v1/auth/register', request);
     return response.data;
   }
 
