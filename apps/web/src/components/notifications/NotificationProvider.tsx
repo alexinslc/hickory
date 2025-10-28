@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { signalRService, NotificationMessage } from '@/lib/signalr/signalr-service';
+import { useAuthStore } from '@/store/auth-store';
 
 interface NotificationContextType {
   notifications: NotificationMessage[];
@@ -11,6 +12,7 @@ interface NotificationContextType {
   markAllAsRead: () => void;
   clearNotifications: () => void;
   isConnected: boolean;
+  connectionError: string | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -19,6 +21,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const { accessToken, isAuthenticated } = useAuthStore();
 
   const addNotification = useCallback((notification: NotificationMessage) => {
     setNotifications(prev => [notification, ...prev].slice(0, 50)); // Keep last 50
@@ -41,12 +45,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
-    // Try to get access token from localStorage or session
-    // This is a simplified version - in production, integrate with your auth system
-    const token = localStorage.getItem('accessToken');
-    
-    if (!token) {
-      console.log('No access token found, skipping SignalR connection');
+    // Don't connect if not authenticated or no token
+    if (!isAuthenticated || !accessToken) {
+      console.log('Not authenticated or no access token, skipping SignalR connection');
+      setIsConnected(false);
+      setConnectionError(null);
       return;
     }
 
@@ -60,15 +63,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     const connectSignalR = async () => {
       try {
-        await signalRService.connect(token);
+        setConnectionError(null);
+        await signalRService.connect(accessToken);
         if (mounted) {
           setIsConnected(true);
           signalRService.onNotification(handleNotification);
+          console.log('SignalR notifications ready');
         }
       } catch (error) {
         console.error('Failed to connect to SignalR:', error);
         if (mounted) {
           setIsConnected(false);
+          setConnectionError(error instanceof Error ? error.message : 'Connection failed');
         }
       }
     };
@@ -80,7 +86,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       signalRService.offNotification(handleNotification);
       signalRService.disconnect();
     };
-  }, [addNotification]);
+  }, [accessToken, isAuthenticated, addNotification]);
 
   const value: NotificationContextType = {
     notifications,
@@ -90,6 +96,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     markAllAsRead,
     clearNotifications,
     isConnected,
+    connectionError,
   };
 
   return (

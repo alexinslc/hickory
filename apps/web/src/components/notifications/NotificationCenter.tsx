@@ -5,8 +5,22 @@ import { useNotifications } from './NotificationProvider';
 import Link from 'next/link';
 
 export function NotificationCenter() {
-  const { notifications, unreadCount, markAllAsRead, clearNotifications, isConnected } = useNotifications();
+  const { notifications, unreadCount, markAllAsRead, clearNotifications, isConnected, connectionError } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Determine status message
+  const getStatusMessage = () => {
+    if (connectionError) {
+      return 'Connection error';
+    }
+    if (!isConnected) {
+      return 'Connecting...';
+    }
+    if (notifications.length === 0) {
+      return 'You\'re all caught up!';
+    }
+    return '';
+  };
 
   return (
     <div className="relative">
@@ -94,10 +108,20 @@ export function NotificationCenter() {
                       d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                     />
                   </svg>
-                  <p className="text-sm">No notifications yet</p>
-                  <p className="text-xs mt-1 text-gray-400">
-                    {isConnected ? 'You\'re all caught up!' : 'Connecting...'}
-                  </p>
+                  <p className="text-sm font-medium">No notifications yet</p>
+                  {connectionError ? (
+                    <p className="text-xs mt-1 text-red-500">
+                      Connection error: Real-time notifications unavailable
+                    </p>
+                  ) : !isConnected ? (
+                    <p className="text-xs mt-1 text-gray-400">
+                      Connecting to notification service...
+                    </p>
+                  ) : (
+                    <p className="text-xs mt-1 text-gray-400">
+                      You&apos;re all caught up!
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
