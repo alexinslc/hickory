@@ -489,3 +489,32 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+
+/**
+ * Extracts a user-friendly error message from an API error
+ * @param error - The error object from an API call
+ * @returns A formatted error message string
+ */
+export function handleApiError(error: any): string {
+  // Check for response data with message
+  if (error?.response?.data?.message) {
+    return error.response.data.message;
+  }
+
+  // Check for validation errors
+  if (error?.response?.data?.errors) {
+    const errors = error.response.data.errors;
+    const errorMessages = Object.entries(errors)
+      .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+      .join('; ');
+    return errorMessages;
+  }
+
+  // Check for error message property
+  if (error?.message) {
+    return error.message;
+  }
+
+  // Default fallback
+  return 'An unexpected error occurred';
+}

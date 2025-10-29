@@ -1,5 +1,3 @@
-import { jest } from '@jest/globals';
-
 describe('CLI Auth Commands', () => {
   describe('login command', () => {
     it('should prompt for email and password', async () => {

@@ -113,7 +113,7 @@ apps/
 <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
 <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
 <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
-<PackageReference Include="Moq" Version="4.20.0" />
+<PackageReference Include="Moq" Version="4.20.70" />
 <PackageReference Include="FluentAssertions" Version="6.12.0" />
 <PackageReference Include="Testcontainers.PostgreSql" Version="3.10.0" />
 <PackageReference Include="Respawn" Version="6.2.1" /> <!-- DB cleanup -->

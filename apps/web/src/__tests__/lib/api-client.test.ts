@@ -1,8 +1,4 @@
-import axios from 'axios';
-import { apiClient, handleApiError } from '../../lib/api-client';
-
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+import { handleApiError } from '../../lib/api-client';
 
 describe('apiClient', () => {
   describe('error handling', () => {
