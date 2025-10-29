@@ -97,6 +97,9 @@ jobs:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
       
+      - name: Restore .NET dependencies
+        run: dotnet restore apps/api/Hickory.Api.csproj
+      
       - name: Lint Web
         run: npx nx lint web
       
@@ -127,6 +130,12 @@ jobs:
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      
+      - name: Restore .NET dependencies
+        run: |
+          dotnet restore apps/api/Hickory.Api.csproj
+          dotnet restore apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj
+          dotnet restore apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj
       
       - name: Build API
         run: dotnet build apps/api/Hickory.Api.csproj --configuration Release --no-restore
