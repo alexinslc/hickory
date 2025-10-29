@@ -41,7 +41,17 @@ if ! gh auth status &> /dev/null; then
 fi
 
 # Get current branch and default branch
-BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+# Try to get current branch first
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+# If not on a branch (detached HEAD), try to get default branch from remote
+if [ -z "$BRANCH" ] || [ "$BRANCH" = "HEAD" ]; then
+    BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+fi
+
+# Final fallback to 'main'
+BRANCH=${BRANCH:-main}
+
 echo -e "${BLUE}Branch:${NC} $BRANCH"
 echo ""
 

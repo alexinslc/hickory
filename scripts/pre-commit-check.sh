@@ -4,6 +4,15 @@
 
 set -e
 
+# Temporary file cleanup
+TMPFILES=()
+cleanup() {
+    for tmpfile in "${TMPFILES[@]}"; do
+        rm -f "$tmpfile"
+    done
+}
+trap cleanup EXIT
+
 echo "🔍 Running pre-commit CI checks..."
 echo ""
 
@@ -21,11 +30,11 @@ run_check() {
     local name=$1
     local cmd=$2
     local tmpfile=$(mktemp)
+    TMPFILES+=("$tmpfile")
     
     echo -n "  → $name... "
     if eval "$cmd" > "$tmpfile" 2>&1; then
         echo -e "${GREEN}✓${NC}"
-        rm -f "$tmpfile"
     else
         echo -e "${RED}✗${NC}"
         echo -e "${YELLOW}    See $tmpfile for details${NC}"
