@@ -4,7 +4,8 @@ WORKDIR /app
 
 # Copy package files (root only - monorepo structure)
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps && \
+    npm cache clean --force
 
 # Build stage
 FROM node:25-alpine3.21 AS builder
@@ -21,7 +22,8 @@ COPY apps/web ./apps/web
 COPY nx.json tsconfig.base.json ./
 
 # Build app using nx from root
-RUN npx nx build web
+RUN npx nx build web && \
+    npm prune --production
 
 # Runtime stage
 FROM node:25-alpine3.21 AS runtime
@@ -30,10 +32,17 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy built app
-COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder /app/apps/web/public ./apps/web/public
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+# Copy built app with correct ownership
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+
+# Switch to non-root user
+USER nextjs
 
 # Expose port
 EXPOSE 3000

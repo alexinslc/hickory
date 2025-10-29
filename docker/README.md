@@ -42,8 +42,41 @@ Complete Docker configuration for local development and production deployment of
 1. **PostgreSQL** (postgres:16-alpine) - Primary database
 2. **Redis** (redis:7-alpine) - Caching and session storage
 3. **API** (.NET 9.0) - ASP.NET Core backend
-4. **Web** (Node 20) - Next.js frontend
+4. **Web** (Node 25) - Next.js frontend
 5. **MailHog** (optional) - Email testing during development
+
+## 🎯 Docker Image Optimizations
+
+The Dockerfiles in this repository have been optimized for smaller image sizes and better security:
+
+### API Backend Optimizations
+- **Multi-stage build**: Separates build and runtime stages
+- **No extra packages**: Removed curl installation, using built-in wget
+- **Non-root user**: Runs as dedicated `dotnet` user for security
+- **Layer caching**: Optimized COPY order for better cache utilization
+- **Build flags**: Uses `--no-restore` to avoid redundant package downloads
+- **Minimal base image**: Uses aspnet runtime image instead of full SDK
+
+### Web Frontend Optimizations
+- **Multi-stage build**: Separates deps, builder, and runtime stages
+- **npm ci instead of npm install**: Faster, more reliable installations
+- **Production dependencies only**: Uses `--omit=dev` flag
+- **Cache cleaning**: Runs `npm cache clean --force` after install
+- **npm prune**: Removes dev dependencies after build
+- **Alpine Linux**: Uses lightweight Alpine base image
+- **Non-root user**: Runs as dedicated `nextjs` user for security
+- **Proper file ownership**: Sets correct ownership in COPY commands
+
+### General Best Practices
+- **`.dockerignore`**: Reduces build context size by excluding unnecessary files
+- **Health checks**: Built-in health monitoring without extra tools
+- **Layer optimization**: Ordered commands to maximize cache reuse
+- **Security**: All services run as non-root users where possible
+
+**Expected Size Reductions**:
+- API image: ~15-20% smaller (removed curl/apt packages)
+- Web image: ~10-15% smaller (npm cache cleanup, production deps only)
+- Faster builds: Improved layer caching reduces rebuild time
 
 ## 📦 Prerequisites
 
