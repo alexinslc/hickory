@@ -27,6 +27,8 @@ jobs:
       - name: Build API
         run: dotnet build apps/api/Hickory.Api.csproj --no-restore --configuration Release
 
+      - name: Build API Test Project
+        run: dotnet build apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --no-restore --configuration Release
       - name: Run API Unit Tests
         run: dotnet test apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=test-results.trx"
 
