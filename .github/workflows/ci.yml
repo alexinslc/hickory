@@ -2,23 +2,116 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop, 'feature/**', '001-help-desk-core' ]
+    branches: [main, develop, 'feature/**', 'fix/**', '001-help-desk-core']
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+
+# Cancel in-progress runs when a new one is started
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-  NODE_VERSION: '25.x'
+  NODE_VERSION: '20'
   DOTNET_VERSION: '9.0.x'
 
+# Default permissions for all jobs (least privilege)
+permissions:
+  contents: read
+
 jobs:
-  # Backend .NET API - Build, Lint, and Test
-  backend:
-    name: Backend API (.NET)
+  # Install and cache dependencies
+  setup:
+    name: Setup Dependencies
     runs-on: ubuntu-latest
     
-    defaults:
-      run:
-        working-directory: ./apps/api
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Cache npm dependencies
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
+      - name: Install npm dependencies
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: npm ci
+      
+      - name: Cache .NET dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      
+      - name: Restore .NET dependencies
+        run: dotnet restore apps/api/Hickory.Api.csproj
+
+  # Lint and format checks
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+      - name: Restore .NET cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      
+      - name: Lint Web
+        run: npx nx lint web
+      
+      - name: Lint CLI
+        run: npx nx lint cli
+      
+      - name: Check .NET formatting
+        run: dotnet format apps/api/Hickory.Api.csproj --verify-no-changes --no-restore
+        continue-on-error: true
+
+  # Build jobs
+  build-api:
+    name: Build .NET API
+    runs-on: ubuntu-latest
+    needs: setup
     
     steps:
       - name: Checkout code
@@ -29,30 +122,35 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
-      - name: Restore dependencies
-        run: dotnet restore
-      
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-      
-      - name: Format check
-        run: dotnet format --verify-no-changes --no-restore || echo "Format check skipped - install dotnet-format if needed"
-      
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" || echo "No tests configured yet"
-      
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: success()
+      - name: Restore .NET cache
+        uses: actions/cache@v4
         with:
-          files: '**/coverage.cobertura.xml'
-          flags: backend
-          name: backend-coverage
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      
+      - name: Build API
+        run: dotnet build apps/api/Hickory.Api.csproj --configuration Release --no-restore
+      
+      - name: Build API Tests
+        run: dotnet build apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --configuration Release --no-restore
+      
+      - name: Build API Integration Tests
+        run: dotnet build apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj --configuration Release --no-restore
+      
+      - name: Upload API Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-build
+          path: |
+            apps/api/bin/Release/
+            apps/api/Hickory.Api.Tests/bin/Release/
+            apps/api/Hickory.Api.IntegrationTests/bin/Release/
+          retention-days: 1
 
-  # Frontend Web - Build, Lint, and Test
-  frontend:
-    name: Frontend Web (Next.js)
+  build-web:
+    name: Build Web App
     runs-on: ubuntu-latest
+    needs: setup
     
     steps:
       - name: Checkout code
@@ -64,33 +162,26 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
       
-      - name: Lint
-        run: npx nx lint web
-      
-      - name: Type check
-        run: npx nx run web:type-check || echo "Type check not configured, skipping"
-      
-      - name: Run tests
-        run: npx nx test web --coverage || echo "No tests configured yet"
-      
-      - name: Build
+      - name: Build Web
         run: npx nx build web
       
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: success()
+      - name: Upload Web Build Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          files: '**/coverage/lcov.info'
-          flags: frontend
-          name: frontend-coverage
+          name: web-build
+          path: apps/web/.next/
+          retention-days: 1
 
-  # CLI - Build, Lint, and Test
-  cli:
-    name: CLI (Node.js)
+  build-cli:
+    name: Build CLI
     runs-on: ubuntu-latest
+    needs: setup
     
     steps:
       - name: Checkout code
@@ -102,33 +193,235 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-      
-      - name: Lint
-        run: npx nx lint cli
-      
-      - name: Type check
-        run: npx nx run cli:type-check || echo "Type check not configured, skipping"
-      
-      - name: Run tests
-        run: npx nx test cli --coverage || echo "No tests configured yet"
-      
-      - name: Build
-        run: npx nx build cli
-      
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: success()
+      - name: Restore npm cache
+        uses: actions/cache@v4
         with:
-          files: '**/coverage/lcov.info'
-          flags: cli
-          name: cli-coverage
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+      - name: Build CLI
+        run: npx nx build cli
+
+  # Unit tests
+  test-api-unit:
+    name: API Unit Tests
+    runs-on: ubuntu-latest
+    needs: build-api
+    permissions:
+      contents: read
+      checks: write  # Required for test reporter
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Download API Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-build
+          path: apps/api/
+      
+      - name: Run API Unit Tests
+        run: dotnet test apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
+      
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: .NET API Unit Test Results
+          path: '**/test-results.trx'
+          reporter: dotnet-trx
+          fail-on-error: true
+      
+      - name: Upload Coverage Reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          directory: ./coverage
+          flags: api-unit
+          name: api-unit-coverage
+          fail_ci_if_error: false
+
+  test-api-integration:
+    name: API Integration Tests
+    runs-on: ubuntu-latest
+    needs: build-api
+    permissions:
+      contents: read
+      checks: write  # Required for test reporter
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Download API Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-build
+          path: apps/api/
+      
+      - name: Run API Integration Tests
+        run: dotnet test apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj --no-build --configuration Release --logger "trx;LogFileName=integration-test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
+      
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: .NET API Integration Test Results
+          path: '**/integration-test-results.trx'
+          reporter: dotnet-trx
+          fail-on-error: true
+      
+      - name: Upload Coverage Reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          directory: ./coverage
+          flags: api-integration
+          name: api-integration-coverage
+          fail_ci_if_error: false
+
+  test-web:
+    name: Web Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+      - name: Run Web Unit Tests
+        run: npx nx test web --coverage --ci
+      
+      - name: Upload Coverage Reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          directory: ./coverage/apps/web
+          flags: web
+          name: web-coverage
+          fail_ci_if_error: false
+
+  test-cli:
+    name: CLI Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+      - name: Run CLI Unit Tests
+        run: npx nx test cli --ci
+
+  # E2E Tests
+  test-e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [build-api, build-web]
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+      - name: Download API Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-build
+          path: apps/api/
+      
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Start API (Background)
+        run: |
+          cd apps/api
+          dotnet run --no-build --no-launch-profile &
+          echo $! > api.pid
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+      
+      - name: Wait for API
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:5000/health 2>/dev/null; do sleep 2; done' || exit 1
+      
+      - name: Run E2E Tests
+        run: npx nx e2e web-e2e
+        env:
+          CI: true
+      
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web-e2e/playwright-report/
+          retention-days: 7
+      
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f apps/api/api.pid ]; then
+            kill $(cat apps/api/api.pid) || true
+          fi
 
   # Docker Build Validation
   docker:
-    name: Docker Build
+    name: Docker Build (${{ matrix.service }})
     runs-on: ubuntu-latest
+    needs: [build-api, build-web]
     
     strategy:
       matrix:
@@ -155,6 +448,9 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # Required for uploading SARIF results
     
     steps:
       - name: Checkout code
@@ -174,21 +470,25 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-  # Status Check (required for branch protection)
+  # Overall status check
   ci-success:
     name: CI Success
     runs-on: ubuntu-latest
-    needs: [backend, frontend, cli, docker]
+    needs: [lint, test-api-unit, test-api-integration, test-web, test-cli, test-e2e, docker, security]
     if: always()
     
     steps:
       - name: Check job status
         run: |
-          if [[ "${{ needs.backend.result }}" != "success" ]] || \
-             [[ "${{ needs.frontend.result }}" != "success" ]] || \
-             [[ "${{ needs.cli.result }}" != "success" ]] || \
-             [[ "${{ needs.docker.result }}" != "success" ]]; then
-            echo "One or more CI jobs failed"
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.test-api-unit.result }}" != "success" ]] || \
+             [[ "${{ needs.test-api-integration.result }}" != "success" ]] || \
+             [[ "${{ needs.test-web.result }}" != "success" ]] || \
+             [[ "${{ needs.test-cli.result }}" != "success" ]] || \
+             [[ "${{ needs.test-e2e.result }}" != "success" ]] || \
+             [[ "${{ needs.docker.result }}" != "success" ]] || \
+             [[ "${{ needs.security.result }}" != "success" ]]; then
+            echo "❌ One or more CI jobs failed"
             exit 1
           fi
-          echo "All CI jobs passed successfully"
+          echo "✅ All CI jobs passed successfully"
