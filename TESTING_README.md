@@ -118,7 +118,7 @@ Hickory.Api.Tests/
 │   ├── Auth/
 │   │   └── JwtTokenServiceTests.cs (8 tests) ✅
 │   └── Data/
-│       └── TicketNumberGeneratorTests.cs (6 tests) ⚠️
+│       └── TicketNumberGeneratorTests.cs (6 tests) ✅
 ├── Validators/
 │   └── LoginValidatorTests.cs (8 tests) ✅
 └── TestUtilities/
