@@ -42,7 +42,7 @@ Complete Docker configuration for local development and production deployment of
 1. **PostgreSQL** (postgres:16-alpine) - Primary database
 2. **Redis** (redis:7-alpine) - Caching and session storage
 3. **API** (.NET 9.0) - ASP.NET Core backend
-4. **Web** (Node 20) - Next.js frontend
+4. **Web** (Node 25) - Next.js frontend
 5. **MailHog** (optional) - Email testing during development
 
 ## 📦 Prerequisites
