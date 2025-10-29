@@ -91,7 +91,7 @@ ENTRYPOINT ["dotnet", "Hickory.Api.dll"]
 ### Key Changes
 | Change | Impact |
 |--------|--------|
-| Removed `apt-get install curl` | -20MB, reduced attack surface |
+| Removed `apt-get install curl` | -5-10MB, reduced attack surface |
 | Use `wget` instead of `curl` | Built-in tool, no installation needed |
 | Added `--no-cache` flag | Cleaner restore process |
 | Added `--no-restore` flag | Faster publish step |
@@ -266,9 +266,9 @@ healthcheck:
 ## Summary of Benefits
 
 ### Size Improvements
-- **API Backend**: ~20-30MB smaller
-- **Web Frontend**: ~100MB smaller
-- **Total Savings**: ~130MB per deployment
+- **API Backend**: ~5-15MB smaller (removed curl and dependencies)
+- **Web Frontend**: ~100MB smaller (npm cache + dev dependencies removed)
+- **Total Savings**: ~105-115MB per deployment
 - **Build Context**: 50-90% smaller
 
 ### Security Improvements

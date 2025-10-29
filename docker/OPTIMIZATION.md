@@ -14,10 +14,10 @@ Three Docker images were optimized:
 ### 1. API Backend (api.Dockerfile)
 
 #### Size Optimizations
-- **Removed curl installation**: The original Dockerfile installed curl via apt-get, which added ~20MB to the image and required installing additional dependencies. We now use wget which is already included in the aspnet base image.
+- **Removed curl installation**: The original Dockerfile installed curl via apt-get, which required installing additional dependencies. We now use wget which is already included in the aspnet base image.
   - **Before**: `RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*`
   - **After**: No extra packages needed, uses built-in wget
-  - **Savings**: ~20-25MB per image
+  - **Savings**: ~5-15MB per image (curl itself is ~2-5MB, but apt-get update and dependencies add more)
 
 - **Added build flags**: 
   - `--no-cache` for dotnet restore prevents caching that can bloat the image
@@ -99,11 +99,11 @@ Created comprehensive `.dockerignore` file to exclude:
 
 | Image | Before (estimated) | After (estimated) | Reduction |
 |-------|-------------------|-------------------|-----------|
-| API Backend | ~250MB | ~220MB | ~12% (~30MB) |
+| API Backend | ~220MB | ~210MB | ~5% (~5-15MB) |
 | Web Frontend | ~500MB | ~400MB | ~20% (~100MB) |
-| **Total** | ~750MB | ~620MB | ~17% (~130MB) |
+| **Total** | ~720MB | ~610MB | ~15% (~105-115MB) |
 
-*Note: Actual sizes depend on dependencies and application code*
+*Note: Actual sizes depend on dependencies and application code. The main savings come from removing npm cache and dev dependencies in the web image.*
 
 ### Build Time Improvements
 

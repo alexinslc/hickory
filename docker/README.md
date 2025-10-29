@@ -60,7 +60,6 @@ The Dockerfiles in this repository have been optimized for smaller image sizes a
 ### Web Frontend Optimizations
 - **Multi-stage build**: Separates deps, builder, and runtime stages
 - **npm ci instead of npm install**: Faster, more reliable installations
-- **Production dependencies only**: Uses `--omit=dev` flag
 - **Cache cleaning**: Runs `npm cache clean --force` after install
 - **npm prune**: Removes dev dependencies after build
 - **Alpine Linux**: Uses lightweight Alpine base image
@@ -74,8 +73,9 @@ The Dockerfiles in this repository have been optimized for smaller image sizes a
 - **Security**: All services run as non-root users where possible
 
 **Expected Size Reductions**:
-- API image: ~15-20% smaller (removed curl/apt packages)
-- Web image: ~10-15% smaller (npm cache cleanup, production deps only)
+- API image: ~5-15MB smaller (removed curl/apt packages)
+- Web image: ~100MB smaller (npm cache cleanup, dev dependencies removed)
+- Build context: 50-90% smaller (with .dockerignore)
 - Faster builds: Improved layer caching reduces rebuild time
 
 ## 📦 Prerequisites
