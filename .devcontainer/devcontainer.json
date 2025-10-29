@@ -1,0 +1,119 @@
+{
+  "name": "Hickory Help Desk",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      // VS Code settings
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "dotnet.defaultSolution": "hickory.sln",
+        "omnisharp.useModernNet": true,
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[csharp]": {
+          "editor.defaultFormatter": "ms-dotnettools.csharp"
+        },
+        "files.watcherExclude": {
+          "**/node_modules/**": true,
+          "**/bin/**": true,
+          "**/obj/**": true
+        }
+      },
+      
+      // Extensions to install
+      "extensions": [
+        // .NET Development
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        
+        // Node.js/TypeScript/React
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dsznajder.es7-react-js-snippets",
+        
+        // Docker
+        "ms-azuretools.vscode-docker",
+        
+        // Database
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        
+        // Git
+        "eamodio.gitlens",
+        
+        // General productivity
+        "editorconfig.editorconfig",
+        "streetsidesoftware.code-spell-checker",
+        "ms-vscode.live-server"
+      ]
+    }
+  },
+  
+  // Forward ports for services
+  "forwardPorts": [
+    3000,  // Next.js web frontend
+    5000,  // .NET API
+    5432,  // PostgreSQL
+    6379,  // Redis
+    8025   // MailHog UI
+  ],
+  
+  "portsAttributes": {
+    "3000": {
+      "label": "Web Frontend",
+      "onAutoForward": "notify"
+    },
+    "5000": {
+      "label": "API Backend",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    },
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    },
+    "8025": {
+      "label": "MailHog UI",
+      "onAutoForward": "silent"
+    }
+  },
+  
+  // Run commands after container is created
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  
+  // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root
+  "remoteUser": "vscode",
+  
+  // Features to add to the dev container
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000"
+    }
+  },
+  
+  // Use 'mounts' to make the Docker socket available or add other mounts
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
+  ],
+  
+  // Environment variables
+  "containerEnv": {
+    "DOCKER_HOST": "unix:///var/run/docker-host.sock"
+  }
+}
