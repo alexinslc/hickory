@@ -28,6 +28,9 @@ coverage/
 *.lcov
 .nyc_output
 TestResults/
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Environment variables
 .env

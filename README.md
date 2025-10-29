@@ -86,17 +86,50 @@ npm run dev
 
 ## 🧪 Testing
 
+### E2E Tests (Playwright) - **130+ comprehensive tests**
+
+Full end-to-end test coverage for all major features:
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run with UI mode (recommended for development)
+npm run test:e2e:ui
+
+# Run specific test suites
+npm run test:e2e:dashboard
+npm run test:e2e:auth
+npm run test:e2e:search
+
+# View test report
+npm run test:e2e:report
+
+# See detailed guide
+cat apps/web-e2e/E2E_TEST_GUIDE.md
+```
+
+**Test Coverage:**
+- ✅ User ticket workflows (7 tests)
+- ✅ Agent ticket management (10 tests)
+- ✅ Dashboard functionality (15 tests)
+- ✅ Authentication flows (25 tests)
+- ✅ Search functionality (15 tests)
+- ✅ Knowledge base (20 tests)
+- ✅ Admin features (20 tests)
+- ✅ Settings & notifications (20 tests)
+
+### Performance Tests
+
 ```bash
 # Performance tests
 npm run test:performance
-
-# E2E tests (Playwright)
-cd apps/web-e2e
-npx playwright test
-
-# View E2E report
-npx playwright show-report
 ```
+
+**Documentation:**
+- [E2E Test Guide](apps/web-e2e/E2E_TEST_GUIDE.md) - Comprehensive testing guide
+- [E2E README](apps/web-e2e/README.md) - Test coverage details
+- [Quick Start](apps/web-e2e/QUICKSTART.md) - Getting started
 
 ## 🛠️ Development
 
