@@ -100,3 +100,6 @@ storage/
 # Next.js
 .next
 out
+
+# Archived files
+.github/workflows-archive/
