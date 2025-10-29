@@ -31,6 +31,65 @@ Tests the agent workflows for managing and responding to support requests:
 - **US2.9**: Agent queue shows priority and status information
 - **US2.10**: Agent can filter or sort tickets in queue
 
+### Dashboard Functionality (`dashboard.spec.ts`)
+
+Tests the main dashboard features:
+
+- **D1.1-D1.8**: User dashboard view (layout, stats, recent tickets, quick actions, updates)
+- **D2.1-D2.3**: Navigation (menu accessibility, section navigation, dashboard links)
+- **D3.1-D3.2**: Responsive design (mobile and tablet viewports)
+- **D4.1**: Performance (dashboard load time)
+
+### Authentication Flows (`authentication.spec.ts`)
+
+Tests all authentication functionality:
+
+- **A1.1-A1.8**: Login (page load, valid/invalid credentials, validation, links, redirects)
+- **A2.1-A2.7**: Registration (page load, valid data, validation, duplicate prevention, links)
+- **A3.1-A3.3**: Logout (successful logout, session clearing, access control)
+- **A4.1-A4.2**: Session persistence (page reloads, navigation)
+- **A5.1-A5.2**: Security (password masking, form protection)
+
+### Search Functionality (`search.spec.ts`)
+
+Tests the search features:
+
+- **S1.1-S1.7**: Basic search (page load, title search, no results, clickable results, nav search, special chars, case-insensitive)
+- **S2.1-S2.3**: Filters (priority filter, status filter, clear filters)
+- **S3.1**: Performance (search results load time)
+- **S4.1-S4.3**: Edge cases (long queries, empty queries, SQL injection protection)
+
+### Knowledge Base (`knowledge-base.spec.ts`)
+
+Tests the knowledge base functionality:
+
+- **KB1.1-KB1.6**: Viewing articles (page load, article list, navigation, details, content, back navigation)
+- **KB2.1-KB2.2**: Search (search functionality, article search)
+- **KB3.1-KB3.2**: Categories (organization, filtering)
+- **KB4.1-KB4.3**: Creating/editing (create page, form fields, edit page)
+- **KB5.1**: Mobile responsive
+- **KB6.1**: Performance (page load time)
+
+### Admin Functionality (`admin.spec.ts`)
+
+Tests admin-specific features:
+
+- **ADM1.1-ADM1.6**: Category management (navigation, list view, create, edit, delete, validation)
+- **ADM2.1-ADM2.2**: Access control (non-admin restrictions, navigation visibility)
+- **ADM3.1-ADM3.3**: Advanced features (search/filter, sortable table, deletion confirmation)
+- **ADM4.1**: Performance (admin page load time)
+
+### Settings and Notifications (`settings.spec.ts`)
+
+Tests user settings and preferences:
+
+- **SET1.1-SET1.2**: Navigation (settings access, page load)
+- **SET2.1-SET2.6**: Notification preferences (page load, options, email toggle, ticket notifications, comment notifications, persistence)
+- **SET3.1-SET3.2**: Profile settings (view info, current data display)
+- **SET4.1-SET4.3**: UI/UX (section navigation, mobile responsive)
+- **SET5.1-SET5.2**: Form validation (error display, invalid data prevention)
+- **SET6.1**: Performance (page load time)
+
 ## Running the Tests
 
 ### Prerequisites
@@ -53,7 +112,7 @@ Tests the agent workflows for managing and responding to support requests:
 ### Run All E2E Tests
 
 ```bash
-# Run all tests
+# Run all tests (starts web server automatically via playwright config)
 npx nx e2e web-e2e
 
 # Run with UI mode (interactive)
@@ -61,6 +120,8 @@ npx nx e2e web-e2e --ui
 
 # Run specific test file
 npx playwright test user-story-1-submit-tickets.spec.ts
+npx playwright test dashboard.spec.ts
+npx playwright test authentication.spec.ts
 
 # Run with headed browser (see what's happening)
 npx nx e2e web-e2e --headed
@@ -69,6 +130,10 @@ npx nx e2e web-e2e --headed
 npx playwright test --project=chromium
 npx playwright test --project=firefox
 npx playwright test --project=webkit
+
+# Run tests matching pattern
+npx playwright test --grep "dashboard"
+npx playwright test --grep "authentication"
 ```
 
 ### Debug Tests
