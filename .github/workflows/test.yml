@@ -137,10 +137,15 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      - name: Build API
+        run: |
+          cd apps/api
+          dotnet build
+
       - name: Start API (Background)
         run: |
           cd apps/api
-          dotnet run --no-launch-profile &
+          dotnet run --no-build --no-launch-profile &
           echo "API_PID=$!" >> $GITHUB_ENV
         env:
           ASPNETCORE_ENVIRONMENT: Development
