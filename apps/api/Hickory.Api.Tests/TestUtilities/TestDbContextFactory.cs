@@ -34,14 +34,6 @@ public static class TestDbContextFactory
 
         return context;
     }
-
-    /// <summary>
-    /// Creates a DbContext with a shared database name for tests that need to share data
-    /// </summary>
-    public static ApplicationDbContext CreateSharedInMemoryDbContext(string sharedDatabaseName)
-    {
-        return CreateInMemoryDbContext(sharedDatabaseName);
-    }
 }
 
 /// <summary>
