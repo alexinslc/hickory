@@ -25,7 +25,7 @@ export default function LoginPage() {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-lg">
+            <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-lg" aria-hidden="true">
               <TicketIcon className="h-10 w-10" />
             </div>
           </div>
@@ -46,12 +46,13 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} aria-label="Login form">
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
@@ -59,6 +60,7 @@ export default function LoginPage() {
                   disabled={login.isPending}
                   required
                   autoComplete="email"
+                  aria-required="true"
                 />
               </div>
               
@@ -74,6 +76,7 @@ export default function LoginPage() {
                 </div>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
@@ -81,12 +84,13 @@ export default function LoginPage() {
                   disabled={login.isPending}
                   required
                   autoComplete="current-password"
+                  aria-required="true"
                 />
               </div>
 
               {login.isError && (
-                <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
-                  <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive border border-destructive/20" role="alert">
+                  <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" aria-hidden="true" />
                   <div className="text-sm">
                     <p className="font-medium">Authentication failed</p>
                     <p className="text-xs mt-1">
@@ -103,15 +107,16 @@ export default function LoginPage() {
                 className="w-full" 
                 size="lg"
                 disabled={login.isPending}
+                aria-label={login.isPending ? 'Signing in...' : 'Sign in to your account'}
               >
                 {login.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                     Signing in...
                   </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" />
+                    <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
                     Sign In
                   </>
                 )}
