@@ -61,4 +61,4 @@ RUN groupadd -g 999 docker || true \
 USER ${USERNAME}
 
 # Set working directory
-WORKDIR /workspace
+WORKDIR /workspaces/hickory

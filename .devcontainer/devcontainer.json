@@ -2,7 +2,7 @@
   "name": "Hickory Help Desk",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspaces/hickory",
   
   // Configure tool-specific properties
   "customizations": {
