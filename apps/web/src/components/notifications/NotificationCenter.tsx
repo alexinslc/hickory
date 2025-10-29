@@ -8,20 +8,6 @@ export function NotificationCenter() {
   const { notifications, unreadCount, markAllAsRead, clearNotifications, isConnected, connectionError } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Determine status message
-  const getStatusMessage = () => {
-    if (connectionError) {
-      return 'Connection error';
-    }
-    if (!isConnected) {
-      return 'Connecting...';
-    }
-    if (notifications.length === 0) {
-      return 'You\'re all caught up!';
-    }
-    return '';
-  };
-
   return (
     <div className="relative">
       {/* Notification Bell Button */}

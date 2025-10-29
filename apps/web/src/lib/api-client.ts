@@ -495,7 +495,7 @@ export const apiClient = new ApiClient();
  * @param error - The error object from an API call
  * @returns A formatted error message string
  */
-export function handleApiError(error: any): string {
+export function handleApiError(error: unknown): string {
   // Check for response data with message
   if (error?.response?.data?.message) {
     return error.response.data.message;
