@@ -17,6 +17,9 @@
 
 ### Run Locally
 ```bash
+# Quick pre-commit check (runs all CI checks locally)
+./scripts/pre-commit-check.sh
+
 # Quick check before pushing
 npm ci && npx nx run-many --target=lint,test --all
 
@@ -27,6 +30,18 @@ npx nx build web
 # Run tests
 dotnet test apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj
 npx nx test web
+```
+
+### Monitor Workflow Status
+```bash
+# Check workflow status (requires gh CLI)
+./scripts/workflow-status.sh
+
+# Watch current workflow run
+gh run watch
+
+# View workflow in browser
+gh run view --web
 ```
 
 ### Fix Common Issues

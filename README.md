@@ -1,5 +1,7 @@
 # Hickory Help Desk
 
+[![CI Pipeline](https://github.com/alexinslc/hickory/workflows/CI%20Pipeline/badge.svg)](https://github.com/alexinslc/hickory/actions/workflows/ci.yml)
+
 Modern, full-stack help desk ticket management system built with .NET 9, Next.js 15, PostgreSQL, and Redis.
 
 ## 🚀 Quick Start
@@ -86,16 +88,26 @@ npm run dev
 
 ## 🧪 Testing
 
+See [GitHub Actions Workflow Documentation](.github/WORKFLOW.md) for CI/CD details.
+
+**Run tests locally:**
 ```bash
-# Performance tests
-npm run test:performance
+# All tests
+npx nx run-many --target=test --all
+
+# Specific projects
+dotnet test apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj
+npx nx test web
+npx nx test cli
 
 # E2E tests (Playwright)
-cd apps/web-e2e
-npx playwright test
+npx nx e2e web-e2e
 
 # View E2E report
 npx playwright show-report
+
+# Performance tests
+npm run test:performance
 ```
 
 ## 🛠️ Development
