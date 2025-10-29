@@ -400,6 +400,12 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
       
+      - name: Restore .NET cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      
       - name: Download API Build Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -412,7 +418,7 @@ jobs:
       - name: Run Database Migrations
         run: |
           dotnet tool install --global dotnet-ef || true
-          dotnet ef database update --project apps/api/Hickory.Api.csproj --no-build --configuration Release
+          dotnet ef database update --project apps/api/Hickory.Api.csproj --configuration Release
         env:
           ASPNETCORE_ENVIRONMENT: Development
       
