@@ -30,14 +30,16 @@ run_check() {
     local name=$1
     local cmd=$2
     local tmpfile=$(mktemp)
-    TMPFILES+=("$tmpfile")
     
     echo -n "  → $name... "
     if eval "$cmd" > "$tmpfile" 2>&1; then
         echo -e "${GREEN}✓${NC}"
+        rm -f "$tmpfile"  # Clean up on success
     else
         echo -e "${RED}✗${NC}"
-        echo -e "${YELLOW}    See $tmpfile for details${NC}"
+        # Keep failed logs for review, add to cleanup list
+        TMPFILES+=("$tmpfile")
+        echo -e "${YELLOW}    See $tmpfile for details (will be cleaned up on exit)${NC}"
         FAILED=1
     fi
 }
