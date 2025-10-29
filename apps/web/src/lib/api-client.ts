@@ -495,14 +495,31 @@ export const apiClient = new ApiClient();
  * @param error - The error object from an API call
  * @returns A formatted error message string
  */
-export function handleApiError(error: any): string {
+export function handleApiError(error: unknown): string {
+  // Type guard for axios error structure
+  const isAxiosError = (err: unknown): err is { response?: { data?: { message?: string; errors?: Record<string, unknown> } } } => {
+    if (typeof err !== 'object' || err === null || !('response' in err)) {
+      return false;
+    }
+    const response = (err as { response: unknown }).response;
+    if (typeof response !== 'object' || response === null) {
+      return false;
+    }
+    return true;
+  };
+
+  // Type guard for error with message
+  const hasMessage = (err: unknown): err is { message: string } => {
+    return typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string';
+  };
+
   // Check for response data with message
-  if (error?.response?.data?.message) {
+  if (isAxiosError(error) && error.response?.data?.message) {
     return error.response.data.message;
   }
 
   // Check for validation errors
-  if (error?.response?.data?.errors) {
+  if (isAxiosError(error) && error.response?.data?.errors) {
     const errors = error.response.data.errors;
     const errorMessages = Object.entries(errors)
       .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
@@ -511,7 +528,7 @@ export function handleApiError(error: any): string {
   }
 
   // Check for error message property
-  if (error?.message) {
+  if (hasMessage(error)) {
     return error.message;
   }
 

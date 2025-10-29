@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
-import { useLogout } from '@/hooks/use-auth';
 import { useMyTickets } from '@/hooks/use-tickets';
 import { AuthGuard } from '@/components/auth-guard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
