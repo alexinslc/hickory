@@ -61,7 +61,6 @@ export function SearchInput({
         onChange={(e) => setLocalValue(e.target.value)}
         placeholder={placeholder}
         className="block w-full rounded-md border-gray-300 pl-10 pr-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-        aria-label="Search tickets by keyword"
       />
       {localValue && (
         <button

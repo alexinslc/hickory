@@ -71,13 +71,13 @@ export function SearchResults({
       </div>
 
       {/* Tickets list */}
-      <div className="space-y-4" role="list" aria-label="Search results">
+      <ul className="space-y-4" aria-label="Search results">
         {tickets.map((ticket) => (
-          <div key={ticket.id} role="listitem">
+          <li key={ticket.id}>
             <TicketCard ticket={ticket} showAssignee />
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -108,7 +108,7 @@ export function SearchResults({
               </p>
             </div>
             <div>
-              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Page navigation">
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Search results pagination">
                 <button
                   onClick={() => onPageChange(page - 1)}
                   disabled={page === 1}

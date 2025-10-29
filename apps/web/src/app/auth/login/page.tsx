@@ -107,7 +107,6 @@ export default function LoginPage() {
                 className="w-full" 
                 size="lg"
                 disabled={login.isPending}
-                aria-label={login.isPending ? 'Signing in...' : 'Sign in to your account'}
               >
                 {login.isPending ? (
                   <>

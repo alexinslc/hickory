@@ -129,7 +129,6 @@ export default function SearchPage() {
           <div className="lg:col-span-3 h-96 bg-gray-200 rounded"></div>
         </div>
       </div>
-      <span className="sr-only">Loading search page...</span>
     </div>}>
       <SearchPageContent />
     </Suspense>
