@@ -6,9 +6,26 @@ Modern, full-stack help desk ticket management system built with .NET 9, Next.js
 
 ## 🚀 Quick Start
 
-### Option 1: Docker (Recommended)
+### Option 1: Dev Container (Recommended for VS Code)
 
-The fastest way to get started:
+The easiest way to get started with a complete development environment:
+
+**Prerequisites:**
+- [Docker](https://www.docker.com/products/docker-desktop)
+- [VS Code](https://code.visualstudio.com/)
+- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+**Steps:**
+1. Open this repository in VS Code
+2. Click "Reopen in Container" when prompted (or use Command Palette: "Dev Containers: Reopen in Container")
+3. Wait for the container to build and dependencies to install (5-10 minutes first time)
+4. Start development! All services (PostgreSQL, Redis, MailHog) are automatically configured.
+
+See [.devcontainer/README.md](.devcontainer/README.md) for more details.
+
+### Option 2: Docker Compose
+
+Run the full application stack with Docker:
 
 ```bash
 # Start all services
@@ -24,7 +41,7 @@ open http://localhost:3000
 
 See [docker/QUICKSTART.md](docker/QUICKSTART.md) for more details.
 
-### Option 2: Local Development
+### Option 3: Local Development
 
 **Prerequisites:**
 - .NET 9.0 SDK
@@ -49,6 +66,7 @@ npm run dev
 
 ## 📖 Documentation
 
+- **[Dev Container Setup](.devcontainer/README.md)** - VS Code devcontainer documentation
 - **[Docker Setup](docker/README.md)** - Complete Docker documentation
 - **[Specification](specs/001-help-desk-core/spec.md)** - Product requirements
 - **[API Documentation](specs/001-help-desk-core/contracts/openapi.yaml)** - OpenAPI spec
