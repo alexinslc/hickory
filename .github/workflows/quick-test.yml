@@ -43,6 +43,6 @@ jobs:
         if: always()
         run: |
           echo "✅ Quick tests completed!"
-          echo "- .NET API: 82 tests"
+          echo "- .NET API: .NET unit tests"
           echo "- Web: Jest unit tests"
           echo "- CLI: Jest unit tests"
