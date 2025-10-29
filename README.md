@@ -88,8 +88,6 @@ npm run dev
 
 ## 🧪 Testing
 
-See [GitHub Actions Workflow Documentation](.github/WORKFLOW.md) for CI/CD details.
-
 **Run tests locally:**
 ```bash
 # All tests
