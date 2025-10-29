@@ -364,6 +364,21 @@ jobs:
     needs: [build-api, build-web]
     timeout-minutes: 15
     
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hickory
+          POSTGRES_USER: hickory
+          POSTGRES_PASSWORD: hickory_dev_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -394,10 +409,16 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
       
+      - name: Run Database Migrations
+        run: |
+          dotnet tool install --global dotnet-ef || true
+          dotnet ef database update --project apps/api/Hickory.Api.csproj --no-build --configuration Release
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+      
       - name: Start API (Background)
         run: |
-          cd apps/api
-          dotnet run --no-build --no-launch-profile &
+          dotnet apps/api/bin/Release/net9.0/Hickory.Api.dll &
           echo $! > api.pid
         env:
           ASPNETCORE_ENVIRONMENT: Development
@@ -422,8 +443,8 @@ jobs:
       - name: Stop API
         if: always()
         run: |
-          if [ -f apps/api/api.pid ]; then
-            kill $(cat apps/api/api.pid) || true
+          if [ -f api.pid ]; then
+            kill $(cat api.pid) || true
           fi
 
   # Docker Build Validation
