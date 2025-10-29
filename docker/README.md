@@ -61,7 +61,7 @@ The Dockerfiles in this repository have been optimized for smaller image sizes a
 - **Multi-stage build**: Separates deps, builder, and runtime stages
 - **npm ci instead of npm install**: Faster, more reliable installations
 - **Cache cleaning**: Runs `npm cache clean --force` after install
-- **npm prune**: Removes dev dependencies after build
+- **npm prune --production**: Removes dev dependencies after build
 - **Alpine Linux**: Uses lightweight Alpine base image
 - **Non-root user**: Runs as dedicated `nextjs` user for security
 - **Proper file ownership**: Sets correct ownership in COPY commands
