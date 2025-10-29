@@ -4,6 +4,9 @@
 
 set -e
 
+# Configuration
+WORKFLOW_FILE="${WORKFLOW_FILE:-ci.yml}"  # Can be overridden via environment variable
+
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -37,16 +40,16 @@ if ! gh auth status &> /dev/null; then
     exit 1
 fi
 
-# Get current branch
-BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+# Get current branch and default branch
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
 echo -e "${BLUE}Branch:${NC} $BRANCH"
 echo ""
 
 # Get latest workflow runs
-echo "Latest CI Pipeline runs:"
+echo "Latest CI Pipeline runs ($WORKFLOW_FILE):"
 echo ""
 
-gh run list --workflow=ci.yml --limit 5 --json status,conclusion,displayTitle,createdAt,url \
+gh run list --workflow="$WORKFLOW_FILE" --limit 5 --json status,conclusion,displayTitle,createdAt,url \
     --jq '.[] | 
         if .status == "completed" then
             if .conclusion == "success" then
@@ -75,8 +78,11 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Commands:"
-echo "  View all runs:         gh run list --workflow=ci.yml"
+echo "  View all runs:         gh run list --workflow=$WORKFLOW_FILE"
 echo "  View specific run:     gh run view <run-id>"
 echo "  Watch latest run:      gh run watch"
 echo "  Open in browser:       gh run view --web"
+echo ""
+echo "Configuration:"
+echo "  Set workflow file:     export WORKFLOW_FILE=custom.yml && $0"
 echo ""

@@ -20,13 +20,15 @@ FAILED=0
 run_check() {
     local name=$1
     local cmd=$2
+    local tmpfile=$(mktemp)
     
     echo -n "  → $name... "
-    if eval "$cmd" > /tmp/ci-check.log 2>&1; then
+    if eval "$cmd" > "$tmpfile" 2>&1; then
         echo -e "${GREEN}✓${NC}"
+        rm -f "$tmpfile"
     else
         echo -e "${RED}✗${NC}"
-        echo -e "${YELLOW}    See /tmp/ci-check.log for details${NC}"
+        echo -e "${YELLOW}    See $tmpfile for details${NC}"
         FAILED=1
     fi
 }
@@ -98,8 +100,8 @@ echo ""
 # 6. Security checks (optional, fast check)
 echo "🔒 Running quick security check..."
 if command -v npm &> /dev/null; then
-    AUDIT_RESULT=$(npm audit --audit-level=high 2>&1 | grep -c "found 0" || echo "0")
-    if [ "$AUDIT_RESULT" -gt 0 ]; then
+    # npm audit returns exit code 0 if no vulnerabilities found
+    if npm audit --audit-level=high > /dev/null 2>&1; then
         echo -e "  → npm audit... ${GREEN}✓${NC}"
     else
         echo -e "  → npm audit... ${YELLOW}⚠${NC} (Run 'npm audit' for details)"
@@ -114,7 +116,5 @@ if [ $FAILED -eq 0 ]; then
     exit 0
 else
     echo -e "${RED}✗ Some checks failed.${NC} Please fix the issues above."
-    echo ""
-    echo "Tip: Check /tmp/ci-check.log for detailed error messages"
     exit 1
 fi
