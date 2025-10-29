@@ -14,8 +14,11 @@ export function NotificationCenter() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+        aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -26,7 +29,10 @@ export function NotificationCenter() {
         
         {/* Unread badge */}
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full">
+          <span 
+            className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full"
+            aria-label={`${unreadCount} unread notifications`}
+          >
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -37,6 +43,7 @@ export function NotificationCenter() {
             isConnected ? 'bg-green-500' : 'bg-gray-400'
           }`}
           title={isConnected ? 'Connected' : 'Disconnected'}
+          aria-label={isConnected ? 'Connected to notifications' : 'Disconnected from notifications'}
         />
       </button>
 
@@ -47,10 +54,15 @@ export function NotificationCenter() {
           <div
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
+            aria-hidden="true"
           />
 
           {/* Panel */}
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col">
+          <div 
+            className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col"
+            role="dialog"
+            aria-label="Notifications panel"
+          >
             {/* Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
@@ -59,6 +71,7 @@ export function NotificationCenter() {
                   <button
                     onClick={markAllAsRead}
                     className="text-sm text-blue-600 hover:text-blue-800"
+                    aria-label="Mark all notifications as read"
                   >
                     Mark all read
                   </button>
@@ -70,6 +83,7 @@ export function NotificationCenter() {
                       setIsOpen(false);
                     }}
                     className="text-sm text-gray-600 hover:text-gray-800"
+                    aria-label="Clear all notifications"
                   >
                     Clear
                   </button>
@@ -78,14 +92,15 @@ export function NotificationCenter() {
             </div>
 
             {/* Notifications List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto" role="list" aria-label="Notification list">
               {notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
+                <div className="p-8 text-center text-gray-500" role="status">
                   <svg
                     className="w-16 h-16 mx-auto mb-4 text-gray-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -96,7 +111,7 @@ export function NotificationCenter() {
                   </svg>
                   <p className="text-sm font-medium">No notifications yet</p>
                   {connectionError ? (
-                    <p className="text-xs mt-1 text-red-500">
+                    <p className="text-xs mt-1 text-red-500" role="alert">
                       Connection error: Real-time notifications unavailable
                     </p>
                   ) : !isConnected ? (
@@ -115,6 +130,7 @@ export function NotificationCenter() {
                     <div
                       key={`${notification.timestamp}-${index}`}
                       className="p-4 hover:bg-gray-50 transition-colors"
+                      role="listitem"
                     >
                       <div className="flex items-start gap-3">
                         {/* Type indicator */}
@@ -128,6 +144,7 @@ export function NotificationCenter() {
                               ? 'bg-green-500'
                               : 'bg-purple-500'
                           }`}
+                          aria-hidden="true"
                         />
 
                         {/* Content */}
@@ -144,13 +161,17 @@ export function NotificationCenter() {
                                 href={`/tickets/${notification.ticketNumber}`}
                                 onClick={() => setIsOpen(false)}
                                 className="text-xs text-blue-600 hover:text-blue-800"
+                                aria-label={`View ticket ${notification.ticketNumber}`}
                               >
                                 View Ticket {notification.ticketNumber}
                               </Link>
                             )}
-                            <span className="text-xs text-gray-400">
+                            <time 
+                              className="text-xs text-gray-400"
+                              dateTime={notification.timestamp}
+                            >
                               {new Date(notification.timestamp).toLocaleTimeString()}
-                            </span>
+                            </time>
                           </div>
                         </div>
                       </div>
