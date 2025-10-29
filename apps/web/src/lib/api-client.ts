@@ -498,7 +498,14 @@ export const apiClient = new ApiClient();
 export function handleApiError(error: unknown): string {
   // Type guard for axios error structure
   const isAxiosError = (err: unknown): err is { response?: { data?: { message?: string; errors?: Record<string, unknown> } } } => {
-    return typeof err === 'object' && err !== null && 'response' in err;
+    if (typeof err !== 'object' || err === null || !('response' in err)) {
+      return false;
+    }
+    const response = (err as { response: unknown }).response;
+    if (typeof response !== 'object' || response === null) {
+      return false;
+    }
+    return true;
   };
 
   // Type guard for error with message
