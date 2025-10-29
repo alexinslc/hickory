@@ -1,5 +1,22 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.vscode
+.idea
+
+# Documentation
+*.md
+README*
+CHANGELOG*
+LICENSE
+docs/
+
 # Dependencies
-node_modules/
+node_modules
 .pnp
 .pnp.js
 
@@ -28,14 +45,20 @@ coverage/
 *.lcov
 .nyc_output
 TestResults/
+tests/
+specs/
+__tests__/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+**/jest.config.*
+**/*-e2e/
 
-# Environment variables
+# Environment variables (they should be passed at runtime)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
+.env.*
+!.env.example
 
 # Logs
 *.log
@@ -51,14 +74,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
-
-# IDEs
-.vscode/
-.idea/
-*.iml
-*.swp
-*.swo
-.vs/
 
 # Nx
 .nx/cache
@@ -76,11 +91,13 @@ Thumbs.db
 tmp/
 temp/
 
-# Compiled files
-*.min.js
-*.min.css
+# Docker
+docker/
+Dockerfile*
+docker-compose*.yml
+.dockerignore
 
-# Package manager lock files (keep package-lock.json, ignore others if using multiple)
+# Package manager
 yarn.lock
 pnpm-lock.yaml
 
@@ -89,11 +106,6 @@ uploads/
 attachments/
 storage/
 
-
-
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
-
-# Next.js
-.next
-out
+# Editors
+.cursor
+.specify
