@@ -115,7 +115,7 @@ apps/
 <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
 <PackageReference Include="Moq" Version="4.20.0" />
 <PackageReference Include="FluentAssertions" Version="6.12.0" />
-<PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
+<PackageReference Include="Testcontainers.PostgreSql" Version="3.10.0" />
 <PackageReference Include="Respawn" Version="6.2.1" /> <!-- DB cleanup -->
 ```
 
