@@ -1,17 +1,48 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuth } from '../../hooks/use-auth';
+import { useAuth, useLogin, useRegister, useLogout } from '../../hooks/use-auth';
 import { apiClient } from '../../lib/api-client';
 import { useAuthStore } from '../../store/auth-store';
 import { ReactNode } from 'react';
 
+// Type for the auth store state used in tests
+interface AuthState {
+  user: {
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+  } | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  setAuth: jest.Mock;
+  clearAuth: jest.Mock;
+  updateUser: jest.Mock;
+}
+
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}));
+
 // Mock the API client
-jest.mock('../../lib/api-client');
+jest.mock('../../lib/api-client', () => ({
+  apiClient: {
+    login: jest.fn(),
+    register: jest.fn(),
+  },
+}));
 const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
 // Mock the auth store
-jest.mock('../../store/auth-store');
-const mockedUseAuthStore = useAuthStore as unknown as jest.Mock;
+jest.mock('../../store/auth-store', () => ({
+  useAuthStore: jest.fn(),
+}));
+const mockedUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;
 
 describe('useAuth hook', () => {
   let queryClient: QueryClient;
@@ -19,6 +50,23 @@ describe('useAuth hook', () => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+
+  // Helper function to mock the auth store with proper typing
+  const mockAuthStore = (state: Partial<AuthState>) => {
+    mockedUseAuthStore.mockImplementation(<T,>(selector: (state: AuthState) => T): T => {
+      const fullState: AuthState = {
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        setAuth: jest.fn(),
+        clearAuth: jest.fn(),
+        updateUser: jest.fn(),
+        ...state,
+      };
+      return selector(fullState);
+    });
+  };
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -32,11 +80,7 @@ describe('useAuth hook', () => {
     jest.clearAllMocks();
 
     // Setup default auth store mock
-    mockedUseAuthStore.mockReturnValue({
-      user: null,
-      setUser: jest.fn(),
-      clearUser: jest.fn(),
-    });
+    mockAuthStore({});
   });
 
   afterEach(() => {
@@ -53,33 +97,39 @@ describe('useAuth hook', () => {
         firstName: 'John',
         lastName: 'Doe',
         role: 'User',
-        expiresAt: new Date('2025-12-31'),
+        expiresAt: '2025-12-31',
       };
 
-      const setUserMock = jest.fn();
-      mockedUseAuthStore.mockReturnValue({
-        user: null,
-        setUser: setUserMock,
-        clearUser: jest.fn(),
-      });
+      const setAuthMock = jest.fn();
+      mockAuthStore({ setAuth: setAuthMock });
 
-      mockedApiClient.post.mockResolvedValueOnce({ data: mockResponse });
+      mockedApiClient.login.mockResolvedValueOnce(mockResponse);
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      const { result } = renderHook(() => useLogin(), { wrapper });
 
-      result.current.login.mutate({
+      result.current.mutate({
         email: 'test@example.com',
         password: 'password123',
       });
 
-      await waitFor(() => expect(result.current.login.isSuccess).toBe(true));
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/login', {
+      expect(mockedApiClient.login).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
       });
 
-      expect(setUserMock).toHaveBeenCalledWith(mockResponse);
+      expect(setAuthMock).toHaveBeenCalledWith(
+        {
+          userId: '123',
+          email: 'test@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
+          role: 'User',
+        },
+        'mock-token',
+        'mock-refresh'
+      );
     });
 
     it('should handle login errors', async () => {
@@ -90,86 +140,63 @@ describe('useAuth hook', () => {
         },
       };
 
-      mockedApiClient.post.mockRejectedValueOnce(mockError);
+      mockAuthStore({});
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      mockedApiClient.login.mockRejectedValueOnce(mockError);
 
-      result.current.login.mutate({
+      const { result } = renderHook(() => useLogin(), { wrapper });
+
+      result.current.mutate({
         email: 'wrong@example.com',
         password: 'wrongpassword',
       });
 
-      await waitFor(() => expect(result.current.login.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true));
 
-      expect(result.current.login.error).toBeDefined();
+      expect(result.current.error).toBeDefined();
     });
 
-    it('should not call setUser on login failure', async () => {
-      const setUserMock = jest.fn();
-      mockedUseAuthStore.mockReturnValue({
-        user: null,
-        setUser: setUserMock,
-        clearUser: jest.fn(),
-      });
+    it('should not call setAuth on login failure', async () => {
+      const setAuthMock = jest.fn();
+      mockAuthStore({ setAuth: setAuthMock });
 
-      mockedApiClient.post.mockRejectedValueOnce(new Error('Network error'));
+      mockedApiClient.login.mockRejectedValueOnce(new Error('Network error'));
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      const { result } = renderHook(() => useLogin(), { wrapper });
 
-      result.current.login.mutate({
+      result.current.mutate({
         email: 'test@example.com',
         password: 'password123',
       });
 
-      await waitFor(() => expect(result.current.login.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true));
 
-      expect(setUserMock).not.toHaveBeenCalled();
+      expect(setAuthMock).not.toHaveBeenCalled();
     });
   });
 
   describe('logout', () => {
-    it('should logout and clear user data', async () => {
-      const clearUserMock = jest.fn();
-      mockedUseAuthStore.mockReturnValue({
+    it('should logout and clear user data', () => {
+      const clearAuthMock = jest.fn();
+      mockAuthStore({
         user: {
           userId: '123',
           email: 'test@example.com',
           firstName: 'John',
           lastName: 'Doe',
           role: 'User',
-          accessToken: 'token',
         },
-        setUser: jest.fn(),
-        clearUser: clearUserMock,
+        accessToken: 'token',
+        refreshToken: 'refresh-token',
+        isAuthenticated: true,
+        clearAuth: clearAuthMock,
       });
 
-      mockedApiClient.post.mockResolvedValueOnce({ data: { message: 'Logged out' } });
+      const { result } = renderHook(() => useLogout(), { wrapper });
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      result.current();
 
-      result.current.logout.mutate();
-
-      await waitFor(() => expect(result.current.logout.isSuccess).toBe(true));
-
-      expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/logout');
-      expect(clearUserMock).toHaveBeenCalled();
-    });
-
-    it('should clear user data even if logout API call fails', async () => {
-      const clearUserMock = jest.fn();
-      mockedUseAuthStore.mockReturnValue({
-        user: { userId: '123', email: 'test@example.com' },
-        setUser: jest.fn(),
-        clearUser: clearUserMock,
-      });
-
-      mockedApiClient.post.mockRejectedValueOnce(new Error('Network error'));
-
-      const { result } = renderHook(() => useAuth(), { wrapper });
-
-      result.current.logout.mutate();
-
-      await waitFor(() => expect(clearUserMock).toHaveBeenCalled());
+      expect(clearAuthMock).toHaveBeenCalled();
     });
   });
 
@@ -177,32 +204,49 @@ describe('useAuth hook', () => {
     it('should register a new user successfully', async () => {
       const mockResponse = {
         accessToken: 'new-token',
+        refreshToken: 'new-refresh-token',
         userId: '456',
         email: 'newuser@example.com',
         firstName: 'Jane',
         lastName: 'Smith',
         role: 'User',
+        expiresAt: '2025-12-31',
       };
 
-      mockedApiClient.post.mockResolvedValueOnce({ data: mockResponse });
+      const setAuthMock = jest.fn();
+      mockAuthStore({ setAuth: setAuthMock });
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      mockedApiClient.register.mockResolvedValueOnce(mockResponse);
 
-      result.current.register.mutate({
+      const { result } = renderHook(() => useRegister(), { wrapper });
+
+      result.current.mutate({
         email: 'newuser@example.com',
         password: 'password123',
         firstName: 'Jane',
         lastName: 'Smith',
       });
 
-      await waitFor(() => expect(result.current.register.isSuccess).toBe(true));
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/register', {
+      expect(mockedApiClient.register).toHaveBeenCalledWith({
         email: 'newuser@example.com',
         password: 'password123',
         firstName: 'Jane',
         lastName: 'Smith',
       });
+
+      expect(setAuthMock).toHaveBeenCalledWith(
+        {
+          userId: '456',
+          email: 'newuser@example.com',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          role: 'User',
+        },
+        'new-token',
+        'new-refresh-token'
+      );
     });
 
     it('should handle registration validation errors', async () => {
@@ -213,28 +257,26 @@ describe('useAuth hook', () => {
         },
       };
 
-      mockedApiClient.post.mockRejectedValueOnce(mockError);
+      mockAuthStore({});
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      mockedApiClient.register.mockRejectedValueOnce(mockError);
 
-      result.current.register.mutate({
+      const { result } = renderHook(() => useRegister(), { wrapper });
+
+      result.current.mutate({
         email: 'existing@example.com',
         password: 'password123',
         firstName: 'John',
         lastName: 'Doe',
       });
 
-      await waitFor(() => expect(result.current.register.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true));
     });
   });
 
   describe('isAuthenticated', () => {
     it('should return false when no user is logged in', () => {
-      mockedUseAuthStore.mockReturnValue({
-        user: null,
-        setUser: jest.fn(),
-        clearUser: jest.fn(),
-      });
+      mockAuthStore({ isAuthenticated: false });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -242,17 +284,17 @@ describe('useAuth hook', () => {
     });
 
     it('should return true when user is logged in', () => {
-      mockedUseAuthStore.mockReturnValue({
+      mockAuthStore({
         user: {
           userId: '123',
           email: 'test@example.com',
           firstName: 'John',
           lastName: 'Doe',
           role: 'User',
-          accessToken: 'token',
         },
-        setUser: jest.fn(),
-        clearUser: jest.fn(),
+        accessToken: 'token',
+        refreshToken: 'refresh-token',
+        isAuthenticated: true,
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
