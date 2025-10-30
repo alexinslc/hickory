@@ -13,11 +13,11 @@ export default function TicketsPage() {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white shadow-sm">
+        <nav className="bg-white shadow-sm" aria-label="Page header">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center">
-                <Link href="/dashboard" className="text-2xl font-bold text-gray-900">
+                <Link href="/dashboard" className="text-2xl font-bold text-gray-900" aria-label="Go to dashboard">
                   Hickory Help Desk
                 </Link>
               </div>
@@ -40,20 +40,21 @@ export default function TicketsPage() {
               <Link
                 href="/tickets/new"
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                aria-label="Create new ticket"
               >
                 Create Ticket
               </Link>
             </div>
 
             {isLoading && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="text-center py-12" role="status" aria-label="Loading tickets">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" aria-hidden="true"></div>
                 <p className="mt-4 text-gray-600">Loading tickets...</p>
               </div>
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="bg-red-50 border border-red-200 rounded-md p-4" role="alert">
                 <p className="text-red-800">
                   Error loading tickets: {error.message}
                 </p>
@@ -68,6 +69,7 @@ export default function TicketsPage() {
                 <Link
                   href="/tickets/new"
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  aria-label="Create your first ticket"
                 >
                   Create Your First Ticket
                 </Link>
@@ -76,22 +78,22 @@ export default function TicketsPage() {
 
             {tickets && tickets.length > 0 && (
               <div className="bg-white shadow rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200" aria-label="Tickets table">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Ticket
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Priority
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Created
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Comments
                       </th>
                     </tr>
@@ -102,6 +104,15 @@ export default function TicketsPage() {
                         key={ticket.id}
                         onClick={() => router.push(`/tickets/${ticket.id}`)}
                         className="hover:bg-gray-50 cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            router.push(`/tickets/${ticket.id}`);
+                          }
+                        }}
+                        aria-label={`View ticket ${ticket.ticketNumber}: ${ticket.title}`}
                       >
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
@@ -132,10 +143,10 @@ export default function TicketsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(ticket.createdAt)}
+                          <time dateTime={ticket.createdAt}>{formatDate(ticket.createdAt)}</time>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {ticket.commentCount}
+                          <span aria-label={`${ticket.commentCount} comments`}>{ticket.commentCount}</span>
                         </td>
                       </tr>
                     ))}

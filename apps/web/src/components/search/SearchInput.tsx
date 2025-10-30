@@ -35,12 +35,16 @@ export function SearchInput({
 
   return (
     <div className="relative">
+      <label htmlFor="search-input" className="sr-only">
+        Search tickets
+      </label>
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
         <svg 
           className="h-5 w-5 text-gray-400" 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path 
             strokeLinecap="round" 
@@ -51,6 +55,7 @@ export function SearchInput({
         </svg>
       </div>
       <input
+        id="search-input"
         type="text"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
@@ -65,8 +70,9 @@ export function SearchInput({
             onChange('');
           }}
           className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+          aria-label="Clear search"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>

@@ -142,116 +142,125 @@ export default function DashboardPage() {
         <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           {/* Welcome Section */}
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome back, {user?.firstName}! 👋
-            </h2>
+            </h1>
             <p className="text-gray-600">
               Here's what's happening with your help desk today
             </p>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat) => (
-              <Card key={stat.title} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`${stat.bgColor} ${stat.color} p-2 rounded-lg`}>
-                    <stat.icon className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stat.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <section aria-labelledby="stats-heading">
+            <h2 id="stats-heading" className="sr-only">Ticket statistics</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {stats.map((stat) => (
+                <Card key={stat.title} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      {stat.title}
+                    </CardTitle>
+                    <div className={`${stat.bgColor} ${stat.color} p-2 rounded-lg`} aria-hidden="true">
+                      <stat.icon className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold" aria-label={`${stat.value} ${stat.title}`}>{stat.value}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stat.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
 
           {/* Quick Actions */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Common tasks to get you started
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {quickActions.map((action) => (
-                  <Link
-                    key={action.title}
-                    href={action.href}
-                    className="flex flex-col items-start p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-blue-50 transition-all group"
-                  >
-                    <action.icon className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-                    <h3 className="font-semibold text-sm mb-1">{action.title}</h3>
-                    <p className="text-xs text-muted-foreground">{action.description}</p>
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Tickets */}
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
+          <section aria-labelledby="quick-actions-heading">
+            <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Recent Tickets</CardTitle>
+                <CardTitle id="quick-actions-heading">Quick Actions</CardTitle>
                 <CardDescription>
-                  Your latest support tickets
+                  Common tasks to get you started
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                  </div>
-                ) : tickets && tickets.length > 0 ? (
-                  <div className="space-y-4">
-                    {tickets.slice(0, 5).map((ticket) => (
-                      <div key={ticket.id} className="flex items-start gap-4 pb-4 border-b last:border-0">
-                        <div className={`p-2 rounded-full ${
-                          ticket.status === 'Open' ? 'bg-blue-100' :
-                          ticket.status === 'InProgress' ? 'bg-yellow-100' :
-                          ticket.status === 'Resolved' ? 'bg-green-100' :
-                          'bg-gray-100'
-                        }`}>
-                          <TicketIcon className={`h-4 w-4 ${
-                            ticket.status === 'Open' ? 'text-blue-600' :
-                            ticket.status === 'InProgress' ? 'text-yellow-600' :
-                            ticket.status === 'Resolved' ? 'text-green-600' :
-                            'text-gray-600'
-                          }`} />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium">
-                            {ticket.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {ticket.ticketNumber} • {ticket.status} • {ticket.priority} priority
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Created {new Date(ticket.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <TicketIcon className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                    <p className="text-sm text-muted-foreground">No tickets yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Create your first ticket to get started</p>
-                  </div>
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {quickActions.map((action) => (
+                    <Link
+                      key={action.title}
+                      href={action.href}
+                      className="flex flex-col items-start p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-blue-50 transition-all group"
+                      aria-label={action.description}
+                    >
+                      <action.icon className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" aria-hidden="true" />
+                      <h3 className="font-semibold text-sm mb-1">{action.title}</h3>
+                      <p className="text-xs text-muted-foreground">{action.description}</p>
+                    </Link>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          </div>
+          </section>
+
+          {/* Recent Tickets */}
+          <section aria-labelledby="recent-tickets-heading">
+            <div className="grid grid-cols-1 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle id="recent-tickets-heading">Recent Tickets</CardTitle>
+                  <CardDescription>
+                    Your latest support tickets
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8" role="status" aria-label="Loading tickets">
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" aria-hidden="true" />
+                      <span className="sr-only">Loading tickets...</span>
+                    </div>
+                  ) : tickets && tickets.length > 0 ? (
+                    <ul className="space-y-4" aria-label="Recent tickets list">
+                      {tickets.slice(0, 5).map((ticket) => (
+                        <li key={ticket.id} className="flex items-start gap-4 pb-4 border-b last:border-0">
+                          <div className={`p-2 rounded-full ${
+                            ticket.status === 'Open' ? 'bg-blue-100' :
+                            ticket.status === 'InProgress' ? 'bg-yellow-100' :
+                            ticket.status === 'Resolved' ? 'bg-green-100' :
+                            'bg-gray-100'
+                          }`} aria-hidden="true">
+                            <TicketIcon className={`h-4 w-4 ${
+                              ticket.status === 'Open' ? 'text-blue-600' :
+                              ticket.status === 'InProgress' ? 'text-yellow-600' :
+                              ticket.status === 'Resolved' ? 'text-green-600' :
+                              'text-gray-600'
+                            }`} />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium">
+                              {ticket.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {ticket.ticketNumber} • {ticket.status} • {ticket.priority} priority
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              <time dateTime={ticket.createdAt}>Created {new Date(ticket.createdAt).toLocaleDateString()}</time>
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center py-8">
+                      <TicketIcon className="h-12 w-12 mx-auto text-gray-300 mb-3" aria-hidden="true" />
+                      <p className="text-sm text-muted-foreground">No tickets yet</p>
+                      <p className="text-xs text-gray-400 mt-1">Create your first ticket to get started</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </section>
         </main>
       </div>
     </AuthGuard>

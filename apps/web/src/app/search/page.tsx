@@ -76,7 +76,7 @@ function SearchPageContent() {
       </div>
 
       {/* Search input */}
-      <div className="mb-6">
+      <div className="mb-6" role="search">
         <SearchInput 
           value={searchQuery} 
           onChange={handleSearchChange}
@@ -86,7 +86,7 @@ function SearchPageContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Filters sidebar */}
-        <div className="lg:col-span-1">
+        <aside className="lg:col-span-1" aria-label="Search filters">
           <SearchFilters
             status={status}
             priority={priority}
@@ -98,10 +98,10 @@ function SearchPageContent() {
             onCreatedBeforeChange={handleFilterChange(setCreatedBefore)}
             onClearFilters={handleClearFilters}
           />
-        </div>
+        </aside>
 
         {/* Results */}
-        <div className="lg:col-span-3">
+        <section className="lg:col-span-3" aria-label="Search results">
           <SearchResults
             tickets={data?.tickets || []}
             totalCount={data?.totalCount || 0}
@@ -111,7 +111,7 @@ function SearchPageContent() {
             isLoading={isLoading}
             onPageChange={handlePageChange}
           />
-        </div>
+        </section>
       </div>
     </div>
   );
@@ -119,7 +119,7 @@ function SearchPageContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="status" aria-label="Loading search page">
       <div className="animate-pulse">
         <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
         <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
