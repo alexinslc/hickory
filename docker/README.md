@@ -128,8 +128,8 @@ docker compose -f docker/docker-compose.yml exec api \
 All services include Docker health checks to ensure proper orchestration and monitoring:
 
 ### API Health Check
-- **Endpoint**: `/health/live`
-- **Method**: HTTP GET via wget
+- **Endpoint**: `/health`
+- **Method**: HTTP GET via curl
 - **Interval**: Every 30 seconds
 - **Timeout**: 10 seconds
 - **Start Period**: 40 seconds (allows time for startup)
