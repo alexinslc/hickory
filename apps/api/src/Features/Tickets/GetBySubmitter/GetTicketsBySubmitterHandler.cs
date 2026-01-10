@@ -23,12 +23,6 @@ public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitte
     public async Task<List<TicketDto>> Handle(GetTicketsBySubmitterQuery query, CancellationToken cancellationToken)
     {
         var ticketsQuery = _dbContext.Tickets
-            .Include(t => t.Submitter)
-            .Include(t => t.AssignedTo)
-            .Include(t => t.Comments)
-            .Include(t => t.Category)
-            .Include(t => t.TicketTags)
-                .ThenInclude(tt => tt.Tag)
             .Where(t => t.SubmitterId == query.UserId);
 
         // Filter by category if provided
@@ -45,33 +39,35 @@ public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitte
                 t.TicketTags.Any(tt => normalizedTags.Contains(tt.Tag.Name.ToLower())));
         }
 
+        // Use projection to avoid loading unnecessary data and prevent N+1 queries
         var tickets = await ticketsQuery
             .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new TicketDto
+            {
+                Id = t.Id,
+                TicketNumber = t.TicketNumber,
+                Title = t.Title,
+                Description = t.Description,
+                Status = t.Status.ToString(),
+                Priority = t.Priority.ToString(),
+                SubmitterId = t.SubmitterId,
+                SubmitterName = $"{t.Submitter.FirstName} {t.Submitter.LastName}",
+                AssignedToId = t.AssignedToId,
+                AssignedToName = t.AssignedTo != null 
+                    ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}"
+                    : null,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt,
+                ClosedAt = t.ClosedAt,
+                ResolutionNotes = t.ResolutionNotes,
+                CommentCount = t.Comments.Count,
+                RowVersion = Convert.ToBase64String(t.RowVersion),
+                CategoryId = t.CategoryId,
+                CategoryName = t.Category != null ? t.Category.Name : null,
+                Tags = t.TicketTags.Select(tt => tt.Tag.Name).ToList()
+            })
             .ToListAsync(cancellationToken);
 
-        return tickets.Select(ticket => new TicketDto
-        {
-            Id = ticket.Id,
-            TicketNumber = ticket.TicketNumber,
-            Title = ticket.Title,
-            Description = ticket.Description,
-            Status = ticket.Status.ToString(),
-            Priority = ticket.Priority.ToString(),
-            SubmitterId = ticket.SubmitterId,
-            SubmitterName = $"{ticket.Submitter.FirstName} {ticket.Submitter.LastName}",
-            AssignedToId = ticket.AssignedToId,
-            AssignedToName = ticket.AssignedTo != null 
-                ? $"{ticket.AssignedTo.FirstName} {ticket.AssignedTo.LastName}"
-                : null,
-            CreatedAt = ticket.CreatedAt,
-            UpdatedAt = ticket.UpdatedAt,
-            ClosedAt = ticket.ClosedAt,
-            ResolutionNotes = ticket.ResolutionNotes,
-            CommentCount = ticket.Comments.Count,
-            RowVersion = Convert.ToBase64String(ticket.RowVersion),
-            CategoryId = ticket.CategoryId,
-            CategoryName = ticket.Category?.Name,
-            Tags = ticket.TicketTags.Select(tt => tt.Tag.Name).ToList()
-        }).ToList();
+        return tickets;
     }
 }

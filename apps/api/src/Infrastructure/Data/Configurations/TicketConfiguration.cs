@@ -94,9 +94,30 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasIndex(t => t.Priority);
         builder.HasIndex(t => t.CategoryId);
         builder.HasIndex(t => t.CreatedAt);
+        builder.HasIndex(t => t.UpdatedAt);
         
-        // Composite index for agent queue queries
-        builder.HasIndex(t => new { t.Status, t.Priority, t.CreatedAt });
+        // Composite indexes for common query patterns
+        // Agent queue queries (status + priority with created date for sorting)
+        builder.HasIndex(t => new { t.Status, t.Priority, t.CreatedAt })
+            .HasDatabaseName("IX_Tickets_Status_Priority_CreatedAt");
+        
+        // User's tickets by submitter (submitter + status for filtering)
+        builder.HasIndex(t => new { t.SubmitterId, t.Status, t.CreatedAt })
+            .HasDatabaseName("IX_Tickets_SubmitterId_Status_CreatedAt");
+        
+        // Assigned tickets (assignee + status for agent workload)
+        builder.HasIndex(t => new { t.AssignedToId, t.Status, t.Priority })
+            .HasDatabaseName("IX_Tickets_AssignedToId_Status_Priority")
+            .HasFilter("\"AssignedToId\" IS NOT NULL");
+        
+        // Category-based queries
+        builder.HasIndex(t => new { t.CategoryId, t.Status, t.CreatedAt })
+            .HasDatabaseName("IX_Tickets_CategoryId_Status_CreatedAt")
+            .HasFilter("\"CategoryId\" IS NOT NULL");
+        
+        // Recent activity queries (updated date with status)
+        builder.HasIndex(t => new { t.UpdatedAt, t.Status })
+            .HasDatabaseName("IX_Tickets_UpdatedAt_Status");
         
         // GIN index for full-text search
         builder.HasIndex(t => t.SearchVector)

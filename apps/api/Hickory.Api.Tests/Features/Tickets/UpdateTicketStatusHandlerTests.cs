@@ -15,11 +15,12 @@ public class UpdateTicketStatusHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
+        var cacheService = new MockCacheService();
         var ticket = TestDataBuilder.CreateTestTicket(status: currentStatus);
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
         var command = new UpdateTicketStatusCommand(ticket.Id, newStatus);
 
         // Act
@@ -37,7 +38,8 @@ public class UpdateTicketStatusHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
-        var handler = new UpdateTicketStatusHandler(dbContext);
+        var cacheService = new MockCacheService();
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
         var command = new UpdateTicketStatusCommand(Guid.NewGuid(), TicketStatus.InProgress);
 
         // Act & Assert
@@ -55,11 +57,12 @@ public class UpdateTicketStatusHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
+        var cacheService = new MockCacheService();
         var ticket = TestDataBuilder.CreateTestTicket(status: status);
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
 
         // Act & Assert
@@ -74,11 +77,12 @@ public class UpdateTicketStatusHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
+        var cacheService = new MockCacheService();
         var ticket = TestDataBuilder.CreateTestTicket(status: TicketStatus.Resolved);
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Closed);
 
         // Act & Assert
@@ -94,11 +98,12 @@ public class UpdateTicketStatusHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
+        var cacheService = new MockCacheService();
         var ticket = TestDataBuilder.CreateTestTicket(status: TicketStatus.Open);
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
 
         // Act
@@ -114,11 +119,12 @@ public class UpdateTicketStatusHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
+        var cacheService = new MockCacheService();
         var ticket = TestDataBuilder.CreateTestTicket(status: TicketStatus.InProgress);
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Resolved);
 
         // Act
@@ -134,11 +140,12 @@ public class UpdateTicketStatusHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
+        var cacheService = new MockCacheService();
         var ticket = TestDataBuilder.CreateTestTicket(status: TicketStatus.Resolved);
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
 
         // Act

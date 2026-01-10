@@ -35,10 +35,29 @@ builder.Host.UseSerilog();
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
-    ));
+    );
+    
+    // Add query performance interceptor for metrics
+    options.AddInterceptors(new QueryPerformanceInterceptor());
+    
+    // Enable detailed logging in development
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging(); // Shows parameter values in logs
+        options.EnableDetailedErrors(); // More detailed error messages
+        options.LogTo(
+            message => Log.Debug(message),
+            new[] { Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.CommandExecuting },
+            Microsoft.Extensions.Logging.LogLevel.Information
+        );
+    }
+});
 
 // Redis Distributed Cache
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
@@ -154,7 +173,8 @@ builder.Services.AddOpenTelemetry()
         .AddMeter("Microsoft.AspNetCore.Http")
         .AddMeter("Microsoft.AspNetCore.Authentication")
         .AddMeter("Hickory.Api")
-        .AddMeter("Hickory.Api.Cache"));
+        .AddMeter("Hickory.Api.Cache")
+        .AddMeter("Hickory.Api.Database"));
 
 builder.Services.AddControllers();
 
