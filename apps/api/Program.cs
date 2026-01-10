@@ -3,6 +3,7 @@ using FluentValidation;
 using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Behaviors;
+using Hickory.Api.Infrastructure.Caching;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Messaging;
 using Hickory.Api.Infrastructure.Middleware;
@@ -16,6 +17,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,25 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
     ));
+
+// Redis Distributed Cache
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = ConfigurationOptions.Parse(redisConnectionString);
+    configuration.AbortOnConnectFail = false; // Don't fail startup if Redis is temporarily unavailable
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnectionString;
+    options.InstanceName = "hickory:";
+});
+
+// Caching Services
+builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Authentication Services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -106,8 +127,6 @@ builder.Services.AddCors(options =>
 });
 
 // Health Checks
-var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
-
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>("database", tags: new[] { "ready", "db" })
     .AddNpgSql(
@@ -134,7 +153,8 @@ builder.Services.AddOpenTelemetry()
         .AddMeter("Microsoft.AspNetCore.Hosting")
         .AddMeter("Microsoft.AspNetCore.Http")
         .AddMeter("Microsoft.AspNetCore.Authentication")
-        .AddMeter("Hickory.Api"));
+        .AddMeter("Hickory.Api")
+        .AddMeter("Hickory.Api.Cache"));
 
 builder.Services.AddControllers();
 

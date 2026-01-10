@@ -1,3 +1,4 @@
+using Hickory.Api.Infrastructure.Caching;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
@@ -10,10 +11,12 @@ public record UpdateTicketStatusCommand(Guid TicketId, TicketStatus NewStatus) :
 public class UpdateTicketStatusHandler : IRequestHandler<UpdateTicketStatusCommand, Unit>
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ICacheService _cacheService;
 
-    public UpdateTicketStatusHandler(ApplicationDbContext dbContext)
+    public UpdateTicketStatusHandler(ApplicationDbContext dbContext, ICacheService cacheService)
     {
         _dbContext = dbContext;
+        _cacheService = cacheService;
     }
 
     public async Task<Unit> Handle(UpdateTicketStatusCommand command, CancellationToken cancellationToken)
@@ -35,6 +38,11 @@ public class UpdateTicketStatusHandler : IRequestHandler<UpdateTicketStatusComma
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
+            
+            // Invalidate ticket cache
+            await _cacheService.RemoveAsync(CacheKeys.Ticket(command.TicketId), cancellationToken);
+            // Invalidate related list caches
+            await _cacheService.RemoveByPatternAsync(CacheKeys.AllTicketsPattern(), cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {

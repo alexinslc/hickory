@@ -1,5 +1,6 @@
 using FluentValidation;
 using Hickory.Api.Features.KnowledgeBase.Models;
+using Hickory.Api.Infrastructure.Caching;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
@@ -36,10 +37,12 @@ public class UpdateArticleValidator : AbstractValidator<UpdateArticleCommand>
 public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, ArticleDto>
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ICacheService _cacheService;
 
-    public UpdateArticleHandler(ApplicationDbContext dbContext)
+    public UpdateArticleHandler(ApplicationDbContext dbContext, ICacheService cacheService)
     {
         _dbContext = dbContext;
+        _cacheService = cacheService;
     }
 
     public async Task<ArticleDto> Handle(UpdateArticleCommand command, CancellationToken cancellationToken)
@@ -146,6 +149,11 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        
+        // Invalidate article cache
+        await _cacheService.RemoveAsync(CacheKeys.Article(command.ArticleId), cancellationToken);
+        // Invalidate related list/search caches
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllArticlesPattern(), cancellationToken);
 
         // Reload with all related data for response
         var updatedArticle = await _dbContext.KnowledgeArticles
