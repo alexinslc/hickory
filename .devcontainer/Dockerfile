@@ -1,5 +1,5 @@
 # Use the official Microsoft devcontainers image with .NET and Node.js
-FROM mcr.microsoft.com/devcontainers/dotnet:1-9.0-bookworm
+FROM mcr.microsoft.com/devcontainers/dotnet:1-10.0-bookworm
 
 # Install Node.js 20.x
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \

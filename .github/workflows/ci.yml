@@ -13,7 +13,7 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
-  DOTNET_VERSION: '9.0.x'
+  DOTNET_VERSION: '10.0.x'
   NX_NO_CLOUD: 'true'
 
 # Default permissions for all jobs (least privilege)
@@ -418,7 +418,7 @@ jobs:
       
       - name: Run Database Migrations
         run: |
-          dotnet tool install --global dotnet-ef --version 9.* || true
+          dotnet tool install --global dotnet-ef --version 10.* || true
           dotnet restore apps/api/Hickory.Api.csproj
           dotnet ef database update --project apps/api/Hickory.Api.csproj --configuration Release
         env:
@@ -426,7 +426,7 @@ jobs:
       
       - name: Start API (Background)
         run: |
-          dotnet apps/api/bin/Release/net9.0/Hickory.Api.dll &
+          dotnet apps/api/bin/Release/net10.0/Hickory.Api.dll &
           echo $! > api.pid
         env:
           ASPNETCORE_ENVIRONMENT: Development
