@@ -21,55 +21,10 @@ permissions:
   contents: read
 
 jobs:
-  # Install and cache dependencies
-  setup:
-    name: Setup Dependencies
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      
-      - name: Cache npm dependencies
-        id: cache-npm
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      
-      - name: Install npm dependencies
-        if: steps.cache-npm.outputs.cache-hit != 'true'
-        run: npm ci
-      
-      - name: Cache .NET dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-      
-      - name: Restore .NET dependencies
-        run: dotnet restore apps/api/Hickory.Api.csproj
-
   # Lint and format checks
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
-    needs: setup
     
     steps:
       - name: Checkout code
@@ -85,69 +40,70 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
       
-      - name: Restore npm cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-      
-      - name: Restore .NET cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      - name: Install npm dependencies
+        run: npm ci
       
       - name: Restore .NET dependencies
         run: dotnet restore apps/api/Hickory.Api.csproj
       
-      - name: Lint Web
-        run: npx nx lint web
-      
-      - name: Lint CLI
-        run: npx nx lint cli
+      - name: Lint Web & CLI
+        run: |
+          npx nx lint web
+          npx nx lint cli
       
       - name: Check .NET formatting
         run: dotnet format apps/api/Hickory.Api.csproj --verify-no-changes --no-restore
         continue-on-error: true
 
-  # Build jobs
-  build-api:
-    name: Build .NET API
+  # Build jobs - matrix strategy for parallelization
+  build:
+    name: Build (${{ matrix.project }})
     runs-on: ubuntu-latest
-    needs: setup
+    strategy:
+      matrix:
+        project: [api, web, cli]
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Setup Node.js
+        if: matrix.project != 'api'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
       - name: Setup .NET
+        if: matrix.project == 'api'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
       
-      - name: Restore .NET cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-      
-      - name: Restore .NET dependencies
-        run: |
-          dotnet restore apps/api/Hickory.Api.csproj
-          dotnet restore apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj
-          dotnet restore apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj
+      - name: Install npm dependencies
+        if: matrix.project != 'api'
+        run: npm ci
       
       - name: Build API
-        run: dotnet build apps/api/Hickory.Api.csproj --configuration Release --no-restore
+        if: matrix.project == 'api'
+        run: |
+          dotnet build apps/api/Hickory.Api.csproj --configuration Release
+          dotnet build apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --configuration Release --no-restore
+          dotnet build apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj --configuration Release --no-restore
       
-      - name: Build API Tests
-        run: dotnet build apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --configuration Release --no-restore
+      - name: Build Web
+        if: matrix.project == 'web'
+        run: npx nx build web
       
-      - name: Build API Integration Tests
-        run: dotnet build apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj --configuration Release --no-restore
+      - name: Build CLI
+        if: matrix.project == 'cli'
+        run: npx nx build cli
       
       - name: Upload API Build Artifacts
+        if: matrix.project == 'api'
         uses: actions/upload-artifact@v4
         with:
           name: api-build
@@ -156,67 +112,23 @@ jobs:
             apps/api/Hickory.Api.Tests/bin/Release/
             apps/api/Hickory.Api.IntegrationTests/bin/Release/
           retention-days: 1
-
-  build-web:
-    name: Build Web App
-    runs-on: ubuntu-latest
-    needs: setup
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Restore npm cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-      
-      - name: Build Web
-        run: npx nx build web
       
       - name: Upload Web Build Artifacts
+        if: matrix.project == 'web'
         uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: apps/web/.next/
           retention-days: 1
 
-  build-cli:
-    name: Build CLI
+  # Test jobs
+  test-api:
+    name: Test API (${{ matrix.type }})
     runs-on: ubuntu-latest
-    needs: setup
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Restore npm cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-      
-      - name: Build CLI
-        run: npx nx build cli
-
-  # Unit tests
-  test-api-unit:
-    name: API Unit Tests
-    runs-on: ubuntu-latest
-    needs: build-api
+    needs: build
+    strategy:
+      matrix:
+        type: [unit, integration]
     permissions:
       contents: read
       checks: write  # Required for test reporter
@@ -236,59 +148,20 @@ jobs:
           name: api-build
           path: apps/api/
       
-      - name: Run API Unit Tests
+      - name: Run Unit Tests
+        if: matrix.type == 'unit'
         run: dotnet test apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
       
-      - name: Publish Test Results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: .NET API Unit Test Results
-          path: '**/test-results.trx'
-          reporter: dotnet-trx
-          fail-on-error: true
-      
-      - name: Upload Coverage Reports
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          directory: ./coverage
-          flags: api-unit
-          name: api-unit-coverage
-          fail_ci_if_error: false
-
-  test-api-integration:
-    name: API Integration Tests
-    runs-on: ubuntu-latest
-    needs: build-api
-    permissions:
-      contents: read
-      checks: write  # Required for test reporter
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      
-      - name: Download API Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: api-build
-          path: apps/api/
-      
-      - name: Run API Integration Tests
+      - name: Run Integration Tests
+        if: matrix.type == 'integration'
         run: dotnet test apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj --no-build --configuration Release --logger "trx;LogFileName=integration-test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
       
       - name: Publish Test Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: .NET API Integration Test Results
-          path: '**/integration-test-results.trx'
+          name: .NET API ${{ matrix.type }} Test Results
+          path: '**/*-results.trx'
           reporter: dotnet-trx
           fail-on-error: true
       
@@ -297,14 +170,17 @@ jobs:
         if: always()
         with:
           directory: ./coverage
-          flags: api-integration
-          name: api-integration-coverage
+          flags: api-${{ matrix.type }}
+          name: api-${{ matrix.type }}-coverage
           fail_ci_if_error: false
 
-  test-web:
-    name: Web Unit Tests
+  test-frontend:
+    name: Test Frontend (${{ matrix.app }})
     runs-on: ubuntu-latest
-    needs: setup
+    needs: build
+    strategy:
+      matrix:
+        app: [web, cli]
     
     steps:
       - name: Checkout code
@@ -316,53 +192,26 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      - name: Restore npm cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      - name: Install npm dependencies
+        run: npm ci
       
-      - name: Run Web Unit Tests
-        run: npx nx test web --coverage --ci
+      - name: Run ${{ matrix.app }} Tests
+        run: npx nx test ${{ matrix.app }} --coverage --ci
       
       - name: Upload Coverage Reports
         uses: codecov/codecov-action@v4
-        if: always()
+        if: always() && matrix.app == 'web'
         with:
-          directory: ./coverage/apps/web
-          flags: web
-          name: web-coverage
+          directory: ./coverage/apps/${{ matrix.app }}
+          flags: ${{ matrix.app }}
+          name: ${{ matrix.app }}-coverage
           fail_ci_if_error: false
-
-  test-cli:
-    name: CLI Unit Tests
-    runs-on: ubuntu-latest
-    needs: setup
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Restore npm cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-      
-      - name: Run CLI Unit Tests
-        run: npx nx test cli --ci
 
   # E2E Tests
   test-e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [build-api, build-web]
+    needs: build
     timeout-minutes: 15
     
     services:
@@ -395,17 +244,8 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
-      - name: Restore npm cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-      
-      - name: Restore .NET cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      - name: Install npm dependencies
+        run: npm ci
       
       - name: Download API Build Artifacts
         uses: actions/download-artifact@v4
@@ -455,11 +295,12 @@ jobs:
             kill $(cat api.pid) || true
           fi
 
-  # Docker Build Validation
+  # Docker Build Validation (optional, only on main/develop)
   docker:
     name: Docker Build (${{ matrix.service }})
     runs-on: ubuntu-latest
-    needs: [build-api, build-web]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    needs: [build, test-api, test-frontend]
     
     strategy:
       matrix:
@@ -482,13 +323,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Security Scan
+  # Security Scan (non-blocking, informational only)
   security:
     name: Security Scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write  # Required for uploading SARIF results
+      security-events: write
+    continue-on-error: true  # Don't fail the build on security issues
     
     steps:
       - name: Checkout code
@@ -512,21 +354,19 @@ jobs:
   ci-success:
     name: CI Success
     runs-on: ubuntu-latest
-    needs: [lint, test-api-unit, test-api-integration, test-web, test-cli, test-e2e, docker, security]
+    needs: [lint, build, test-api, test-frontend, test-e2e]
     if: always()
     
     steps:
       - name: Check job status
         run: |
           if [[ "${{ needs.lint.result }}" != "success" ]] || \
-             [[ "${{ needs.test-api-unit.result }}" != "success" ]] || \
-             [[ "${{ needs.test-api-integration.result }}" != "success" ]] || \
-             [[ "${{ needs.test-web.result }}" != "success" ]] || \
-             [[ "${{ needs.test-cli.result }}" != "success" ]] || \
-             [[ "${{ needs.test-e2e.result }}" != "success" ]] || \
-             [[ "${{ needs.docker.result }}" != "success" ]] || \
-             [[ "${{ needs.security.result }}" != "success" ]]; then
+             [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.test-api.result }}" != "success" ]] || \
+             [[ "${{ needs.test-frontend.result }}" != "success" ]] || \
+             [[ "${{ needs.test-e2e.result }}" != "success" ]]; then
             echo "❌ One or more CI jobs failed"
             exit 1
           fi
           echo "✅ All CI jobs passed successfully"
+

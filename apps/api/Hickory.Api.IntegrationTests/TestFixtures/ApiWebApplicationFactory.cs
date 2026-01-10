@@ -8,6 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Hickory.Api.IntegrationTests.TestFixtures;
 
@@ -72,5 +76,41 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLi
         await _postgresContainer.DisposeAsync();
         await _redisContainer.DisposeAsync();
         await base.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Helper method to get an admin token for integration tests
+    /// </summary>
+    public async Task<string> GetAdminTokenAsync()
+    {
+        using var scope = Services.CreateScope();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        
+        // Use the same JWT settings from the test configuration
+        var secret = configuration["JWT:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
+        var issuer = configuration["JWT:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
+        var audience = configuration["JWT:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured");
+        
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, "test-admin-id"),
+            new Claim(ClaimTypes.Name, "Test Admin"),
+            new Claim(ClaimTypes.Email, "admin@test.com"),
+            new Claim(ClaimTypes.Role, "Admin")
+        };
+        
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials
+        );
+        
+        var tokenHandler = new JwtSecurityTokenHandler();
+        return await Task.FromResult(tokenHandler.WriteToken(token));
     }
 }
