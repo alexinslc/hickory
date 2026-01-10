@@ -89,8 +89,31 @@ public class GetTicketByIdHandler : IRequestHandler<GetTicketByIdQuery, TicketDt
             Tags = ticket.TicketTags.Select(tt => tt.Tag.Name).ToList()
         };
         
-        // Cache the result
-        await _cacheService.SetAsync(cacheKey, ticketDto, CacheExpiration.TicketDetails, cancellationToken);
+        // Cache the result without RowVersion to avoid caching optimistic concurrency tokens
+        var cachedTicketDto = new TicketDto
+        {
+            Id = ticketDto.Id,
+            TicketNumber = ticketDto.TicketNumber,
+            Title = ticketDto.Title,
+            Description = ticketDto.Description,
+            Status = ticketDto.Status,
+            Priority = ticketDto.Priority,
+            SubmitterId = ticketDto.SubmitterId,
+            SubmitterName = ticketDto.SubmitterName,
+            AssignedToId = ticketDto.AssignedToId,
+            AssignedToName = ticketDto.AssignedToName,
+            CreatedAt = ticketDto.CreatedAt,
+            UpdatedAt = ticketDto.UpdatedAt,
+            ClosedAt = ticketDto.ClosedAt,
+            ResolutionNotes = ticketDto.ResolutionNotes,
+            CommentCount = ticketDto.CommentCount,
+            RowVersion = null,
+            CategoryId = ticketDto.CategoryId,
+            CategoryName = ticketDto.CategoryName,
+            Tags = ticketDto.Tags
+        };
+
+        await _cacheService.SetAsync(cacheKey, cachedTicketDto, CacheExpiration.TicketDetails, cancellationToken);
 
         return ticketDto;
     }

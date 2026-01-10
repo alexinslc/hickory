@@ -97,8 +97,19 @@ public class CacheService : ICacheService
         finally
         {
             semaphore.Release();
-            // Note: Semaphores may remain in dictionary but this is acceptable as
-            // the memory footprint is minimal and they can be reused for the same keys
+            
+            // Opportunistically remove the semaphore from the dictionary to avoid
+            // unbounded growth for keys that are no longer used. We only remove
+            // when the semaphore is not contended (CurrentCount == 1) and the
+            // instance in the dictionary is the same one we used.
+            if (semaphore.CurrentCount == 1 &&
+                _locks.TryRemove(key, out var existingSemaphore) &&
+                !ReferenceEquals(existingSemaphore, semaphore))
+            {
+                // If a different semaphore was removed (extremely unlikely due to the
+                // use of GetOrAdd), reinsert it to avoid affecting other callers.
+                _locks.TryAdd(key, existingSemaphore);
+            }
         }
     }
 
@@ -287,7 +298,25 @@ public class CacheService : ICacheService
     {
         try
         {
-            var server = _redis.GetServer(_redis.GetEndPoints().First());
+            var endPoints = _redis.GetEndPoints();
+            if (endPoints == null || endPoints.Length == 0)
+            {
+                throw new InvalidOperationException("No Redis endpoints are configured.");
+            }
+
+            IServer? server = null;
+            foreach (var endPoint in endPoints)
+            {
+                var candidate = _redis.GetServer(endPoint);
+                if (candidate.IsConnected && !candidate.IsReplica)
+                {
+                    server = candidate;
+                    break;
+                }
+            }
+
+            // Fallback to the first endpoint if no suitable primary/non-replica server was found
+            server ??= _redis.GetServer(endPoints.First());
             
             var keyspaceInfo = await server.InfoAsync("keyspace");
             var totalKeys = 0L;
@@ -295,13 +324,14 @@ public class CacheService : ICacheService
             // Parse keyspace info to get total keys
             foreach (var section in keyspaceInfo)
             {
-                foreach (var entry in section.Where(e => e.Key.StartsWith("db")))
+                var dbEntries = section.Where(e => e.Key.StartsWith("db"));
+                foreach (var entry in dbEntries)
                 {
-                    var value = entry.Value;
-                    var parts = value.Split(',');
-                    foreach (var part in parts.Where(p => p.StartsWith("keys=")))
+                    var parts = entry.Value.Split(',');
+                    var keysParts = parts.Where(p => p.StartsWith("keys=")).Select(p => p["keys=".Length..]);
+                    foreach (var keyPart in keysParts)
                     {
-                        if (long.TryParse(part.Substring(5), out var keys))
+                        if (long.TryParse(keyPart, out var keys))
                         {
                             totalKeys += keys;
                         }

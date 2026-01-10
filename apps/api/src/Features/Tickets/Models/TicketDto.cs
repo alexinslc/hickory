@@ -19,7 +19,7 @@ public record TicketDto
     public DateTime? ClosedAt { get; init; }
     public string? ResolutionNotes { get; init; }
     public int CommentCount { get; init; }
-    public string RowVersion { get; init; } = string.Empty; // Base64 encoded for JSON
+    public string? RowVersion { get; init; } // Base64 encoded for JSON, nullable for cached responses
     
     // Category and Tags for organization
     public Guid? CategoryId { get; init; }
