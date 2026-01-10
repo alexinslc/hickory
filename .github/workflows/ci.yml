@@ -419,6 +419,7 @@ jobs:
       - name: Run Database Migrations
         run: |
           dotnet tool install --global dotnet-ef || true
+          dotnet restore apps/api/Hickory.Api.csproj
           dotnet ef database update --project apps/api/Hickory.Api.csproj --configuration Release
         env:
           ASPNETCORE_ENVIRONMENT: Development
