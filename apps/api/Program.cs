@@ -128,13 +128,20 @@ builder.Services.AddSignalR();
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
+
+// Add built-in .NET 10 OpenAPI support for YAML format
+builder.Services.AddOpenApi(options =>
+{
+    options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_1;
+});
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Hickory Help Desk API",
         Version = "v1",
-        Description = "API for Hickory Help Desk System",
+        Description = "API for Hickory Help Desk System with OpenAPI 3.1 support",
         Contact = new OpenApiContact
         {
             Name = "Hickory Support",
@@ -170,10 +177,14 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Hickory API v1");
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Hickory API v1 (JSON)");
+    options.SwaggerEndpoint("/swagger/v1/swagger.yaml", "Hickory API v1 (YAML)");
     options.RoutePrefix = "api-docs";
     options.DocumentTitle = "Hickory Help Desk API Documentation";
 });
+
+// Map built-in .NET 10 OpenAPI endpoints (provides YAML support)
+app.MapOpenApi();
 
 if (app.Environment.IsDevelopment())
 {
