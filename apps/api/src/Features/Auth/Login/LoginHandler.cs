@@ -15,6 +15,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
     private readonly IJwtTokenService _tokenService;
     private readonly ILogger<LoginHandler> _logger;
     private readonly double _jwtExpirationMinutes;
+    private const int MaxActiveTokensPerUser = 5;
 
     public LoginHandler(
         ApplicationDbContext context,
@@ -68,12 +69,12 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
             .OrderBy(rt => rt.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        // If user has 5 or more active tokens, revoke the oldest one
-        if (activeTokens.Count >= 5)
+        // If user has reached max active tokens, revoke the oldest one
+        if (activeTokens.Count >= MaxActiveTokensPerUser)
         {
             var oldestToken = activeTokens.First();
             oldestToken.RevokedAt = DateTime.UtcNow;
-            oldestToken.RevokedReason = "Exceeded maximum active sessions (5)";
+            oldestToken.RevokedReason = $"Exceeded maximum active sessions ({MaxActiveTokensPerUser})";
             _logger.LogInformation("Revoked oldest token for user {UserId} due to session limit", user.Id);
         }
         
