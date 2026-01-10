@@ -111,14 +111,17 @@ Cache is automatically invalidated on mutations:
 
 **Tickets:**
 - Update status → Clears specific ticket + all ticket lists
-- Assign → Clears specific ticket + all ticket lists
-- Close → Clears specific ticket + all ticket lists
-- Add/Remove tags → Clears specific ticket + all ticket lists
+
+> **Note:** Cache invalidation for other ticket operations (Assign, Close, Add/Remove tags, Update Priority, Reassign) is not yet implemented. These operations will result in stale cached data until the TTL expires.
 
 **Articles:**
 - Update → Clears specific article + all article lists
-- Publish → Clears specific article + all article lists
-- Change tags → Clears specific article + all article lists
+
+> **Note:** Cache invalidation for Publish operations and tag changes (handled by `UpdateArticleHandler`) are already implemented as they are part of the update flow.
+
+> **Note:** Cache invalidation for helpful/not helpful votes (handled by `RateArticleHandler`) is not yet implemented. This may result in temporarily stale rating counts (`HelpfulCount` and `NotHelpfulCount`) in cached article responses.
+
+> **Note:** Article view counts may be stale in cached responses. When `IncrementViewCount` is false, cached articles are returned with potentially outdated view counts. Multiple views within the 15-minute cache window will show the same count until cache expiration or invalidation.
 
 ### Manual Invalidation
 

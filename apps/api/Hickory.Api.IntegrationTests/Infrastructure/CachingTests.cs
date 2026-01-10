@@ -233,7 +233,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
     }
 
     [Fact]
-    public async Task CacheManagement_ClearAll_Should_Remove_All_Caches()
+    public async Task CacheManagement_ClearTickets_Should_Remove_Ticket_Caches()
     {
         // Arrange
         var token = await _factory.GetAdminTokenAsync();
