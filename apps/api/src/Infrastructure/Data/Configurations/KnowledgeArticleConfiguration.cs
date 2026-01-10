@@ -44,9 +44,12 @@ public class KnowledgeArticleConfiguration : IEntityTypeConfiguration<KnowledgeA
             .IsRequired(false);
         
         // Search vector for PostgreSQL full-text search
+        // Computed column: setweight(to_tsvector('english', title), 'A') || setweight(to_tsvector('english', content), 'B')
+        // Title is weighted higher ('A') for better search relevance
         builder.Property(a => a.SearchVector)
             .HasColumnType("tsvector")
-            .IsRequired(false);
+            .HasComputedColumnSql("setweight(to_tsvector('english', coalesce(\"Title\", '')), 'A') || setweight(to_tsvector('english', coalesce(\"Content\", '')), 'B')", stored: true)
+            .IsRequired();
         
         // Relationships
         builder.HasOne(a => a.Author)

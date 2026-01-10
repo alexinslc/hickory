@@ -3,7 +3,6 @@ using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using NpgsqlTypes;
 
 namespace Hickory.Api.Features.KnowledgeBase.GetSuggested;
 
@@ -73,25 +72,19 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
             
             if (!string.IsNullOrWhiteSpace(searchText))
             {
-                try
-                {
-                    var searchVector = NpgsqlTsQuery.Parse(searchText);
+                // Use PostgreSQL's plainto_tsquery for safe query parsing
+                // Store the tsquery to avoid redundant parsing
+                var tsQuery = EF.Functions.PlainToTsQuery("english", searchText);
+                var searchArticles = await articlesQuery
+                    .Where(a => a.SearchVector.Matches(tsQuery))
+                    .OrderByDescending(a => a.SearchVector.Rank(tsQuery))
+                    .ThenByDescending(a => a.HelpfulCount)
+                    .Take(query.Limit)
+                    .ToListAsync(cancellationToken);
 
-                    var searchArticles = await articlesQuery
-                        .Where(a => a.SearchVector.Matches(searchVector))
-                        .OrderByDescending(a => a.SearchVector.Rank(searchVector))
-                        .ThenByDescending(a => a.HelpfulCount)
-                        .Take(query.Limit)
-                        .ToListAsync(cancellationToken);
-
-                    if (searchArticles.Any())
-                    {
-                        return searchArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
-                    }
-                }
-                catch (Exception)
+                if (searchArticles.Any())
                 {
-                    // If parsing fails, fall through to the fallback logic below
+                    return searchArticles.Select(KnowledgeArticleHelpers.MapToListItemDto).ToList();
                 }
             }
         }

@@ -84,4 +84,42 @@ public static class TestDataBuilder
             CreatedAt = DateTime.UtcNow
         };
     }
+
+    public static KnowledgeArticle CreateTestKnowledgeArticle(
+        Guid? authorId = null,
+        string title = "Test Article",
+        string content = "Test Content",
+        ArticleStatus status = ArticleStatus.Published,
+        Guid? categoryId = null,
+        int viewCount = 0,
+        int helpfulCount = 0,
+        int notHelpfulCount = 0,
+        DateTime? publishedAt = null)
+    {
+        return new KnowledgeArticle
+        {
+            Id = Guid.NewGuid(),
+            Title = title,
+            Content = content,
+            Status = status,
+            CategoryId = categoryId,
+            AuthorId = authorId ?? Guid.NewGuid(),
+            ViewCount = viewCount,
+            HelpfulCount = helpfulCount,
+            NotHelpfulCount = notHelpfulCount,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            PublishedAt = publishedAt ?? (status == ArticleStatus.Published ? DateTime.UtcNow : null)
+        };
+    }
+
+    public static Tag CreateTestTag(string name = "test-tag")
+    {
+        return new Tag
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
 }

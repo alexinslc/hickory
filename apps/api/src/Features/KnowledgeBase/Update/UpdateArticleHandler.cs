@@ -57,19 +57,17 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
         }
 
         // Update fields if provided
-        var needsSearchVectorUpdate = false;
-        
         if (request.Title != null && request.Title != article.Title)
         {
             article.Title = request.Title;
-            needsSearchVectorUpdate = true;
         }
         
         if (request.Content != null && request.Content != article.Content)
         {
             article.Content = request.Content;
-            needsSearchVectorUpdate = true;
         }
+        
+        // Note: SearchVector is now a computed column and will be automatically updated by the database
         
         if (request.Status.HasValue && request.Status.Value != article.Status)
         {
@@ -103,12 +101,6 @@ public class UpdateArticleHandler : IRequestHandler<UpdateArticleCommand, Articl
                 // Empty GUID means remove category
                 article.CategoryId = null;
             }
-        }
-
-        // Update search vector if title or content changed
-        if (needsSearchVectorUpdate)
-        {
-            article.SearchVector = KnowledgeArticleHelpers.GenerateSearchVector(article.Title, article.Content);
         }
 
         // Track who updated the article

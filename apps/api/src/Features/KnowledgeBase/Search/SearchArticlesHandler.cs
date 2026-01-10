@@ -3,7 +3,6 @@ using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using NpgsqlTypes;
 
 namespace Hickory.Api.Features.KnowledgeBase.Search;
 
@@ -60,20 +59,13 @@ public class SearchArticlesHandler : IRequestHandler<SearchArticlesQuery, Search
         // Apply full-text search if provided
         if (!string.IsNullOrWhiteSpace(query.SearchQuery))
         {
-            NpgsqlTsQuery searchVector;
-            try
-            {
-                searchVector = NpgsqlTsQuery.Parse(query.SearchQuery);
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException("Malformed search query. Please check your search syntax.", nameof(query.SearchQuery), ex);
-            }
-            
-            // Use PostgreSQL full-text search on the SearchVector column
+            // Use PostgreSQL's plainto_tsquery for safe query parsing
+            // This automatically handles special characters and user input
+            // Store the tsquery to avoid redundant parsing
+            var tsQuery = EF.Functions.PlainToTsQuery("english", query.SearchQuery);
             articlesQuery = articlesQuery
-                .Where(a => a.SearchVector.Matches(searchVector))
-                .OrderByDescending(a => a.SearchVector.Rank(searchVector));
+                .Where(a => a.SearchVector.Matches(tsQuery))
+                .OrderByDescending(a => a.SearchVector.Rank(tsQuery));
         }
         else
         {
