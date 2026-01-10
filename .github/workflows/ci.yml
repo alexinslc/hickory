@@ -40,7 +40,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          cache: true
       
       - name: Install npm dependencies
         run: npm ci
@@ -81,7 +80,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          cache: true
       
       - name: Install npm dependencies
         if: matrix.project != 'api'
