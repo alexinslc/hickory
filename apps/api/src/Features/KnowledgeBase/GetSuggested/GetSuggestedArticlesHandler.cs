@@ -73,9 +73,11 @@ public class GetSuggestedArticlesHandler : IRequestHandler<GetSuggestedArticlesQ
             if (!string.IsNullOrWhiteSpace(searchText))
             {
                 // Use PostgreSQL's plainto_tsquery for safe query parsing
+                // Store the tsquery to avoid redundant parsing
+                var tsQuery = EF.Functions.PlainToTsQuery("english", searchText);
                 var searchArticles = await articlesQuery
-                    .Where(a => a.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", searchText)))
-                    .OrderByDescending(a => a.SearchVector.Rank(EF.Functions.PlainToTsQuery("english", searchText)))
+                    .Where(a => a.SearchVector.Matches(tsQuery))
+                    .OrderByDescending(a => a.SearchVector.Rank(tsQuery))
                     .ThenByDescending(a => a.HelpfulCount)
                     .Take(query.Limit)
                     .ToListAsync(cancellationToken);
