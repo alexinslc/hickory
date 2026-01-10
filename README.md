@@ -2,111 +2,70 @@
 
 [![CI Pipeline](https://github.com/alexinslc/hickory/workflows/CI%20Pipeline/badge.svg)](https://github.com/alexinslc/hickory/actions/workflows/ci.yml)
 
-Modern, full-stack help desk ticket management system built with .NET 9, Next.js 15, PostgreSQL, and Redis.
+Full-stack help desk system built with .NET 9, Next.js 15, PostgreSQL, and Redis.
 
 ## 🚀 Quick Start
 
-### Option 1: Dev Container (Recommended for VS Code)
+### Dev Container (Recommended)
+1. Open in VS Code with [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. Click "Reopen in Container"
+3. Wait for setup (~5-10 minutes)
 
-The easiest way to get started with a complete development environment:
+See [.devcontainer/README.md](.devcontainer/README.md) for details.
 
-**Prerequisites:**
-- [Docker](https://www.docker.com/products/docker-desktop)
-- [VS Code](https://code.visualstudio.com/)
-- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-
-**Steps:**
-1. Open this repository in VS Code
-2. Click "Reopen in Container" when prompted (or use Command Palette: "Dev Containers: Reopen in Container")
-3. Wait for the container to build and dependencies to install (5-10 minutes first time)
-4. Start development! All services (PostgreSQL, Redis, MailHog) are automatically configured.
-
-See [.devcontainer/README.md](.devcontainer/README.md) for more details.
-
-### Option 2: Docker Compose
-
-Run the full application stack with Docker:
-
+### Docker Compose
 ```bash
-# Start all services
 docker compose -f docker/docker-compose.yml up -d
-
-# Initialize database
-docker compose -f docker/docker-compose.yml exec api \
-  dotnet ef database update
-
-# Access the application
+docker compose -f docker/docker-compose.yml exec api dotnet ef database update
 open http://localhost:3000
 ```
 
-See [docker/QUICKSTART.md](docker/QUICKSTART.md) for more details.
+See [docker/QUICKSTART.md](docker/QUICKSTART.md) for details.
 
-### Option 3: Local Development
+### Local Development
+**Requirements:** .NET 9.0 SDK, Node.js 20+, PostgreSQL 16, Redis 7
 
-**Prerequisites:**
-- .NET 9.0 SDK
-- Node.js 20+
-- PostgreSQL 16
-- Redis 7
-
-**Backend:**
 ```bash
-cd apps/api
-dotnet restore
-dotnet ef database update
-dotnet run
-```
+# Backend
+cd apps/api && dotnet restore && dotnet ef database update && dotnet run
 
-**Frontend:**
-```bash
-cd apps/web
-npm install
-npm run dev
+# Frontend
+cd apps/web && npm install && npm run dev
 ```
 
 ## 📖 Documentation
 
-- **[Dev Container Setup](.devcontainer/README.md)** - VS Code devcontainer documentation
-- **[Docker Setup](docker/README.md)** - Complete Docker documentation
-- **[Specification](specs/001-help-desk-core/spec.md)** - Product requirements
-- **[API Documentation](specs/001-help-desk-core/contracts/openapi.yaml)** - OpenAPI spec
-- **[Data Model](specs/001-help-desk-core/data-model.md)** - Database schema
+- [Dev Container](.devcontainer/README.md) - VS Code devcontainer
+- [Docker Setup](docker/README.md) - Docker documentation
+- [Specification](specs/001-help-desk-core/spec.md) - Product requirements
+- [API Docs](specs/001-help-desk-core/contracts/openapi.yaml) - OpenAPI spec
+- [Data Model](specs/001-help-desk-core/data-model.md) - Database schema
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Next.js   │────▶│  .NET API   │────▶│ PostgreSQL  │
-│   Frontend  │     │   Backend   │     │  Database   │
-│   (Port     │     │   (Port     │     │  (Port      │
-│    3000)    │     │    5000)    │     │    5432)    │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │
-                           │
-                    ┌──────▼──────┐
-                    │    Redis    │
-                    │    Cache    │
-                    │  (Port 6379)│
-                    └─────────────┘
+┌─────────┐     ┌─────────┐     ┌────────────┐
+│ Next.js │────▶│ .NET 9  │────▶│ PostgreSQL │
+│  :3000  │     │  :5000  │     │   :5432    │
+└─────────┘     └────┬────┘     └────────────┘
+                     │
+                ┌────▼────┐
+                │  Redis  │
+                │  :6379  │
+                └─────────┘
 ```
 
 ## 🎯 Features
 
-- **User Stories Implemented:**
-  - ✅ US-001: Submit and track support tickets
-  - ✅ US-002: Agent ticket management and responses
-  
-- **Technical Features:**
-  - Real-time updates with WebSockets
-  - Optimistic concurrency control
-  - Performance: <2s ticket submission, <30s agent response
-  - Full-text search capabilities
-  - Email notifications via SMTP
-  - Caching with Redis
+- Submit and track support tickets (US-001)
+- Agent ticket management (US-002)
+- Real-time updates (WebSockets)
+- Optimistic concurrency control
+- Performance: <2s submission, <30s response
+- Full-text search, email notifications, Redis caching
 
 ## 🧪 Testing
 
-**Run tests locally:**
 ```bash
 # All tests
 npx nx run-many --target=test --all
@@ -114,12 +73,9 @@ npx nx run-many --target=test --all
 # Specific projects
 dotnet test apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj
 npx nx test web
-npx nx test cli
 
-# E2E tests (Playwright)
+# E2E tests
 npx nx e2e web-e2e
-
-# View E2E report
 npx playwright show-report
 
 # Performance tests
@@ -128,17 +84,12 @@ npm run test:performance
 
 ## 🛠️ Development
 
-This project uses [Nx](https://nx.dev) for monorepo management.
+Uses [Nx](https://nx.dev) for monorepo management.
 
 ```bash
-# Build all projects
-npx nx run-many --target=build --all
-
-# Run tests
-npx nx run-many --target=test --all
-
-# Lint
-npx nx run-many --target=lint --all
+npx nx run-many --target=build --all  # Build all
+npx nx run-many --target=test --all   # Test all
+npx nx run-many --target=lint --all   # Lint all
 ```
 
 ## 📦 Project Structure
@@ -146,55 +97,41 @@ npx nx run-many --target=lint --all
 ```
 hickory/
 ├── apps/
-│   ├── api/              # .NET 9 ASP.NET Core API
-│   ├── web/              # Next.js 15 frontend
-│   ├── cli/              # CLI tool (TypeScript)
-│   └── *-e2e/            # End-to-end tests
-├── docker/               # Docker configuration
-│   ├── docker-compose.yml
-│   ├── api.Dockerfile
-│   ├── web.Dockerfile
-│   └── README.md
-├── specs/                # Product specifications
-└── tests/                # Shared test utilities
+│   ├── api/          # .NET 9 API
+│   ├── web/          # Next.js 15 frontend
+│   ├── cli/          # TypeScript CLI
+│   └── *-e2e/        # E2E tests
+├── docker/           # Docker config
+├── specs/            # Specifications
+└── tests/            # Test utilities
 ```
 
 ## 🔐 Security
 
-- JWT authentication with configurable expiration
-- Password hashing with bcrypt
-- SQL injection protection via parameterized queries
-- XSS protection in frontend
-- CORS configuration
-- Rate limiting (Redis-backed)
+- JWT authentication
+- Password hashing (bcrypt)
+- Parameterized queries (SQL injection protection)
+- XSS protection, CORS, rate limiting
 
 ## 🚢 Deployment
 
-See [docker/README.md](docker/README.md) for production deployment instructions.
+See [docker/README.md](docker/README.md) for production deployment.
 
-Key considerations:
-- Update JWT secret
-- Configure production SMTP
-- Set up SSL/TLS
-- Configure reverse proxy
-- Set up monitoring
-- Implement backup strategy
+**Key considerations:** Update JWT secret, configure SMTP, set up SSL/TLS, reverse proxy, monitoring, and backups.
 
 ## 📝 License
 
-See [LICENSE](LICENSE) file for details.
+See [LICENSE](LICENSE) file.
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
+3. Make changes and run tests
+4. Submit a pull request
 
 ## 📧 Support
 
-For issues and questions:
-- Create an issue in the repository
-- Check existing documentation
+- Create an issue
+- Check documentation
 - Review troubleshooting guides
