@@ -63,6 +63,23 @@ cd apps/web && npm install && npm run dev
 - Optimistic concurrency control
 - Performance: <2s submission, <30s response
 - Full-text search, email notifications, Redis caching
+- Health checks for monitoring (PostgreSQL, Redis)
+
+## 🏥 Health Checks
+
+The API exposes health check endpoints for monitoring:
+
+- **`/health`** - Overall application health (all dependencies)
+- **`/health/ready`** - Readiness check (database + Redis)
+- **`/health/live`** - Liveness check (application is running)
+
+All health checks complete within 5 seconds and return:
+- `200 OK` with "Healthy" when all checks pass
+- `503 Service Unavailable` when any check fails
+
+Dependencies monitored:
+- PostgreSQL database connection
+- Redis cache connection
 
 ## 🧪 Testing
 
