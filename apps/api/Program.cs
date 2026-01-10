@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -112,14 +113,21 @@ builder.Services.AddHealthChecks()
         name: "postgres",
         tags: new[] { "ready", "db", "sql" });
 
-// OpenTelemetry
+// OpenTelemetry - Enhanced for .NET 10
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource
         .AddService("hickory-api"))
     .WithTracing(tracing => tracing
         .AddAspNetCoreInstrumentation()
         .AddEntityFrameworkCoreInstrumentation()
-        .AddSource("Hickory.Api"));
+        .AddSource("Hickory.Api"))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddMeter("Microsoft.AspNetCore.Hosting")
+        .AddMeter("Microsoft.AspNetCore.Http")
+        .AddMeter("Microsoft.AspNetCore.Authentication")
+        .AddMeter("Hickory.Api"));
 
 builder.Services.AddControllers();
 

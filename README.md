@@ -2,7 +2,7 @@
 
 [![CI Pipeline](https://github.com/alexinslc/hickory/workflows/CI%20Pipeline/badge.svg)](https://github.com/alexinslc/hickory/actions/workflows/ci.yml)
 
-Full-stack help desk system built with .NET 9, Next.js 15, PostgreSQL, and Redis.
+Full-stack help desk system built with .NET 10, Next.js 15, PostgreSQL, and Redis.
 
 ## 🚀 Quick Start
 
@@ -23,7 +23,7 @@ open http://localhost:3000
 See [docker/QUICKSTART.md](docker/QUICKSTART.md) for details.
 
 ### Local Development
-**Requirements:** .NET 9.0 SDK, Node.js 20+, PostgreSQL 16, Redis 7
+**Requirements:** .NET 10.0 SDK, Node.js 20+, PostgreSQL 16, Redis 7
 
 ```bash
 # Backend
@@ -45,7 +45,7 @@ cd apps/web && npm install && npm run dev
 
 ```
 ┌─────────┐     ┌─────────┐     ┌────────────┐
-│ Next.js │────▶│ .NET 9  │────▶│ PostgreSQL │
+│ Next.js │────▶│ .NET 10  │────▶│ PostgreSQL │
 │  :3000  │     │  :5000  │     │   :5432    │
 └─────────┘     └────┬────┘     └────────────┘
                      │
@@ -97,7 +97,7 @@ npx nx run-many --target=lint --all   # Lint all
 ```
 hickory/
 ├── apps/
-│   ├── api/          # .NET 9 API
+│   ├── api/          # .NET 10 API
 │   ├── web/          # Next.js 15 frontend
 │   ├── cli/          # TypeScript CLI
 │   └── *-e2e/        # E2E tests

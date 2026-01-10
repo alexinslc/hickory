@@ -1,4 +1,5 @@
 # Build stage
+# Note: .NET 10 images use Ubuntu by default (previously Debian)
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -17,6 +18,7 @@ RUN dotnet publish Hickory.Api.csproj -c Release -o /app/publish \
     /p:PublishSingleFile=false
 
 # Runtime stage
+# Note: .NET 10 images use Ubuntu by default (previously Debian)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
