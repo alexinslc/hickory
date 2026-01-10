@@ -1,7 +1,8 @@
 export default {
   displayName: 'cli',
   preset: '../../jest.preset.js',
-  testEnvironment: 'node',
+  testEnvironment: '<rootDir>/jest-environment-node-no-storage.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.env.setup.js'],
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
