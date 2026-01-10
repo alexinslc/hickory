@@ -128,7 +128,8 @@ describe('useAuth hook', () => {
           role: 'User',
         },
         'mock-token',
-        'mock-refresh'
+        'mock-refresh',
+        '2025-12-31'
       );
     });
 
@@ -245,7 +246,8 @@ describe('useAuth hook', () => {
           role: 'User',
         },
         'new-token',
-        'new-refresh-token'
+        'new-refresh-token',
+        '2025-12-31'
       );
     });
 
