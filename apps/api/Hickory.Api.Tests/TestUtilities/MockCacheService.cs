@@ -48,13 +48,13 @@ public class MockCacheService : ICacheService
         return Task.CompletedTask;
     }
 
-    public (long Hits, long Misses, double HitRate) GetStatistics()
+    public Task<CacheStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default)
     {
-        return (0, 0, 0);
-    }
-
-    public void ResetStatistics()
-    {
-        // No-op for tests
+        return Task.FromResult(new CacheStatistics
+        {
+            TotalHits = 0,
+            TotalMisses = 0,
+            TotalKeys = 0
+        });
     }
 }
