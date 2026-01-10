@@ -21,6 +21,18 @@ public class CacheService : ICacheService
     private long _hits;
     private long _misses;
 
+    private static string? SanitizeForLogging(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        // Remove line breaks and other control characters to prevent log forging
+        var chars = value.Where(c => !char.IsControl(c) || c == '\t').ToArray();
+        return new string(chars);
+    }
+
     public CacheService(
         IDistributedCache distributedCache,
         IConnectionMultiplexer redis,
@@ -78,20 +90,20 @@ public class CacheService : ICacheService
             {
                 Interlocked.Increment(ref _misses);
                 _cacheMissesCounter.Add(1);
-                _logger.LogDebug("Cache miss for key: {Key}", key);
+                _logger.LogDebug("Cache miss for key: {Key}", SanitizeForLogging(key));
                 return null;
             }
 
             Interlocked.Increment(ref _hits);
             _cacheHitsCounter.Add(1);
-            _logger.LogDebug("Cache hit for key: {Key}", key);
+            _logger.LogDebug("Cache hit for key: {Key}", SanitizeForLogging(key));
             
             return JsonSerializer.Deserialize<T>(cachedData, _jsonOptions);
         }
         catch (Exception ex)
         {
             _cacheMissesCounter.Add(1);
-            _logger.LogWarning(ex, "Error retrieving from cache for key: {Key}", key);
+            _logger.LogWarning(ex, "Error retrieving from cache for key: {Key}", SanitizeForLogging(key));
             Interlocked.Increment(ref _misses);
             return null;
         }
@@ -115,11 +127,11 @@ public class CacheService : ICacheService
 
             await _distributedCache.SetStringAsync(key, serialized, options, cancellationToken);
             _logger.LogDebug("Cached value for key: {Key} with expiration: {Expiration}", 
-                key, expiration?.ToString() ?? "none");
+                SanitizeForLogging(key), expiration?.ToString() ?? "none");
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error setting cache for key: {Key}", key);
+            _logger.LogWarning(ex, "Error setting cache for key: {Key}", SanitizeForLogging(key));
         }
     }
 
@@ -128,11 +140,11 @@ public class CacheService : ICacheService
         try
         {
             await _distributedCache.RemoveAsync(key, cancellationToken);
-            _logger.LogDebug("Removed cache for key: {Key}", key);
+            _logger.LogDebug("Removed cache for key: {Key}", SanitizeForLogging(key));
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error removing cache for key: {Key}", key);
+            _logger.LogWarning(ex, "Error removing cache for key: {Key}", SanitizeForLogging(key));
         }
     }
 
