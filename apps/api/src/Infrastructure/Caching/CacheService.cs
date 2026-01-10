@@ -97,12 +97,8 @@ public class CacheService : ICacheService
         finally
         {
             semaphore.Release();
-            
-            // Clean up the semaphore if no one is waiting
-            if (semaphore.CurrentCount == 1)
-            {
-                _locks.TryRemove(key, out _);
-            }
+            // Note: Semaphores may remain in dictionary but this is acceptable as
+            // the memory footprint is minimal and they can be reused for the same keys
         }
     }
 
@@ -256,18 +252,22 @@ public class CacheService : ICacheService
                     continue;
                 }
 
-                var keys = new RedisKey[keysResult.Length];
+                // Filter out null or empty keys
+                var keys = new List<RedisKey>();
                 for (int i = 0; i < keysResult.Length; i++)
                 {
                     var keyString = (string?)keysResult[i];
                     if (!string.IsNullOrEmpty(keyString))
                     {
-                        keys[i] = keyString;
+                        keys.Add(keyString);
                     }
                 }
 
-                var deletedCount = await db.KeyDeleteAsync(keys).ConfigureAwait(false);
-                totalDeleted += deletedCount;
+                if (keys.Count > 0)
+                {
+                    var deletedCount = await db.KeyDeleteAsync(keys.ToArray()).ConfigureAwait(false);
+                    totalDeleted += deletedCount;
+                }
             }
             while (cursor != 0);
 
