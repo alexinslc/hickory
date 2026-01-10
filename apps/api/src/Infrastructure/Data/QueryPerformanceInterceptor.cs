@@ -19,7 +19,8 @@ public class QueryPerformanceInterceptor : DbCommandInterceptor
     public QueryPerformanceInterceptor(ILogger<QueryPerformanceInterceptor> logger, IMeterFactory meterFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        var meter = meterFactory?.Create("Hickory.Api.Database") ?? throw new ArgumentNullException(nameof(meterFactory));
+        ArgumentNullException.ThrowIfNull(meterFactory);
+        var meter = meterFactory.Create("Hickory.Api.Database");
         
         _queryDuration = meter.CreateHistogram<double>(
             "db.query.duration",
