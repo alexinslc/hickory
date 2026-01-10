@@ -106,12 +106,19 @@ builder.Services.AddCors(options =>
 });
 
 // Health Checks
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>("database", tags: new[] { "ready", "db" })
     .AddNpgSql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
         name: "postgres",
-        tags: new[] { "ready", "db", "sql" });
+        tags: new[] { "ready", "db", "sql" })
+    .AddRedis(
+        redisConnectionString,
+        name: "redis",
+        tags: new[] { "ready", "cache" },
+        timeout: TimeSpan.FromSeconds(5));
 
 // OpenTelemetry - Enhanced for .NET 10
 builder.Services.AddOpenTelemetry()
@@ -223,14 +230,17 @@ app.MapControllers();
 // SignalR hub endpoint
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// Seed database with admin user on startup
-using (var scope = app.Services.CreateScope())
+// Seed database with admin user on startup (skip in test environments)
+if (!builder.Configuration.GetValue<bool>("SkipDbSeeder"))
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
-    await DbSeeder.SeedAdminUser(context, passwordHasher, logger);
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        
+        await DbSeeder.SeedAdminUser(context, passwordHasher, logger);
+    }
 }
 
 app.Run();
