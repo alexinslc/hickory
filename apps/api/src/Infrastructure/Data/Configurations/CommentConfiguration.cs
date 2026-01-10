@@ -38,5 +38,9 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
         builder.HasIndex(c => c.TicketId);
         builder.HasIndex(c => c.CreatedAt);
         builder.HasIndex(c => c.AuthorId);
+        
+        // Composite index for filtered comment queries (ticket + internal flag + sort order)
+        builder.HasIndex(c => new { c.TicketId, c.IsInternal, c.CreatedAt })
+            .HasDatabaseName("IX_Comments_TicketId_IsInternal_CreatedAt");
     }
 }

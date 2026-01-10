@@ -90,6 +90,10 @@ public class KnowledgeArticleConfiguration : IEntityTypeConfiguration<KnowledgeA
         builder.HasIndex(a => a.PublishedAt)
             .HasDatabaseName("IX_KnowledgeArticles_PublishedAt");
         
+        // Composite index for common filtered queries
+        builder.HasIndex(a => new { a.Status, a.CategoryId, a.PublishedAt })
+            .HasDatabaseName("IX_KnowledgeArticles_Status_CategoryId_PublishedAt");
+        
         // GIN index for full-text search (created via migration)
         builder.HasIndex(a => a.SearchVector)
             .HasDatabaseName("IX_KnowledgeArticles_SearchVector")
