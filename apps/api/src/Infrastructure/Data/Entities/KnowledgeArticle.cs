@@ -73,9 +73,10 @@ public class KnowledgeArticle
     public User? LastUpdatedBy { get; set; }
     
     /// <summary>
-    /// PostgreSQL full-text search vector (auto-generated)
+    /// PostgreSQL full-text search vector (automatically computed from Title and Content)
+    /// Weighted: Title='A' (highest), Content='B'
     /// </summary>
-    public NpgsqlTypes.NpgsqlTsVector? SearchVector { get; set; }
+    public NpgsqlTypes.NpgsqlTsVector SearchVector { get; set; } = null!;
     
     /// <summary>
     /// Article creation timestamp
