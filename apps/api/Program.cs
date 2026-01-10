@@ -182,7 +182,7 @@ var app = builder.Build();
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Rate Limiting
+// Rate Limiting - placed before authentication to prevent unauthorized requests from consuming quotas
 app.UseIpRateLimiting();
 
 app.UseSwagger();
