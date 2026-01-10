@@ -58,6 +58,11 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<KnowledgeArticle> KnowledgeArticles => Set<KnowledgeArticle>();
     
+    /// <summary>
+    /// Refresh tokens for JWT authentication
+    /// </summary>
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -166,6 +171,10 @@ public class ApplicationDbContext : DbContext
                         // Prevent CreatedAt from being modified
                         entry.Property(nameof(article.CreatedAt)).IsModified = false;
                     }
+                    break;
+                    
+                case RefreshToken refreshToken when entry.State == EntityState.Added:
+                    refreshToken.CreatedAt = now;
                     break;
             }
         }

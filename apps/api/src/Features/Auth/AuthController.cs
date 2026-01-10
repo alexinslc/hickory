@@ -1,5 +1,6 @@
 using Hickory.Api.Features.Auth.Login;
 using Hickory.Api.Features.Auth.Models;
+using Hickory.Api.Features.Auth.RefreshToken;
 using Hickory.Api.Features.Auth.Register;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -54,6 +55,23 @@ public class AuthController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
+        }
+    }
+    
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AuthResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        try
+        {
+            var command = new RefreshTokenCommand(request.RefreshToken);
+            var response = await _mediator.Send(command);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
     }
 }

@@ -57,18 +57,28 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
 
         // Update last login
         user.LastLoginAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync(cancellationToken);
-
+        
         // Generate tokens
         var accessToken = _tokenService.GenerateAccessToken(user);
-        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenString = _tokenService.GenerateRefreshToken();
+        
+        // Store refresh token in database
+        var refreshToken = new Hickory.Api.Infrastructure.Data.Entities.RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshTokenString,
+            ExpiresAt = DateTime.UtcNow.AddDays(30) // 30-day refresh token expiration
+        };
+        
+        _context.RefreshTokens.Add(refreshToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("User {UserId} logged in successfully", user.Id);
 
         return new AuthResponse
         {
             AccessToken = accessToken,
-            RefreshToken = refreshToken,
+            RefreshToken = refreshTokenString,
             UserId = user.Id,
             Email = user.Email,
             FirstName = user.FirstName,
