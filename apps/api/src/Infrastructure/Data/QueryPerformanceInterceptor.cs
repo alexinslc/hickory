@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace Hickory.Api.Infrastructure.Data;
 
@@ -10,21 +11,31 @@ namespace Hickory.Api.Infrastructure.Data;
 /// </summary>
 public class QueryPerformanceInterceptor : DbCommandInterceptor
 {
-    private static readonly Meter Meter = new("Hickory.Api.Database");
-    private static readonly Histogram<double> QueryDuration = Meter.CreateHistogram<double>(
-        "db.query.duration",
-        "ms",
-        "Duration of database queries in milliseconds");
-    
-    private static readonly Counter<long> QueryCount = Meter.CreateCounter<long>(
-        "db.query.count",
-        "queries",
-        "Total number of database queries executed");
-    
-    private static readonly Counter<long> SlowQueryCount = Meter.CreateCounter<long>(
-        "db.query.slow_count",
-        "queries",
-        "Number of slow queries (>100ms)");
+    private readonly ILogger<QueryPerformanceInterceptor> _logger;
+    private readonly Histogram<double> _queryDuration;
+    private readonly Counter<long> _queryCount;
+    private readonly Counter<long> _slowQueryCount;
+
+    public QueryPerformanceInterceptor(ILogger<QueryPerformanceInterceptor> logger, IMeterFactory meterFactory)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        var meter = meterFactory?.Create("Hickory.Api.Database") ?? throw new ArgumentNullException(nameof(meterFactory));
+        
+        _queryDuration = meter.CreateHistogram<double>(
+            "db.query.duration",
+            "ms",
+            "Duration of database queries in milliseconds");
+        
+        _queryCount = meter.CreateCounter<long>(
+            "db.query.count",
+            "queries",
+            "Total number of database queries executed");
+        
+        _slowQueryCount = meter.CreateCounter<long>(
+            "db.query.slow_count",
+            "queries",
+            "Number of slow queries (>100ms)");
+    }
 
     public override DbDataReader ReaderExecuted(
         DbCommand command,
@@ -93,16 +104,16 @@ public class QueryPerformanceInterceptor : DbCommandInterceptor
             { "command_type", commandType }
         };
 
-        QueryDuration.Record(duration, tags);
-        QueryCount.Add(1, tags);
+        _queryDuration.Record(duration, tags);
+        _queryCount.Add(1, tags);
 
         // Track slow queries (>100ms)
         if (duration > 100)
         {
-            SlowQueryCount.Add(1, tags);
+            _slowQueryCount.Add(1, tags);
             
-            // Log slow queries for investigation using Serilog
-            Serilog.Log.Warning(
+            // Log slow queries for investigation
+            _logger.LogWarning(
                 "Slow query detected ({Duration}ms): {CommandText}",
                 duration,
                 command.CommandText.Length > 500 

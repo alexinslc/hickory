@@ -33,8 +33,11 @@ builder.Host.UseSerilog();
 
 // Add services to the container.
 
+// Register QueryPerformanceInterceptor as singleton for reuse across all DbContext instances
+builder.Services.AddSingleton<QueryPerformanceInterceptor>();
+
 // Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     
@@ -43,10 +46,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
     );
     
-    // Add query performance interceptor for metrics
-    options.AddInterceptors(new QueryPerformanceInterceptor());
+    // Add query performance interceptor for metrics - reuse singleton instance
+    var interceptor = serviceProvider.GetRequiredService<QueryPerformanceInterceptor>();
+    options.AddInterceptors(interceptor);
     
-    // Enable detailed logging in development
+    // Enable detailed logging in development only.
+    // WARNING: Do NOT enable EnableSensitiveDataLogging in production as it will log parameter values,
+    // including potentially sensitive user data (emails, names, passwords, etc.).
     if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging(); // Shows parameter values in logs
