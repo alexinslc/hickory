@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <!-- Prevent copying appsettings files from the main project -->
-    <Content Remove="..\appsettings*.json" />
+    <Content Remove="..\Hickory.Api\appsettings*.json" />
   </ItemGroup>
 
 </Project>
