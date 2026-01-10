@@ -53,11 +53,11 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = redisConnectionString;
-    options.InstanceName = "hickory:";
+    // Note: InstanceName removed to avoid duplicate prefixing with CacheKeys class
 });
 
-// Caching Services
-builder.Services.AddScoped<ICacheService, CacheService>();
+// Caching Services - Singleton to maintain statistics across all requests
+builder.Services.AddSingleton<ICacheService, CacheService>();
 
 // Authentication Services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();

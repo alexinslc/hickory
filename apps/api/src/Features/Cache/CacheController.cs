@@ -29,18 +29,6 @@ public class CacheController : ControllerBase
     }
 
     /// <summary>
-    /// Clear specific cache key
-    /// </summary>
-    [HttpDelete("keys/{key}")]
-    public async Task<IActionResult> ClearKey(string key, CancellationToken cancellationToken)
-    {
-        await _cacheService.RemoveAsync(key, cancellationToken);
-        var sanitizedKey = key?.Replace("\r", string.Empty).Replace("\n", string.Empty);
-        _logger.LogInformation("Cache key cleared by admin: {Key}", sanitizedKey);
-        return NoContent();
-    }
-
-    /// <summary>
     /// Clear all ticket caches
     /// </summary>
     [HttpDelete("tickets")]
