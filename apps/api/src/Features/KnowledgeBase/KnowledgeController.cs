@@ -6,6 +6,7 @@ using Hickory.Api.Features.KnowledgeBase.Rate;
 using Hickory.Api.Features.KnowledgeBase.Search;
 using Hickory.Api.Features.KnowledgeBase.Update;
 using Hickory.Api.Infrastructure.Data.Entities;
+using Hickory.Api.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,8 +19,6 @@ namespace Hickory.Api.Features.KnowledgeBase;
 [Authorize]
 public class KnowledgeController : ControllerBase
 {
-    private const string AgentRole = "Agent";
-    private const string AdministratorRole = "Administrator";
     private const string PublishedStatus = "Published";
     
     private readonly IMediator _mediator;
@@ -47,7 +46,7 @@ public class KnowledgeController : ControllerBase
         if (status.HasValue && status.Value != ArticleStatus.Published)
         {
             var userRole = GetUserRole();
-            if (userRole != AgentRole && userRole != AdministratorRole)
+            if (userRole != AuthorizationRoles.Agent && userRole != AuthorizationRoles.Administrator)
             {
                 return Forbid();
             }
@@ -89,7 +88,7 @@ public class KnowledgeController : ControllerBase
         if (article.Status != PublishedStatus)
         {
             var userRole = GetUserRole();
-            if (userRole != AgentRole && userRole != AdministratorRole)
+            if (userRole != AuthorizationRoles.Agent && userRole != AuthorizationRoles.Administrator)
             {
                 return NotFound(); // Return 404 to avoid leaking existence
             }
@@ -110,7 +109,7 @@ public class KnowledgeController : ControllerBase
     /// Create a new knowledge base article (Agent/Admin only)
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<ActionResult<ArticleDto>> CreateArticle(
         [FromBody] CreateArticleRequest request,
         CancellationToken cancellationToken = default)
@@ -129,7 +128,7 @@ public class KnowledgeController : ControllerBase
     /// Update an existing knowledge base article (Agent/Admin only)
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<ActionResult<ArticleDto>> UpdateArticle(
         Guid id,
         [FromBody] UpdateArticleRequest request,

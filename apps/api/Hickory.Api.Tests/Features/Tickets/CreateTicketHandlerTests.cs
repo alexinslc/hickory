@@ -241,7 +241,7 @@ public class CreateTicketHandlerTests
         // Assert
         _publishEndpointMock.Verify(
             p => p.Publish(
-                It.Is<Common.Events.TicketCreatedEvent>(e =>
+                It.Is<Hickory.Api.Common.Events.TicketCreatedEvent>(e =>
                     e.TicketNumber == "TKT-00001" &&
                     e.Title == "Test Issue" &&
                     e.Description == "Test Description" &&
