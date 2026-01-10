@@ -47,7 +47,8 @@ USER nextjs
 # Expose port
 EXPOSE 3000
 
-# Health check
+# Health check to verify Next.js server is responding
+# Tests the root endpoint (/) which should return 200 OK
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); });"
 
