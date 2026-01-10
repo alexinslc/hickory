@@ -62,6 +62,21 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
         var accessToken = _tokenService.GenerateAccessToken(user);
         var refreshTokenString = _tokenService.GenerateRefreshToken();
         
+        // Limit active tokens per user (max 5 devices/sessions)
+        var activeTokens = await _context.RefreshTokens
+            .Where(rt => rt.UserId == user.Id && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
+            .OrderBy(rt => rt.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        // If user has 5 or more active tokens, revoke the oldest one
+        if (activeTokens.Count >= 5)
+        {
+            var oldestToken = activeTokens.First();
+            oldestToken.RevokedAt = DateTime.UtcNow;
+            oldestToken.RevokedReason = "Exceeded maximum active sessions (5)";
+            _logger.LogInformation("Revoked oldest token for user {UserId} due to session limit", user.Id);
+        }
+        
         // Store refresh token in database
         var refreshToken = new Hickory.Api.Infrastructure.Data.Entities.RefreshToken
         {
