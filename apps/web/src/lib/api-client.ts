@@ -272,6 +272,11 @@ export interface GetSuggestedArticlesRequest {
 
 class ApiClient {
   private client: AxiosInstance;
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (value: string) => void;
+    reject: (reason: Error) => void;
+  }> = [];
 
   constructor() {
     this.client = axios.create({
@@ -298,13 +303,120 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError<ErrorResponse>) => {
-        if (error.response?.status === 401) {
-          // Token expired - clear auth state and redirect
-          this.handleUnauthorized();
+        const originalRequest = error.config;
+        
+        // If error is 401 and we haven't tried refreshing yet
+        if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
+          if (this.isRefreshing) {
+            // Wait for the current refresh to complete
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then((token) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                return this.client(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
+          }
+
+          (originalRequest as any)._retry = true;
+          this.isRefreshing = true;
+
+          try {
+            const newToken = await this.refreshAccessToken();
+            this.isRefreshing = false;
+            
+            // Retry all queued requests with new token
+            this.processQueue(null, newToken);
+            
+            // Retry the original request
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return this.client(originalRequest);
+          } catch (refreshError) {
+            this.isRefreshing = false;
+            this.processQueue(refreshError as Error, null);
+            this.handleUnauthorized();
+            return Promise.reject(refreshError);
+          }
         }
+
         return Promise.reject(error);
       }
     );
+  }
+
+  private processQueue(error: Error | null, token: string | null = null): void {
+    this.failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error);
+      } else {
+        prom.resolve(token!);
+      }
+    });
+
+    this.failedQueue = [];
+  }
+
+  private async refreshAccessToken(): Promise<string> {
+    const refreshToken = this.getRefreshTokenFromStore();
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    try {
+      // Call refresh endpoint without interceptors to avoid infinite loop
+      const response = await axios.post<AuthResponse>(
+        `${API_BASE_URL}/api/v1/auth/refresh`,
+        { refreshToken }
+      );
+
+      const { accessToken, refreshToken: newRefreshToken, expiresAt } = response.data;
+
+      // Update stored tokens
+      this.updateTokensInStore(accessToken, newRefreshToken, expiresAt);
+
+      return accessToken;
+    } catch (error) {
+      // Clear auth on refresh failure
+      this.handleUnauthorized();
+      throw error;
+    }
+  }
+
+  private getRefreshTokenFromStore(): string | null {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const stored = localStorage.getItem('hickory-auth-storage');
+      if (!stored) return null;
+      
+      const parsed = JSON.parse(stored);
+      return parsed.state?.refreshToken || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private updateTokensInStore(accessToken: string, refreshToken: string, expiresAt: string): void {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const stored = localStorage.getItem('hickory-auth-storage');
+      if (!stored) return;
+      
+      const parsed = JSON.parse(stored);
+      if (parsed.state) {
+        parsed.state.accessToken = accessToken;
+        parsed.state.refreshToken = refreshToken;
+        parsed.state.expiresAt = expiresAt;
+        localStorage.setItem('hickory-auth-storage', JSON.stringify(parsed));
+      }
+    } catch (error) {
+      console.error('Failed to update tokens in store:', error);
+    }
   }
 
   private getTokenFromStore(): string | null {

@@ -31,7 +31,8 @@ export function useLogin() {
           role: data.role,
         },
         data.accessToken,
-        data.refreshToken
+        data.refreshToken,
+        data.expiresAt
       );
       queryClient.invalidateQueries();
       router.push('/dashboard');
@@ -56,7 +57,8 @@ export function useRegister() {
           role: data.role,
         },
         data.accessToken,
-        data.refreshToken
+        data.refreshToken,
+        data.expiresAt
       );
       queryClient.invalidateQueries();
       router.push('/dashboard');
