@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Hickory.Api.Features.Categories.Create;
 using Hickory.Api.Features.Categories.GetAll;
+using Hickory.Api.Common;
 
 namespace Hickory.Api.Features.Categories;
 
@@ -33,7 +34,7 @@ public class CategoriesController : ControllerBase
     /// Create a new category (Admin only)
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthorizationRoles.Administrator)]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryCommand command)
     {
         var category = await _mediator.Send(command);

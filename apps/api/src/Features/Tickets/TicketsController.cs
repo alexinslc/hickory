@@ -11,6 +11,7 @@ using Hickory.Api.Features.Tickets.RemoveTags;
 using Hickory.Api.Features.Tickets.UpdatePriority;
 using Hickory.Api.Features.Tickets.UpdateStatus;
 using Hickory.Api.Infrastructure.Data.Entities;
+using Hickory.Api.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -76,7 +77,7 @@ public class TicketsController : ControllerBase
 
     // Agent-only endpoints
     [HttpGet("queue")]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<ActionResult<List<Models.TicketDto>>> GetAgentQueue(
         CancellationToken cancellationToken)
     {
@@ -88,7 +89,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPut("{id}/assign")]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<IActionResult> AssignTicket(
         Guid id,
         [FromBody] AssignTicketRequest request,
@@ -101,7 +102,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPut("{id}/status")]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<IActionResult> UpdateTicketStatus(
         Guid id,
         [FromBody] UpdateTicketStatusRequest request,
@@ -114,7 +115,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPut("{id}/priority")]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<IActionResult> UpdateTicketPriority(
         Guid id,
         [FromBody] UpdateTicketPriorityRequest request,
@@ -127,7 +128,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPost("{id}/close")]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<IActionResult> CloseTicket(
         Guid id,
         [FromBody] CloseTicketRequest request,
@@ -140,7 +141,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPut("{id}/reassign")]
-    [Authorize(Roles = "Agent,Administrator")]
+    [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
     public async Task<IActionResult> ReassignTicket(
         Guid id,
         [FromBody] ReassignTicketRequest request,
