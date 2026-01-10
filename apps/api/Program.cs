@@ -1,4 +1,5 @@
 using System.Text;
+using AspNetCoreRateLimit;
 using FluentValidation;
 using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
@@ -91,6 +92,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Rate Limiting Configuration
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection("IpRateLimitPolicies"));
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
@@ -173,6 +181,9 @@ var app = builder.Build();
 
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Rate Limiting
+app.UseIpRateLimiting();
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
