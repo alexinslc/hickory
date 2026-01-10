@@ -123,6 +123,74 @@ docker compose -f docker/docker-compose.yml exec api \
   dotnet ef database update --project Hickory.Api.csproj
 ```
 
+## 🏥 Health Checks
+
+All services include Docker health checks to ensure proper orchestration and monitoring:
+
+### API Health Check
+- **Endpoint**: `/health`
+- **Method**: HTTP GET via curl
+- **Interval**: Every 30 seconds
+- **Timeout**: 10 seconds
+- **Start Period**: 40 seconds (allows time for startup)
+- **Retries**: 3 consecutive failures before marking unhealthy
+
+```bash
+# Check API health status
+docker ps --filter "name=api"
+
+# Or use docker inspect
+docker inspect --format='{{.State.Health.Status}}' hickory-api
+```
+
+### Web Health Check
+- **Endpoint**: `/` (root endpoint)
+- **Method**: HTTP GET via Node.js http module
+- **Interval**: Every 30 seconds
+- **Timeout**: 10 seconds
+- **Start Period**: 40 seconds
+- **Retries**: 3 consecutive failures before marking unhealthy
+
+```bash
+# Check web health status
+docker ps --filter "name=web"
+
+# Or use docker inspect
+docker inspect --format='{{.State.Health.Status}}' hickory-web
+```
+
+### Database and Cache Health Checks
+- **PostgreSQL**: Uses `pg_isready` command
+- **Redis**: Uses `redis-cli ping` command
+
+### Monitoring Health Status
+
+```bash
+# View all container health statuses
+docker compose -f docker/docker-compose.yml ps
+
+# Continuously monitor health
+watch -n 5 'docker compose -f docker/docker-compose.yml ps'
+
+# View detailed health check logs
+docker inspect hickory-api | jq '.[0].State.Health'
+docker inspect hickory-web | jq '.[0].State.Health'
+```
+
+### Unhealthy Container Behavior
+
+Docker Compose automatically detects unhealthy containers but does not restart them by default. To enable automatic restarts on health check failure, you can use health check-aware orchestration like Docker Swarm or Kubernetes.
+
+For development, you can manually restart an unhealthy container:
+
+```bash
+# Restart specific unhealthy service
+docker compose -f docker/docker-compose.yml restart api
+
+# Force recreation
+docker compose -f docker/docker-compose.yml up -d --force-recreate api
+```
+
 ## 🔧 Service Details
 
 ### PostgreSQL Database

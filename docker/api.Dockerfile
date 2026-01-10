@@ -35,9 +35,15 @@ USER dotnet
 # Expose port
 EXPOSE 8080
 
-# Health check (no additional tools needed - uses wget which is in aspnet image)
+# Health check using /health endpoint
+# The API provides multiple health endpoints:
+# - /health: Overall health status
+# - /health/ready: Readiness check (database and cache connections)
+# - /health/live: Liveness check (application responsiveness)
+# Using /health for Docker as it provides comprehensive status
+# Note: Using curl which is available in the aspnet image
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:8080/health || exit 1
 
 # Set entry point
 ENTRYPOINT ["dotnet", "Hickory.Api.dll"]
