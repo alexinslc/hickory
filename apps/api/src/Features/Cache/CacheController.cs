@@ -35,7 +35,8 @@ public class CacheController : ControllerBase
     public async Task<IActionResult> ClearKey(string key, CancellationToken cancellationToken)
     {
         await _cacheService.RemoveAsync(key, cancellationToken);
-        _logger.LogInformation("Cache key cleared by admin: {Key}", key);
+        var sanitizedKey = key?.Replace("\r", string.Empty).Replace("\n", string.Empty);
+        _logger.LogInformation("Cache key cleared by admin: {Key}", sanitizedKey);
         return NoContent();
     }
 
