@@ -88,7 +88,10 @@ jobs:
       - name: Build API
         if: matrix.project == 'api'
         run: |
-          dotnet build apps/api/Hickory.Api.csproj --configuration Release
+          dotnet restore apps/api/Hickory.Api.csproj
+          dotnet restore apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj
+          dotnet restore apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj
+          dotnet build apps/api/Hickory.Api.csproj --configuration Release --no-restore
           dotnet build apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --configuration Release --no-restore
           dotnet build apps/api/Hickory.Api.IntegrationTests/Hickory.Api.IntegrationTests.csproj --configuration Release --no-restore
       
