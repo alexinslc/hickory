@@ -61,7 +61,7 @@ public class GetArticleByIdHandler : IRequestHandler<GetArticleByIdQuery, Articl
                     .Include(a => a.Tags)
                     .FirstOrDefaultAsync(a => a.Id == query.ArticleId, ct);
 
-                return article != null ? KnowledgeArticleHelpers.MapToDto(article) : null!;
+                return article != null ? KnowledgeArticleHelpers.MapToDto(article) : null;
             },
             CacheExpiration.KnowledgeArticles,
             cancellationToken);

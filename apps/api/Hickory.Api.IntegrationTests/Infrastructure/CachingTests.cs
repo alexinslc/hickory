@@ -243,10 +243,10 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         using var scope = _factory.Services.CreateScope();
         var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
-        // Cache some data
-        await cacheService.SetAsync("test-key-a", new TicketDto { Title = "A" }, 
+        // Cache some data with proper hickory: prefix to match the pattern
+        await cacheService.SetAsync("hickory:tickets:test-a", new TicketDto { Title = "A" }, 
             TimeSpan.FromMinutes(5), CancellationToken.None);
-        await cacheService.SetAsync("test-key-b", new TicketDto { Title = "B" }, 
+        await cacheService.SetAsync("hickory:tickets:test-b", new TicketDto { Title = "B" }, 
             TimeSpan.FromMinutes(5), CancellationToken.None);
 
         // Act
