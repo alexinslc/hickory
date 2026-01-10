@@ -8,6 +8,7 @@ using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Messaging;
 using Hickory.Api.Infrastructure.Middleware;
 using Hickory.Api.Infrastructure.Notifications;
+using Hickory.Api.Infrastructure.RateLimiting;
 using Hickory.Api.Infrastructure.RealTime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -94,10 +95,20 @@ builder.Services.AddAuthorization();
 
 // Rate Limiting Configuration
 builder.Services.AddMemoryCache();
+
+// IP-based rate limiting (for anonymous users and as fallback)
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
 builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection("IpRateLimitPolicies"));
+
+// Client-based rate limiting (for authenticated users with more lenient limits)
+builder.Services.Configure<ClientRateLimitOptions>(builder.Configuration.GetSection("ClientRateLimiting"));
+builder.Services.Configure<ClientRateLimitPolicies>(builder.Configuration.GetSection("ClientRateLimitPolicies"));
+
 builder.Services.AddInMemoryRateLimiting();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+// Add custom client resolver to identify authenticated users
+builder.Services.AddSingleton<IClientResolveContributor, AuthenticatedUserClientResolveContributor>();
 
 // CORS Configuration
 builder.Services.AddCors(options =>
@@ -182,8 +193,9 @@ var app = builder.Build();
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Rate Limiting - placed before authentication to prevent unauthorized requests from consuming quotas
+// Rate limiting - placed before authentication to protect authentication endpoints from brute-force and abusive requests
 app.UseIpRateLimiting();
+app.UseClientRateLimiting();
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
