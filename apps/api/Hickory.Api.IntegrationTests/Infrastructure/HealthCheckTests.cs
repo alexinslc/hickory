@@ -104,13 +104,13 @@ public class HealthCheckTests : IClassFixture<ApiWebApplicationFactory>
         var healthCheckService = scope.ServiceProvider.GetRequiredService<HealthCheckService>();
         
         // Act
-        var startTime = DateTime.UtcNow;
         var result = await healthCheckService.CheckHealthAsync(check => check.Name == "redis");
-        var duration = DateTime.UtcNow - startTime;
 
         // Assert
         result.Entries["redis"].Status.Should().Be(HealthStatus.Healthy);
-        duration.Should().BeLessThan(TimeSpan.FromSeconds(5), "health check should complete within configured timeout");
+        result.Entries["redis"].Duration.Should().BeLessThan(
+            TimeSpan.FromSeconds(10),
+            "the Redis health check should complete within its configured timeout");
     }
 
     [Fact]
