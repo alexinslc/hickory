@@ -6,12 +6,14 @@ using Hickory.Api.Features.Auth.Register;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Hickory.Api.Features.Auth;
 
 [ApiController]
 [Route("api/v1/auth")]
+[EnableRateLimiting("auth")] // Stricter rate limit for auth endpoints
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;

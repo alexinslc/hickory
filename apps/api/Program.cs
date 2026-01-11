@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
@@ -11,6 +12,7 @@ using Hickory.Api.Infrastructure.Middleware;
 using Hickory.Api.Infrastructure.Notifications;
 using Hickory.Api.Infrastructure.RealTime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -170,6 +172,87 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Helper for rate limiting partition key with security logging
+static string GetRateLimitPartitionKey(HttpContext context, string limitType, IServiceProvider? services = null)
+{
+    var userId = context.User?.FindFirst("sub")?.Value;
+    var ipAddress = context.Connection.RemoteIpAddress?.ToString();
+    var partitionKey = userId ?? ipAddress ?? "anonymous";
+    
+    // Log warning when falling back to "anonymous" (security concern)
+    if (partitionKey == "anonymous")
+    {
+        var logger = (services ?? context.RequestServices).GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("Rate limiting ({LimitType}): Unable to determine user ID or IP address. Using 'anonymous' partition key which may allow multiple users to share the same rate limit bucket.", limitType);
+    }
+    
+    return partitionKey;
+}
+
+// Rate Limiting - protects API from abuse
+builder.Services.AddRateLimiter(options =>
+{
+    // Global rate limit: 100 requests per minute per user (or IP for anonymous requests)
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var partitionKey = GetRateLimitPartitionKey(context, "global");
+        
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: partitionKey,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = builder.Configuration.GetValue("RateLimiting:PermitLimit", 100),
+                Window = TimeSpan.FromMinutes(builder.Configuration.GetValue("RateLimiting:WindowMinutes", 1)),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0 // No queueing, reject immediately
+            });
+    });
+    
+    // Stricter limit for authentication endpoints (prevent brute force), per user/IP
+    options.AddPolicy("auth", context =>
+    {
+        var partitionKey = GetRateLimitPartitionKey(context, "auth");
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: partitionKey,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 10),
+                Window = TimeSpan.FromMinutes(builder.Configuration.GetValue("RateLimiting:AuthWindowMinutes", 1)),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+    
+    // Custom response for rate limited requests
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        // Check if response has already started before modifying it
+        if (context.HttpContext.Response.HasStarted)
+        {
+            return;
+        }
+        
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+        
+        var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
+            ? retryAfterValue.TotalSeconds
+            : 60;
+            
+        // RFC 7231: Retry-After header must be an integer representing seconds
+        context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter).ToString();
+        
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            type = "https://httpstatuses.io/429",
+            title = "Too Many Requests",
+            status = 429,
+            detail = $"Rate limit exceeded. Try again in {(int)retryAfter} seconds."
+        }, cancellationToken);
+    };
+});
+
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
@@ -293,6 +376,9 @@ app.UseCors("AllowWebApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Rate limiting - after auth so we can use user identity for partitioning
+app.UseRateLimiter();
 
 // Health checks endpoints
 app.MapHealthChecks("/health");
