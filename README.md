@@ -2,7 +2,7 @@
 
 [![CI Pipeline](https://github.com/alexinslc/hickory/workflows/CI%%20Pipeline/badge.svg)](https://github.com/alexinslc/hickory/actions/workflows/ci.yml)
 
-Full-stack help desk system built with .NET 10, Next.js 15, PostgreSQL, and Redis.
+Full-stack help desk system built with .NET 10, Next.js 16, PostgreSQL, and Redis.
 
 ## Quick Start
 
@@ -29,7 +29,7 @@ Next.js :3000  →  .NET API :5000  →  PostgreSQL :5432
                    Redis :6379
 ```
 
-**Stack:** .NET 10, Next.js 15, PostgreSQL 16, Redis 7, MediatR, SignalR, TanStack Query
+**Stack:** .NET 10, Next.js 16, PostgreSQL 16, Redis 7, MediatR, SignalR, TanStack Query
 
 ## Features
 
@@ -56,7 +56,7 @@ npx nx e2e web-e2e                     # E2E tests
 ```
 apps/
 ├── api/      # .NET 10 API
-├── web/      # Next.js 15 frontend
+├── web/      # Next.js 16 frontend
 ├── cli/      # TypeScript CLI
 └── *-e2e/    # E2E tests
 ```
