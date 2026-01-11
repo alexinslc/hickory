@@ -5,6 +5,9 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   {
+    ignores: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/build/**', '**/coverage/**'],
+  },
+  {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
