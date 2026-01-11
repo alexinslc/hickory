@@ -5,7 +5,6 @@ WORKDIR /src
 
 # Copy solution and project files
 COPY apps/api/Hickory.Api.csproj apps/api/
-RUN dotnet restore apps/api/Hickory.Api.csproj --no-cache
 
 # Copy source code
 COPY apps/api/ apps/api/
@@ -13,7 +12,6 @@ COPY apps/api/ apps/api/
 # Build and publish with optimizations
 WORKDIR /src/apps/api
 RUN dotnet publish Hickory.Api.csproj -c Release -o /app/publish \
-    --no-restore \
     /p:PublishTrimmed=false \
     /p:PublishSingleFile=false
 
