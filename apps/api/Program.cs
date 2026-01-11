@@ -116,6 +116,12 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 // Business Services
 builder.Services.AddScoped<ITicketNumberGenerator, TicketNumberGenerator>();
 
+// File Storage
+builder.Services.Configure<Hickory.Api.Infrastructure.Storage.LocalFileStorageOptions>(
+    builder.Configuration.GetSection("FileStorage"));
+builder.Services.AddSingleton<Hickory.Api.Infrastructure.Storage.IFileStorageService, 
+    Hickory.Api.Infrastructure.Storage.LocalFileStorageService>();
+
 // Notification Services
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IWebhookService, WebhookService>();

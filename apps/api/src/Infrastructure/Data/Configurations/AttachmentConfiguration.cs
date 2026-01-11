@@ -36,6 +36,12 @@ public class AttachmentConfiguration : IEntityTypeConfiguration<Attachment>
             .HasForeignKey(a => a.TicketId)
             .OnDelete(DeleteBehavior.Cascade);
         
+        builder.HasOne(a => a.Comment)
+            .WithMany(c => c.Attachments)
+            .HasForeignKey(a => a.CommentId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+        
         builder.HasOne(a => a.UploadedBy)
             .WithMany()
             .HasForeignKey(a => a.UploadedById)
@@ -43,6 +49,7 @@ public class AttachmentConfiguration : IEntityTypeConfiguration<Attachment>
         
         // Indexes
         builder.HasIndex(a => a.TicketId);
+        builder.HasIndex(a => a.CommentId);
         builder.HasIndex(a => a.UploadedAt);
         builder.HasIndex(a => a.UploadedById);
     }

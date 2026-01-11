@@ -73,6 +73,30 @@ export interface CommentDto {
   updatedAt?: string;
 }
 
+export interface AttachmentDto {
+  id: string;
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+  uploadedById: string;
+  uploadedByName: string;
+  uploadedAt: string;
+}
+
+export interface TicketDetailsResponse {
+  ticket: TicketDto;
+  comments: CommentDto[];
+  attachments: AttachmentDto[];
+}
+
+export interface UploadAttachmentResponse {
+  id: string;
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+  uploadedAt: string;
+}
+
 export interface CreateTicketRequest {
   title: string;
   description: string;
@@ -558,6 +582,49 @@ class ApiClient {
 
   async removeTagsFromTicket(ticketId: string, tags: string[]): Promise<void> {
     await this.client.delete(`/api/v1/tickets/${ticketId}/tags`, { data: tags });
+  }
+
+  // Attachment endpoints
+  async getTicketDetails(ticketId: string): Promise<TicketDetailsResponse> {
+    const response = await this.client.get<TicketDetailsResponse>(`/api/tickets/${ticketId}/details`);
+    return response.data;
+  }
+
+  async uploadAttachment(ticketId: string, file: File, onUploadProgress?: (progressEvent: any) => void): Promise<UploadAttachmentResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await this.client.post<UploadAttachmentResponse>(
+      `/api/attachments/tickets/${ticketId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress,
+      }
+    );
+    return response.data;
+  }
+
+  async downloadAttachment(attachmentId: string, fileName: string): Promise<void> {
+    const response = await this.client.get(`/api/attachments/${attachmentId}`, {
+      responseType: 'blob',
+    });
+
+    // Create a download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  async deleteAttachment(attachmentId: string): Promise<void> {
+    await this.client.delete(`/api/attachments/${attachmentId}`);
   }
 
   // Search endpoints

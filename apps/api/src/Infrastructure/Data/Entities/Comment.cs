@@ -13,6 +13,9 @@ public class Comment
     public Guid AuthorId { get; set; }
     public User Author { get; set; } = null!;
     
+    // Attachments
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+    
     // Timestamps
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

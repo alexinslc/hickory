@@ -5,7 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { useGetTicketById, useUpdateTicketStatus, useAssignTicket, useCloseTicket } from '@/lib/queries/tickets';
 import { useGetComments, useAddComment, useAddInternalNote } from '@/lib/queries/comments';
 import { useAuthStore } from '@/store/auth-store';
+import { useTicketDetails } from '@/hooks/use-tickets';
 import { AuthGuard } from '@/components/auth-guard';
+import { FileUpload } from '@/components/attachments/FileUpload';
+import { AttachmentList } from '@/components/attachments/AttachmentList';
 
 // Utility functions for status and priority colors
 function getStatusColor(status: string): string {
@@ -52,6 +55,7 @@ export default function TicketDetailPage() {
   const router = useRouter();
   const ticketId = params.id as string;
   const { data: ticket, isLoading, error } = useGetTicketById(ticketId);
+  const { data: ticketDetails, isLoading: detailsLoading, refetch: refetchTicketDetails } = useTicketDetails(ticketId);
   const { data: comments, isLoading: commentsLoading } = useGetComments(ticketId);
   const { user } = useAuthStore();
   const addCommentMutation = useAddComment(ticketId);
@@ -224,6 +228,51 @@ export default function TicketDetailPage() {
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
                 <p className="whitespace-pre-wrap text-gray-700">{ticket.description}</p>
+              </div>
+
+              {/* Attachments Section */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    Attachments
+                    {ticketDetails?.attachments && ticketDetails.attachments.length > 0 && (
+                      <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-normal">
+                        {ticketDetails.attachments.length}
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">Upload files related to this ticket</p>
+                </div>
+
+                {/* File Upload */}
+                <div className="mb-6">
+                  <FileUpload 
+                    ticketId={ticketId}
+                    onUploadComplete={() => refetchTicketDetails()}
+                  />
+                </div>
+
+                {/* Attachment List */}
+                {detailsLoading ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-gray-500 mt-2">Loading attachments...</p>
+                  </div>
+                ) : ticketDetails?.attachments && ticketDetails.attachments.length > 0 ? (
+                  <AttachmentList 
+                    attachments={ticketDetails.attachments} 
+                    canDelete={true}
+                    onDelete={() => refetchTicketDetails()}
+                  />
+                ) : (
+                  <div className="text-center py-4 bg-gray-50 rounded-lg">
+                    <svg className="h-10 w-10 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-sm text-gray-600">No attachments yet</p>
+                    <p className="text-xs text-gray-500 mt-1">Upload files using the form above</p>
+                  </div>
+                )}
               </div>
 
               {/* Comments Section */}
