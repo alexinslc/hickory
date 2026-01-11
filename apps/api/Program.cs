@@ -172,23 +172,31 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Helper for rate limiting partition key with security logging
+static string GetRateLimitPartitionKey(HttpContext context, string limitType, IServiceProvider? services = null)
+{
+    var userId = context.User?.FindFirst("sub")?.Value;
+    var ipAddress = context.Connection.RemoteIpAddress?.ToString();
+    var partitionKey = userId ?? ipAddress ?? "anonymous";
+    
+    // Log warning when falling back to "anonymous" (security concern)
+    // Only log on first occurrence to avoid performance impact
+    if (partitionKey == "anonymous")
+    {
+        var logger = (services ?? context.RequestServices).GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("Rate limiting ({LimitType}): Unable to determine user ID or IP address. Using 'anonymous' partition key which may allow multiple users to share the same rate limit bucket.", limitType);
+    }
+    
+    return partitionKey;
+}
+
 // Rate Limiting - protects API from abuse
 builder.Services.AddRateLimiter(options =>
 {
     // Global rate limit: 100 requests per minute per user (or IP for anonymous requests)
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
-        // Use authenticated user ID if available, otherwise fall back to IP
-        var userId = context.User?.FindFirst("sub")?.Value;
-        var ipAddress = context.Connection.RemoteIpAddress?.ToString();
-        var partitionKey = userId ?? ipAddress ?? "anonymous";
-        
-        // Log warning when falling back to "anonymous" (security concern)
-        if (partitionKey == "anonymous")
-        {
-            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning("Rate limiting: Unable to determine user ID or IP address. Using 'anonymous' partition key which may allow multiple users to share the same rate limit bucket.");
-        }
+        var partitionKey = GetRateLimitPartitionKey(context, "global");
         
         return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: partitionKey,
@@ -204,17 +212,7 @@ builder.Services.AddRateLimiter(options =>
     // Stricter limit for authentication endpoints (prevent brute force), per user/IP
     options.AddPolicy("auth", context =>
     {
-        // Use authenticated user ID if available, otherwise fall back to IP
-        var userId = context.User?.FindFirst("sub")?.Value;
-        var ipAddress = context.Connection.RemoteIpAddress?.ToString();
-        var partitionKey = userId ?? ipAddress ?? "anonymous";
-        
-        // Log warning when falling back to "anonymous" (security concern)
-        if (partitionKey == "anonymous")
-        {
-            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning("Rate limiting (auth): Unable to determine user ID or IP address. Using 'anonymous' partition key which may allow multiple users to share the same rate limit bucket.");
-        }
+        var partitionKey = GetRateLimitPartitionKey(context, "auth");
 
         return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: partitionKey,
