@@ -5,6 +5,7 @@ using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Behaviors;
 using Hickory.Api.Infrastructure.Caching;
 using Hickory.Api.Infrastructure.Data;
+using Hickory.Api.Infrastructure.Health;
 using Hickory.Api.Infrastructure.Messaging;
 using Hickory.Api.Infrastructure.Middleware;
 using Hickory.Api.Infrastructure.Notifications;
@@ -33,16 +34,40 @@ builder.Host.UseSerilog();
 
 // Add services to the container.
 
+// Database configuration and resilience
+var databaseOptions = new DatabaseOptions();
+builder.Configuration.GetSection(DatabaseOptions.SectionName).Bind(databaseOptions);
+builder.Services.AddSingleton(databaseOptions);
+builder.Services.AddSingleton<DatabaseResilienceService>();
+builder.Services.AddSingleton<DatabaseMetricsService>();
+
 // Register QueryPerformanceInterceptor as singleton for reuse across all DbContext instances
 builder.Services.AddSingleton<QueryPerformanceInterceptor>();
 
-// Database
+// Database with connection pooling and resilience
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var baseConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var dbOptions = serviceProvider.GetRequiredService<DatabaseOptions>();
+    
+    // Build connection string with pooling parameters
+    var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder(baseConnectionString)
+    {
+        Pooling = dbOptions.EnablePooling,
+        MinPoolSize = dbOptions.MinPoolSize,
+        MaxPoolSize = dbOptions.MaxPoolSize,
+        ConnectionLifetime = dbOptions.ConnectionLifetimeSeconds,
+        ConnectionIdleLifetime = dbOptions.ConnectionIdleLifetimeSeconds,
+        Timeout = dbOptions.ConnectionTimeoutSeconds,
+        CommandTimeout = dbOptions.CommandTimeoutSeconds,
+        // Additional recommended settings for production
+        NoResetOnClose = true, // Improves performance by not resetting connection state
+        MaxAutoPrepare = 10, // Auto-prepare frequently used statements
+        AutoPrepareMinUsages = 2 // Prepare statements used at least twice
+    };
     
     options.UseNpgsql(
-        connectionString,
+        connectionStringBuilder.ConnectionString,
         npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
     );
     
@@ -158,6 +183,9 @@ builder.Services.AddHealthChecks()
         builder.Configuration.GetConnectionString("DefaultConnection")!,
         name: "postgres",
         tags: new[] { "ready", "db", "sql" })
+    .AddCheck<DatabasePoolHealthCheck>(
+        "database-pool",
+        tags: new[] { "ready", "db", "pool" })
     .AddRedis(
         redisConnectionString,
         name: "redis",
