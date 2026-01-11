@@ -159,7 +159,7 @@ jobs:
           fail-on-error: true
       
       - name: Upload Coverage Reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           directory: ./coverage
@@ -192,7 +192,7 @@ jobs:
         run: npx nx test ${{ matrix.app }} --coverage --ci
       
       - name: Upload Coverage Reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always() && matrix.app == 'web'
         with:
           directory: ./coverage/apps/${{ matrix.app }}
