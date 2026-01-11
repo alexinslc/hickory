@@ -30,10 +30,18 @@ public class DatabasePoolHealthCheck : IHealthCheck
     {
         try
         {
-            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            var baseConnectionString = _configuration.GetConnectionString("DefaultConnection");
+            var builder = new NpgsqlConnectionStringBuilder(baseConnectionString)
+            {
+                Pooling = _options.EnablePooling,
+                MinPoolSize = _options.MinPoolSize,
+                MaxPoolSize = _options.MaxPoolSize,
+                ConnectionLifetime = _options.ConnectionLifetimeSeconds,
+                ConnectionIdleLifetime = _options.ConnectionIdleLifetimeSeconds
+            };
             
-            // Test connection can be opened
-            await using var connection = new NpgsqlConnection(connectionString);
+            // Test connection can be opened using the configured pool settings
+            await using var connection = new NpgsqlConnection(builder.ConnectionString);
             await connection.OpenAsync(cancellationToken);
             
             // Check pool configuration
