@@ -16,5 +16,6 @@ public record UploadAttachmentResponse(
     string FileName,
     string ContentType,
     long FileSizeBytes,
-    DateTime UploadedAt
+    DateTime UploadedAt,
+    Guid UploadedById
 );

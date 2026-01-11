@@ -35,6 +35,28 @@ public class UploadAttachmentHandler : IRequestHandler<UploadAttachmentCommand, 
             throw new InvalidOperationException($"Ticket {request.TicketId} not found");
         }
 
+        // Authorization: only ticket owners, assigned agents, or admins can upload attachments
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == request.UploadedById, cancellationToken);
+
+        if (user == null)
+        {
+            throw new InvalidOperationException($"User {request.UploadedById} not found");
+        }
+
+        var isOwner = ticket.SubmitterId == request.UploadedById;
+        var isAssignedAgent = ticket.AssignedToId == request.UploadedById;
+        var isAdmin = user.Role == UserRole.Administrator;
+
+        if (!isOwner && !isAssignedAgent && !isAdmin)
+        {
+            _logger.LogWarning(
+                "Unauthorized attachment upload attempt by user {UserId} for ticket {TicketId}",
+                request.UploadedById,
+                request.TicketId);
+            throw new UnauthorizedAccessException("You do not have permission to upload attachments to this ticket.");
+        }
+
         // Upload file to storage
         string storagePath;
         try
@@ -96,6 +118,7 @@ public class UploadAttachmentHandler : IRequestHandler<UploadAttachmentCommand, 
             attachment.FileName,
             attachment.ContentType,
             attachment.FileSizeBytes,
-            attachment.UploadedAt);
+            attachment.UploadedAt,
+            attachment.UploadedById);
     }
 }
