@@ -141,7 +141,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
       - name: Download API Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: api-build
           path: apps/api/
@@ -251,7 +251,7 @@ jobs:
         run: npm ci
       
       - name: Download API Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: api-build
           path: apps/api/
