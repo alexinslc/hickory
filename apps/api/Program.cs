@@ -172,15 +172,30 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Helper for rate limiting partition key with security logging
+static string GetRateLimitPartitionKey(HttpContext context, string limitType, IServiceProvider? services = null)
+{
+    var userId = context.User?.FindFirst("sub")?.Value;
+    var ipAddress = context.Connection.RemoteIpAddress?.ToString();
+    var partitionKey = userId ?? ipAddress ?? "anonymous";
+    
+    // Log warning when falling back to "anonymous" (security concern)
+    if (partitionKey == "anonymous")
+    {
+        var logger = (services ?? context.RequestServices).GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("Rate limiting ({LimitType}): Unable to determine user ID or IP address. Using 'anonymous' partition key which may allow multiple users to share the same rate limit bucket.", limitType);
+    }
+    
+    return partitionKey;
+}
+
 // Rate Limiting - protects API from abuse
 builder.Services.AddRateLimiter(options =>
 {
-    // Global rate limit: 100 requests per minute per IP
+    // Global rate limit: 100 requests per minute per user (or IP for anonymous requests)
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
-        // Use authenticated user ID if available, otherwise fall back to IP
-        var userId = context.User?.FindFirst("sub")?.Value;
-        var partitionKey = userId ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+        var partitionKey = GetRateLimitPartitionKey(context, "global");
         
         return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: partitionKey,
@@ -193,18 +208,31 @@ builder.Services.AddRateLimiter(options =>
             });
     });
     
-    // Stricter limit for authentication endpoints (prevent brute force)
-    options.AddFixedWindowLimiter("auth", limiterOptions =>
+    // Stricter limit for authentication endpoints (prevent brute force), per user/IP
+    options.AddPolicy("auth", context =>
     {
-        limiterOptions.PermitLimit = builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 10);
-        limiterOptions.Window = TimeSpan.FromMinutes(builder.Configuration.GetValue("RateLimiting:AuthWindowMinutes", 1));
-        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        limiterOptions.QueueLimit = 0;
+        var partitionKey = GetRateLimitPartitionKey(context, "auth");
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: partitionKey,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 10),
+                Window = TimeSpan.FromMinutes(builder.Configuration.GetValue("RateLimiting:AuthWindowMinutes", 1)),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
     });
     
     // Custom response for rate limited requests
     options.OnRejected = async (context, cancellationToken) =>
     {
+        // Check if response has already started before modifying it
+        if (context.HttpContext.Response.HasStarted)
+        {
+            return;
+        }
+        
         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         context.HttpContext.Response.ContentType = "application/json";
         
@@ -212,14 +240,15 @@ builder.Services.AddRateLimiter(options =>
             ? retryAfterValue.TotalSeconds
             : 60;
             
-        context.HttpContext.Response.Headers.RetryAfter = retryAfter.ToString();
+        // RFC 7231: Retry-After header must be an integer representing seconds
+        context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter).ToString();
         
         await context.HttpContext.Response.WriteAsJsonAsync(new
         {
             type = "https://httpstatuses.io/429",
             title = "Too Many Requests",
             status = 429,
-            detail = $"Rate limit exceeded. Try again in {retryAfter} seconds."
+            detail = $"Rate limit exceeded. Try again in {(int)retryAfter} seconds."
         }, cancellationToken);
     };
 });
