@@ -145,20 +145,47 @@ public class DatabaseMetricsService
     }
     
     /// <summary>
-    /// Retrieves pool statistics from Npgsql.
+    /// Retrieves pool statistics by querying PostgreSQL's pg_stat_activity view.
     /// </summary>
     private (int Active, int Idle, int Total) GetPoolStatistics()
     {
-        // Note: Npgsql doesn't expose pool statistics directly in a simple way.
-        // This is a placeholder for custom monitoring. In production, you might:
-        // 1. Use Npgsql's built-in performance counters
-        // 2. Implement custom connection tracking
-        // 3. Use external monitoring tools
-        
-        // For now, return zeros as placeholders
-        // In a real implementation, you'd need to track connections manually
-        // or use Npgsql's internal metrics if exposed
-        return (0, 0, 0);
+        try
+        {
+            // This query counts active, idle, and total connections for the current database.
+            const string sql = @"
+                SELECT
+                    COUNT(*) FILTER (WHERE state = 'active') AS active,
+                    COUNT(*) FILTER (WHERE state = 'idle')   AS idle,
+                    COUNT(*)                                  AS total
+                FROM pg_stat_activity
+                WHERE datname = current_database();";
+
+            using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
+
+            using var command = new NpgsqlCommand(sql, connection);
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                var active = reader.IsDBNull(0) ? 0 : Convert.ToInt32(reader.GetInt64(0));
+                var idle = reader.IsDBNull(1) ? 0 : Convert.ToInt32(reader.GetInt64(1));
+                var total = reader.IsDBNull(2) ? 0 : Convert.ToInt32(reader.GetInt64(2));
+
+                return (active, idle, total);
+            }
+
+            // If the query returns no rows, fall back to zeros.
+            return (0, 0, 0);
+        }
+        catch (Exception ex)
+        {
+            // If statistics cannot be retrieved (e.g., insufficient permissions,
+            // unsupported PostgreSQL version, or connectivity issues), log and
+            // return zeros so callers can safely handle the failure.
+            _logger.LogWarning(ex, "Failed to retrieve pool statistics from pg_stat_activity");
+            return (0, 0, 0);
+        }
     }
     
     /// <summary>

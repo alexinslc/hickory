@@ -65,7 +65,8 @@ public class DatabaseOptions
     public bool EnableCircuitBreaker { get; set; } = true;
     
     /// <summary>
-    /// Number of consecutive failures before opening circuit. Default: 5
+    /// Minimum number of requests in the sampling period before the circuit breaker can open. Default: 5
+    /// Used together with FailureRatio (50%) to determine when to open the circuit.
     /// </summary>
     public int CircuitBreakerThreshold { get; set; } = 5;
     

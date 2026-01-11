@@ -45,9 +45,9 @@ public class DatabaseResilienceService
                 OnRetry = args =>
                 {
                     _logger.LogWarning(
-                        "Database operation failed with transient error. Attempt {Attempt} of {MaxAttempts}. Retrying after {Delay}ms. Error: {Error}",
+                        "Database operation failed with transient error. Retry {Retry} of {MaxRetries}. Retrying after {Delay}ms. Error: {Error}",
                         args.AttemptNumber + 1,
-                        _options.RetryCount + 1,
+                        _options.RetryCount,
                         args.RetryDelay.TotalMilliseconds,
                         args.Outcome.Exception?.Message ?? "Unknown");
                     
@@ -64,7 +64,7 @@ public class DatabaseResilienceService
                 FailureRatio = 0.5, // Open circuit if 50% of requests fail
                 MinimumThroughput = _options.CircuitBreakerThreshold,
                 BreakDuration = TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds),
-                ShouldHandle = new PredicateBuilder().Handle<DbException>(),
+                ShouldHandle = new PredicateBuilder().Handle<DbException>(IsTransientError),
                 OnOpened = args =>
                 {
                     _logger.LogError(
@@ -94,7 +94,7 @@ public class DatabaseResilienceService
     /// Executes an async database operation with resilience policies applied.
     /// </summary>
     public async Task<TResult> ExecuteAsync<TResult>(
-        Func<CancellationToken, ValueTask<TResult>> operation,
+        Func<CancellationToken, Task<TResult>> operation,
         CancellationToken cancellationToken = default)
     {
         return await _pipeline.ExecuteAsync(
@@ -106,11 +106,11 @@ public class DatabaseResilienceService
     /// Executes an async database operation with resilience policies applied.
     /// </summary>
     public async Task ExecuteAsync(
-        Func<CancellationToken, ValueTask> operation,
+        Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
     {
         await _pipeline.ExecuteAsync(
-            async (ctx) => { await operation(ctx); return ValueTask.CompletedTask; },
+            async (ctx) => await operation(ctx),
             cancellationToken);
     }
     
