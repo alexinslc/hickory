@@ -13,11 +13,13 @@ interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
+  expiresAt: string | null;
   isAuthenticated: boolean;
   
-  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  setAuth: (user: User, accessToken: string, refreshToken: string, expiresAt: string) => void;
   clearAuth: () => void;
   updateUser: (user: Partial<User>) => void;
+  updateTokens: (accessToken: string, refreshToken: string, expiresAt: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,13 +28,15 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       accessToken: null,
       refreshToken: null,
+      expiresAt: null,
       isAuthenticated: false,
 
-      setAuth: (user, accessToken, refreshToken) =>
+      setAuth: (user, accessToken, refreshToken, expiresAt) =>
         set({
           user,
           accessToken,
           refreshToken,
+          expiresAt,
           isAuthenticated: true,
         }),
 
@@ -41,6 +45,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           accessToken: null,
           refreshToken: null,
+          expiresAt: null,
           isAuthenticated: false,
         }),
 
@@ -48,6 +53,13 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, ...updatedUser } : null,
         })),
+
+      updateTokens: (accessToken, refreshToken, expiresAt) =>
+        set({
+          accessToken,
+          refreshToken,
+          expiresAt,
+        }),
     }),
     {
       name: 'hickory-auth-storage',
@@ -55,6 +67,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        expiresAt: state.expiresAt,
         isAuthenticated: state.isAuthenticated,
       }),
     }

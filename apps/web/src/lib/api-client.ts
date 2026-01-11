@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -270,8 +270,18 @@ export interface GetSuggestedArticlesRequest {
   limit?: number;
 }
 
+// Custom interface to extend AxiosRequestConfig for retry tracking
+interface AxiosRequestConfigWithRetry extends AxiosRequestConfig {
+  _retry?: boolean;
+}
+
 class ApiClient {
   private client: AxiosInstance;
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (value: string) => void;
+    reject: (reason: Error) => void;
+  }> = [];
 
   constructor() {
     this.client = axios.create({
@@ -298,13 +308,138 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError<ErrorResponse>) => {
-        if (error.response?.status === 401) {
-          // Token expired - clear auth state and redirect
-          this.handleUnauthorized();
+        const originalRequest = error.config as AxiosRequestConfigWithRetry | undefined;
+        
+        // If error is 401 and we haven't tried refreshing yet
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+          if (this.isRefreshing) {
+            // Wait for the current refresh to complete
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then((token) => {
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${token}`;
+                }
+                return this.client(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          try {
+            const newToken = await this.refreshAccessToken();
+            this.isRefreshing = false;
+            
+            // Retry all queued requests with new token
+            this.processQueue(null, newToken);
+            
+            // Retry the original request
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            }
+            return this.client(originalRequest);
+          } catch (refreshError) {
+            this.isRefreshing = false;
+            this.processQueue(refreshError as Error);
+            this.handleUnauthorized();
+            return Promise.reject(refreshError);
+          }
         }
+
         return Promise.reject(error);
       }
     );
+  }
+
+  private processQueue(error: Error): void;
+  private processQueue(error: null, token: string): void;
+  private processQueue(error: Error | null, token?: string | null): void {
+    this.failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error);
+      } else if (token !== null && token !== undefined) {
+        prom.resolve(token);
+      } else {
+        // This should never happen given the overloads above
+        prom.reject(new Error('Both error and token are null in processQueue'));
+      }
+    });
+
+    this.failedQueue = [];
+  }
+
+  private async refreshAccessToken(): Promise<string> {
+    const refreshToken = this.getRefreshTokenFromStore();
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    try {
+      // Call refresh endpoint without interceptors to avoid infinite loop
+      const response = await axios.post<AuthResponse>(
+        `${API_BASE_URL}/api/v1/auth/refresh`,
+        { refreshToken }
+      );
+
+      const { accessToken, refreshToken: newRefreshToken, expiresAt } = response.data;
+
+      // Update stored tokens using Zustand store
+      this.updateTokensInStore(accessToken, newRefreshToken, expiresAt);
+
+      return accessToken;
+    } catch (error) {
+      // Clear auth on refresh failure
+      this.handleUnauthorized();
+      throw error;
+    }
+  }
+
+  private getRefreshTokenFromStore(): string | null {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const stored = localStorage.getItem('hickory-auth-storage');
+      if (!stored) return null;
+      
+      const parsed = JSON.parse(stored);
+      return parsed.state?.refreshToken || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private updateTokensInStore(accessToken: string, refreshToken: string, expiresAt: string): void {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      // Use dynamic import to avoid circular dependencies and ensure we get the latest state
+      const { useAuthStore } = require('../store/auth-store');
+      const updateTokens = useAuthStore.getState().updateTokens;
+      updateTokens(accessToken, refreshToken, expiresAt);
+    } catch (error) {
+      console.error('Failed to update tokens in store:', error);
+      // Fallback to direct localStorage update if store is not available
+      try {
+        const stored = localStorage.getItem('hickory-auth-storage');
+        if (!stored) return;
+        
+        const parsed = JSON.parse(stored);
+        if (parsed.state) {
+          parsed.state.accessToken = accessToken;
+          parsed.state.refreshToken = refreshToken;
+          parsed.state.expiresAt = expiresAt;
+          localStorage.setItem('hickory-auth-storage', JSON.stringify(parsed));
+        }
+      } catch (fallbackError) {
+        console.error('Failed to update tokens in localStorage:', fallbackError);
+      }
+    }
   }
 
   private getTokenFromStore(): string | null {

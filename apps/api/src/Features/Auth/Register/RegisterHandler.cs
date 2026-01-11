@@ -61,18 +61,28 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, AuthResponse>
         };
 
         _context.Users.Add(user);
+        
+        // Generate tokens
+        var accessToken = _tokenService.GenerateAccessToken(user);
+        var refreshTokenString = _tokenService.GenerateRefreshToken();
+        
+        // Store refresh token in database
+        var refreshToken = new Hickory.Api.Infrastructure.Data.Entities.RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshTokenString,
+            ExpiresAt = DateTime.UtcNow.AddDays(30) // 30-day refresh token expiration
+        };
+        
+        _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("New user registered: {UserId}", user.Id);
 
-        // Generate tokens
-        var accessToken = _tokenService.GenerateAccessToken(user);
-        var refreshToken = _tokenService.GenerateRefreshToken();
-
         return new AuthResponse
         {
             AccessToken = accessToken,
-            RefreshToken = refreshToken,
+            RefreshToken = refreshTokenString,
             UserId = user.Id,
             Email = user.Email,
             FirstName = user.FirstName,

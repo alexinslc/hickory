@@ -15,6 +15,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
     private readonly IJwtTokenService _tokenService;
     private readonly ILogger<LoginHandler> _logger;
     private readonly double _jwtExpirationMinutes;
+    private const int MaxActiveTokensPerUser = 5;
 
     public LoginHandler(
         ApplicationDbContext context,
@@ -57,18 +58,43 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
 
         // Update last login
         user.LastLoginAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync(cancellationToken);
-
+        
         // Generate tokens
         var accessToken = _tokenService.GenerateAccessToken(user);
-        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenString = _tokenService.GenerateRefreshToken();
+        
+        // Limit active tokens per user (max 5 devices/sessions)
+        var activeTokens = await _context.RefreshTokens
+            .Where(rt => rt.UserId == user.Id && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
+            .OrderBy(rt => rt.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        // If user has reached max active tokens, revoke the oldest one
+        if (activeTokens.Count >= MaxActiveTokensPerUser)
+        {
+            var oldestToken = activeTokens.First();
+            oldestToken.RevokedAt = DateTime.UtcNow;
+            oldestToken.RevokedReason = $"Exceeded maximum active sessions ({MaxActiveTokensPerUser})";
+            _logger.LogInformation("Revoked oldest token for user {UserId} due to session limit", user.Id);
+        }
+        
+        // Store refresh token in database
+        var refreshToken = new Hickory.Api.Infrastructure.Data.Entities.RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshTokenString,
+            ExpiresAt = DateTime.UtcNow.AddDays(30) // 30-day refresh token expiration
+        };
+        
+        _context.RefreshTokens.Add(refreshToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("User {UserId} logged in successfully", user.Id);
 
         return new AuthResponse
         {
             AccessToken = accessToken,
-            RefreshToken = refreshToken,
+            RefreshToken = refreshTokenString,
             UserId = user.Id,
             Email = user.Email,
             FirstName = user.FirstName,
