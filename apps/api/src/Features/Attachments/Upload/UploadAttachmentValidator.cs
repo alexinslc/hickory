@@ -89,9 +89,17 @@ public class UploadAttachmentValidator : AbstractValidator<UploadAttachmentComma
             return false;
         }
 
-        // Check for invalid path characters
+        // Check for invalid path characters (platform-specific)
         var invalidChars = Path.GetInvalidFileNameChars();
         if (fileName.Any(c => invalidChars.Contains(c)))
+        {
+            return false;
+        }
+
+        // Additionally check for characters that are problematic on Windows
+        // or in web contexts, regardless of platform
+        char[] additionalInvalidChars = new[] { '<', '>', ':', '|', '?', '*' };
+        if (fileName.Any(c => additionalInvalidChars.Contains(c)))
         {
             return false;
         }
