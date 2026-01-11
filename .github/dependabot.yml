@@ -1,0 +1,88 @@
+# Dependabot configuration
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # NPM dependencies (web, cli, root)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      # Group React/Next.js updates together
+      react:
+        patterns:
+          - "react*"
+          - "next*"
+          - "@next/*"
+      # Group testing libraries
+      testing:
+        patterns:
+          - "jest*"
+          - "@testing-library/*"
+          - "playwright*"
+      # Group TypeScript tooling
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+          - "tslib"
+      # Group linting/formatting
+      linting:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "prettier*"
+
+  # NuGet dependencies (.NET API)
+  - package-ecosystem: "nuget"
+    directory: "/apps/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "nuget"
+    groups:
+      # Group Microsoft packages
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+      # Group Entity Framework
+      ef-core:
+        patterns:
+          - "Microsoft.EntityFrameworkCore*"
+          - "Npgsql.EntityFrameworkCore*"
+      # Group testing packages
+      testing:
+        patterns:
+          - "xunit*"
+          - "FluentAssertions*"
+          - "Moq*"
+          - "NSubstitute*"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
