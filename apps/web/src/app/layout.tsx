@@ -17,6 +17,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem('hickory-theme');
+                const validThemes = ['light', 'dark', 'system'];
+                const initialTheme = theme && validThemes.includes(theme) ? theme : 'system';
+                const isDark = initialTheme === 'dark' || (initialTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) document.documentElement.classList.add('dark');
+              })();
+            `,
+          }}
+        />
+      </head>
       <body>
         <ThemeProvider>
           <a 
