@@ -68,7 +68,7 @@ public class AttachmentsControllerTests : IAsyncLifetime
             password = "Password123!"
         };
 
-        var loginContent = new StringContent(
+        using var loginContent = new StringContent(
             JsonSerializer.Serialize(loginRequest),
             Encoding.UTF8,
             "application/json"

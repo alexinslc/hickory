@@ -36,7 +36,6 @@ public class DeleteAttachmentHandler : IRequestHandler<DeleteAttachmentCommand>
 
         // Access control check
         var isAdmin = request.RequestingUserRole == "Admin";
-        var isAgent = request.RequestingUserRole == "Agent" || isAdmin;
         var isUploader = attachment.UploadedById == request.RequestingUserId;
         var ticket = attachment.Comment?.Ticket ?? attachment.Ticket;
         var isAssignedAgent = ticket.AssignedToId == request.RequestingUserId;

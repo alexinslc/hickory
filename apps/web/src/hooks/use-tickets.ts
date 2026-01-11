@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tantml:react-query';
+import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tanstack/react-query';
 import { apiClient, TicketDto, CreateTicketRequest, CreateTicketResponse, TicketDetailsResponse } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 

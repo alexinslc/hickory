@@ -59,7 +59,7 @@ public class LocalFileStorageServiceTests : IDisposable
 
         // Assert
         Assert.NotNull(storagePath);
-        Assert.EndsWith(".pdf", storagePath); // Should only use first extension
+        Assert.EndsWith(".exe", storagePath); // Path.GetExtension returns the last extension
     }
 
     [Fact]

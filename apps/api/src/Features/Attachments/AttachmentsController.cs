@@ -49,7 +49,7 @@ public class AttachmentsController : ControllerBase
         try
         {
             var response = await _mediator.Send(command, cancellationToken);
-            return Ok(response);
+            return CreatedAtAction(nameof(DownloadAttachment), new { id = response.Id }, response);
         }
         catch (InvalidOperationException ex)
         {
