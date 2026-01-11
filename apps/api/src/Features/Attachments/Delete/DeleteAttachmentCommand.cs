@@ -4,5 +4,6 @@ namespace Hickory.Api.Features.Attachments.Delete;
 
 public record DeleteAttachmentCommand(
     Guid AttachmentId,
-    Guid RequestingUserId
+    Guid RequestingUserId,
+    string RequestingUserRole
 ) : IRequest;

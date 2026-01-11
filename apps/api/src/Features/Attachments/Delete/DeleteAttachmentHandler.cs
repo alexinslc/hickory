@@ -25,6 +25,8 @@ public class DeleteAttachmentHandler : IRequestHandler<DeleteAttachmentCommand>
     {
         var attachment = await _context.Attachments
             .Include(a => a.Ticket)
+            .Include(a => a.Comment)
+                .ThenInclude(c => c!.Ticket)
             .FirstOrDefaultAsync(a => a.Id == request.AttachmentId, cancellationToken);
 
         if (attachment == null)
@@ -32,11 +34,19 @@ public class DeleteAttachmentHandler : IRequestHandler<DeleteAttachmentCommand>
             throw new InvalidOperationException($"Attachment {request.AttachmentId} not found");
         }
 
-        // TODO: Add proper access control
-        // Only allow deletion by:
-        // - Attachment uploader
-        // - Ticket assigned agent
-        // - Admin
+        // Access control check
+        var isAdmin = request.RequestingUserRole == "Admin";
+        var isAgent = request.RequestingUserRole == "Agent" || isAdmin;
+        var isUploader = attachment.UploadedById == request.RequestingUserId;
+        var ticket = attachment.Comment?.Ticket ?? attachment.Ticket;
+        var isAssignedAgent = ticket.AssignedToId == request.RequestingUserId;
+
+        if (!isAdmin && !isUploader && !isAssignedAgent)
+        {
+            _logger.LogWarning("User {UserId} attempted to delete attachment {AttachmentId} without permission",
+                request.RequestingUserId, request.AttachmentId);
+            throw new UnauthorizedAccessException("You do not have permission to delete this attachment");
+        }
 
         // Delete from storage first
         try

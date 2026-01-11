@@ -4,7 +4,8 @@ namespace Hickory.Api.Features.Attachments.Download;
 
 public record DownloadAttachmentQuery(
     Guid AttachmentId,
-    Guid RequestingUserId
+    Guid RequestingUserId,
+    string RequestingUserRole
 ) : IRequest<DownloadAttachmentResponse>;
 
 public record DownloadAttachmentResponse(

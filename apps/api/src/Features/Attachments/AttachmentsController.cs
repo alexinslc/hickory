@@ -64,7 +64,8 @@ public class AttachmentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var userId = GetUserId();
-        var query = new DownloadAttachmentQuery(id, userId);
+        var userRole = GetUserRole();
+        var query = new DownloadAttachmentQuery(id, userId, userRole);
 
         try
         {
@@ -75,6 +76,11 @@ public class AttachmentsController : ControllerBase
                 response.ContentType,
                 response.FileName,
                 enableRangeProcessing: true);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized download attempt for attachment {AttachmentId} by user {UserId}", id, userId);
+            return Forbid();
         }
         catch (InvalidOperationException ex)
         {
@@ -89,12 +95,18 @@ public class AttachmentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var userId = GetUserId();
-        var command = new DeleteAttachmentCommand(id, userId);
+        var userRole = GetUserRole();
+        var command = new DeleteAttachmentCommand(id, userId, userRole);
 
         try
         {
             await _mediator.Send(command, cancellationToken);
             return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized delete attempt for attachment {AttachmentId} by user {UserId}", id, userId);
+            return Forbid();
         }
         catch (InvalidOperationException ex)
         {
@@ -111,5 +123,15 @@ public class AttachmentsController : ControllerBase
             throw new UnauthorizedAccessException("User ID not found in token");
         }
         return userId;
+    }
+
+    private string GetUserRole()
+    {
+        var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(roleClaim))
+        {
+            throw new UnauthorizedAccessException("User role not found in token");
+        }
+        return roleClaim;
     }
 }

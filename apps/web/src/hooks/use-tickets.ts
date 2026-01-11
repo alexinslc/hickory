@@ -1,7 +1,7 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tanstack/react-query';
-import { apiClient, TicketDto, CreateTicketRequest, CreateTicketResponse } from '@/lib/api-client';
+import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tantml:react-query';
+import { apiClient, TicketDto, CreateTicketRequest, CreateTicketResponse, TicketDetailsResponse } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 
 // Query keys
@@ -11,6 +11,7 @@ export const ticketKeys = {
   list: (filters?: Record<string, unknown>) => [...ticketKeys.lists(), filters] as const,
   details: () => [...ticketKeys.all, 'detail'] as const,
   detail: (id: string) => [...ticketKeys.details(), id] as const,
+  detailsFull: (id: string) => [...ticketKeys.details(), id, 'full'] as const,
 };
 
 // Get all user's tickets
@@ -28,6 +29,16 @@ export function useTicket(id: string): UseQueryResult<TicketDto, Error> {
     queryKey: ticketKeys.detail(id),
     queryFn: () => apiClient.getTicketById(id),
     staleTime: 30000,
+  });
+}
+
+// Get ticket details with comments and attachments
+export function useTicketDetails(id: string): UseQueryResult<TicketDetailsResponse, Error> {
+  return useQuery({
+    queryKey: ticketKeys.detailsFull(id),
+    queryFn: () => apiClient.getTicketDetails(id),
+    enabled: !!id,
+    staleTime: 10000, // 10 seconds
   });
 }
 

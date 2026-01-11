@@ -28,6 +28,8 @@ public class DownloadAttachmentHandler : IRequestHandler<DownloadAttachmentQuery
         // Get attachment with ticket info for access control
         var attachment = await _context.Attachments
             .Include(a => a.Ticket)
+            .Include(a => a.Comment)
+                .ThenInclude(c => c!.Ticket)
             .FirstOrDefaultAsync(a => a.Id == request.AttachmentId, cancellationToken);
 
         if (attachment == null)
@@ -35,13 +37,18 @@ public class DownloadAttachmentHandler : IRequestHandler<DownloadAttachmentQuery
             throw new InvalidOperationException($"Attachment {request.AttachmentId} not found");
         }
 
-        // TODO: Add proper access control check
-        // For now, just verify the ticket exists
-        // In production, check if user has access to the ticket:
-        // - User is ticket submitter
-        // - User is assigned agent
-        // - User is admin
-        // - User has appropriate role/permission
+        // Access control check
+        var isAgent = request.RequestingUserRole == "Agent" || request.RequestingUserRole == "Admin";
+        var ticket = attachment.Comment?.Ticket ?? attachment.Ticket;
+        var isTicketOwner = ticket.SubmitterId == request.RequestingUserId;
+        var isAssignedAgent = ticket.AssignedToId == request.RequestingUserId;
+
+        if (!isAgent && !isTicketOwner && !isAssignedAgent)
+        {
+            _logger.LogWarning("User {UserId} attempted to download attachment {AttachmentId} without permission",
+                request.RequestingUserId, request.AttachmentId);
+            throw new UnauthorizedAccessException("You do not have permission to download this attachment");
+        }
 
         try
         {
