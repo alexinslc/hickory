@@ -2,6 +2,27 @@
 
 import { composePlugins, withNx } from '@nx/next';
 
+// Determine if we're in production
+const isProd = process.env.NODE_ENV === 'production';
+
+// API URL for connect-src CSP directive
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// Build script-src with conditional unsafe-eval
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'", // Required for Next.js
+  ...(isProd ? [] : ["'unsafe-eval'"]), // Only allow eval in development
+].join(' ');
+
+// Build connect-src with API origin
+const connectSrc = [
+  "'self'",
+  "ws:",
+  "wss:", // WebSocket support for SignalR
+  apiUrl, // Allow API calls to configured API origin
+].join(' ');
+
 // Security headers configuration
 const securityHeaders = [
   {
@@ -9,11 +30,12 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline needed for Next.js, unsafe-eval for dev
+      `script-src ${scriptSrc}`,
       "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
       "img-src 'self' data: blob:",
       "font-src 'self'",
-      "connect-src 'self' ws: wss:", // ws/wss for WebSocket (SignalR)
+      `connect-src ${connectSrc}`,
+      "object-src 'none'", // Prevent loading of plugins
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -35,16 +57,19 @@ const securityHeaders = [
     value: 'strict-origin-when-cross-origin',
   },
   {
-    // Enforce HTTPS (only in production)
-    key: 'Strict-Transport-Security',
-    value: 'max-age=31536000; includeSubDomains',
-  },
-  {
     // Disable browser features we don't need
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=()',
   },
 ];
+
+// Add HSTS only in production (requires HTTPS)
+if (isProd) {
+  securityHeaders.push({
+    key: 'Strict-Transport-Security',
+    value: 'max-age=31536000; includeSubDomains',
+  });
+}
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
