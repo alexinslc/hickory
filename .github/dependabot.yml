@@ -50,15 +50,15 @@ updates:
       - "dependencies"
       - "nuget"
     groups:
-      # Group Microsoft packages
-      microsoft:
-        patterns:
-          - "Microsoft.*"
       # Group Entity Framework
       ef-core:
         patterns:
           - "Microsoft.EntityFrameworkCore*"
           - "Npgsql.EntityFrameworkCore*"
+      # Group Microsoft packages
+      microsoft:
+        patterns:
+          - "Microsoft.*"
       # Group testing packages
       testing:
         patterns:
@@ -73,6 +73,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "docker"
@@ -83,6 +84,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "github-actions"
