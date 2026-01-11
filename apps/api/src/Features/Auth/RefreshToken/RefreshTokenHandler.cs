@@ -8,6 +8,11 @@ namespace Hickory.Api.Features.Auth.RefreshToken;
 
 public record RefreshTokenCommand(string RefreshToken) : IRequest<AuthResponse>;
 
+/// <summary>
+/// Handles refresh token rotation and validation.
+/// Implements automatic token rotation where each refresh invalidates the old token and issues a new one.
+/// Includes reuse detection to prevent security breaches - if a revoked token is used, all user tokens are revoked.
+/// </summary>
 public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, AuthResponse>
 {
     private readonly ApplicationDbContext _context;
@@ -27,6 +32,13 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, AuthResp
         _jwtExpirationMinutes = double.Parse(configuration["JWT:ExpirationMinutes"] ?? "60");
     }
 
+    /// <summary>
+    /// Handles the refresh token command by validating the token, rotating it, and issuing new tokens.
+    /// </summary>
+    /// <param name="request">The refresh token command containing the refresh token to validate</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A new AuthResponse with rotated access and refresh tokens</returns>
+    /// <exception cref="UnauthorizedAccessException">Thrown when token is invalid, expired, revoked, or user is inactive</exception>
     public async Task<AuthResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         // Find the refresh token in the database
@@ -36,7 +48,16 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, AuthResp
 
         if (refreshToken == null)
         {
-            _logger.LogWarning("Refresh token not found: {Token}", request.RefreshToken);
+            var token = request.RefreshToken ?? string.Empty;
+            var visibleChars = Math.Min(8, token.Length);
+            var tokenPreview = visibleChars > 0
+                ? token[..visibleChars] + new string('*', Math.Max(0, token.Length - visibleChars))
+                : string.Empty;
+
+            _logger.LogWarning(
+                "Refresh token not found. Token preview: {TokenPreview}, Length: {TokenLength}",
+                tokenPreview,
+                token.Length);
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
@@ -100,6 +121,13 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, AuthResp
         };
     }
 
+    /// <summary>
+    /// Revokes all active refresh tokens for a specific user.
+    /// Used for security purposes when token reuse is detected.
+    /// </summary>
+    /// <param name="userId">The user ID whose tokens should be revoked</param>
+    /// <param name="reason">The reason for revocation (for audit logging)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     private async Task RevokeAllUserTokensAsync(Guid userId, string reason, CancellationToken cancellationToken)
     {
         var activeTokens = await _context.RefreshTokens

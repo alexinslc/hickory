@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -270,6 +270,11 @@ export interface GetSuggestedArticlesRequest {
   limit?: number;
 }
 
+// Custom interface to extend AxiosRequestConfig for retry tracking
+interface AxiosRequestConfigWithRetry extends AxiosRequestConfig {
+  _retry?: boolean;
+}
+
 class ApiClient {
   private client: AxiosInstance;
   private isRefreshing = false;
@@ -303,17 +308,19 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError<ErrorResponse>) => {
-        const originalRequest = error.config;
+        const originalRequest = error.config as AxiosRequestConfigWithRetry | undefined;
         
         // If error is 401 and we haven't tried refreshing yet
-        if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
           if (this.isRefreshing) {
             // Wait for the current refresh to complete
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
             })
               .then((token) => {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${token}`;
+                }
                 return this.client(originalRequest);
               })
               .catch((err) => {
@@ -321,7 +328,7 @@ class ApiClient {
               });
           }
 
-          (originalRequest as any)._retry = true;
+          originalRequest._retry = true;
           this.isRefreshing = true;
 
           try {
@@ -332,11 +339,13 @@ class ApiClient {
             this.processQueue(null, newToken);
             
             // Retry the original request
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            }
             return this.client(originalRequest);
           } catch (refreshError) {
             this.isRefreshing = false;
-            this.processQueue(refreshError as Error, null);
+            this.processQueue(refreshError as Error);
             this.handleUnauthorized();
             return Promise.reject(refreshError);
           }
@@ -347,12 +356,17 @@ class ApiClient {
     );
   }
 
-  private processQueue(error: Error | null, token: string | null = null): void {
+  private processQueue(error: Error): void;
+  private processQueue(error: null, token: string): void;
+  private processQueue(error: Error | null, token?: string | null): void {
     this.failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
+      } else if (token !== null && token !== undefined) {
+        prom.resolve(token);
       } else {
-        prom.resolve(token!);
+        // This should never happen given the overloads above
+        prom.reject(new Error('Both error and token are null in processQueue'));
       }
     });
 
@@ -375,7 +389,7 @@ class ApiClient {
 
       const { accessToken, refreshToken: newRefreshToken, expiresAt } = response.data;
 
-      // Update stored tokens
+      // Update stored tokens using Zustand store
       this.updateTokensInStore(accessToken, newRefreshToken, expiresAt);
 
       return accessToken;
@@ -404,18 +418,27 @@ class ApiClient {
     if (typeof window === 'undefined') return;
     
     try {
-      const stored = localStorage.getItem('hickory-auth-storage');
-      if (!stored) return;
-      
-      const parsed = JSON.parse(stored);
-      if (parsed.state) {
-        parsed.state.accessToken = accessToken;
-        parsed.state.refreshToken = refreshToken;
-        parsed.state.expiresAt = expiresAt;
-        localStorage.setItem('hickory-auth-storage', JSON.stringify(parsed));
-      }
+      // Use dynamic import to avoid circular dependencies and ensure we get the latest state
+      const { useAuthStore } = require('../store/auth-store');
+      const updateTokens = useAuthStore.getState().updateTokens;
+      updateTokens(accessToken, refreshToken, expiresAt);
     } catch (error) {
       console.error('Failed to update tokens in store:', error);
+      // Fallback to direct localStorage update if store is not available
+      try {
+        const stored = localStorage.getItem('hickory-auth-storage');
+        if (!stored) return;
+        
+        const parsed = JSON.parse(stored);
+        if (parsed.state) {
+          parsed.state.accessToken = accessToken;
+          parsed.state.refreshToken = refreshToken;
+          parsed.state.expiresAt = expiresAt;
+          localStorage.setItem('hickory-auth-storage', JSON.stringify(parsed));
+        }
+      } catch (fallbackError) {
+        console.error('Failed to update tokens in localStorage:', fallbackError);
+      }
     }
   }
 
