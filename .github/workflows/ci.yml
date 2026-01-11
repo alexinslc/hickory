@@ -150,7 +150,7 @@ jobs:
         run: dotnet test apps/api/Hickory.Api.Tests/Hickory.Api.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
       
       - name: Publish Test Results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: .NET API Unit Test Results
