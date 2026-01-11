@@ -25,21 +25,29 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useState<Map<string, NodeJS.Timeout>>(new Map())[0];
 
   const removeToast = useCallback((id: string) => {
+    // Clear the timer if it exists
+    const timer = timersRef.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timersRef.delete(id);
+    }
     setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
+  }, [timersRef]);
 
   const addToast = useCallback((type: ToastType, message: string, duration = 5000) => {
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const toast: Toast = { id, type, message, duration };
     
     setToasts(prev => [...prev, toast]);
 
     if (duration > 0) {
-      setTimeout(() => removeToast(id), duration);
+      const timer = setTimeout(() => removeToast(id), duration);
+      timersRef.set(id, timer);
     }
-  }, [removeToast]);
+  }, [removeToast, timersRef]);
 
   const success = useCallback((message: string) => addToast('success', message), [addToast]);
   const error = useCallback((message: string) => addToast('error', message, 7000), [addToast]);
@@ -66,12 +74,16 @@ export function useToast() {
 function ToastContainer({ toasts, removeToast }: { toasts: Toast[]; removeToast: (id: string) => void }) {
   if (toasts.length === 0) return null;
 
+  // Use "assertive" if there are any error toasts, otherwise "polite"
+  const hasErrorToast = toasts.some(toast => toast.type === 'error');
+  const ariaLive = hasErrorToast ? 'assertive' : 'polite';
+
   return (
     <div 
       className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm"
       role="region"
       aria-label="Notifications"
-      aria-live="polite"
+      aria-live={ariaLive}
     >
       {toasts.map(toast => (
         <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
@@ -82,6 +94,13 @@ function ToastContainer({ toasts, removeToast }: { toasts: Toast[]; removeToast:
 
 // Individual Toast Component
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape' || event.key === 'Enter') {
+      event.preventDefault();
+      onClose();
+    }
+  };
+
   const styles = {
     success: {
       bg: 'bg-green-50 dark:bg-green-900/30',
@@ -131,6 +150,8 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     <div
       className={`${style.bg} ${style.border} border rounded-lg shadow-lg p-4 flex items-start gap-3 animate-slide-in-right`}
       role="alert"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
     >
       <div className="flex-shrink-0">{style.icon}</div>
       <p className={`${style.text} text-sm flex-1`}>{toast.message}</p>
