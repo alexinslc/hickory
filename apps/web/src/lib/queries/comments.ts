@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, AddCommentRequest } from '../api-client';
 import { ticketKeys } from './tickets';
+import { useToast } from '@/components/ui/toast';
 
 // Query keys
 export const commentKeys = {
@@ -23,6 +24,7 @@ export function useGetComments(ticketId: string) {
 // Add comment mutation
 export function useAddComment(ticketId: string) {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (data: AddCommentRequest) => apiClient.addComment(ticketId, data),
@@ -36,9 +38,13 @@ export function useAddComment(ticketId: string) {
       // Invalidate ticket lists (comment count changed)
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.queue() });
+      
+      // Show success toast
+      toast.success('Comment added successfully!');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Failed to add comment:', error);
+      toast.error(error.message || 'Failed to add comment. Please try again.');
     },
   });
 }
@@ -46,6 +52,7 @@ export function useAddComment(ticketId: string) {
 // Add internal note mutation (for agents)
 export function useAddInternalNote(ticketId: string) {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (content: string) => 
@@ -60,9 +67,13 @@ export function useAddInternalNote(ticketId: string) {
       // Invalidate ticket lists (comment count changed)
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.queue() });
+      
+      // Show success toast
+      toast.success('Internal note added!');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Failed to add internal note:', error);
+      toast.error(error.message || 'Failed to add internal note. Please try again.');
     },
   });
 }

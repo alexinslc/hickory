@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, NotificationPreferencesDto, UpdateNotificationPreferencesRequest } from '@/lib/api-client';
+import { useToast } from '@/components/ui/toast';
 
 export const NOTIFICATION_PREFERENCES_KEY = ['notification-preferences'];
 
@@ -19,6 +20,7 @@ export function useNotificationPreferences() {
  */
 export function useUpdateNotificationPreferences() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (request: UpdateNotificationPreferencesRequest) =>
@@ -26,6 +28,10 @@ export function useUpdateNotificationPreferences() {
     onSuccess: (data: NotificationPreferencesDto) => {
       // Update the cache with the new preferences
       queryClient.setQueryData(NOTIFICATION_PREFERENCES_KEY, data);
+      toast.success('Settings saved successfully!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to save settings. Please try again.');
     },
   });
 }

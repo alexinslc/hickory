@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tanstack/react-query';
 import { apiClient, TicketDto, CreateTicketRequest, CreateTicketResponse, TicketDetailsResponse } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/toast';
 
 // Query keys
 export const ticketKeys = {
@@ -46,6 +47,7 @@ export function useTicketDetails(id: string): UseQueryResult<TicketDetailsRespon
 export function useCreateTicket() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (request: CreateTicketRequest) => apiClient.createTicket(request),
@@ -53,8 +55,14 @@ export function useCreateTicket() {
       // Invalidate tickets list
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       
+      // Show success toast
+      toast.success('Ticket created successfully!');
+      
       // Redirect to ticket detail page
       router.push(`/tickets/${data.id}`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create ticket. Please try again.');
     },
   });
 }
