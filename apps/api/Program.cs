@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
@@ -11,6 +12,7 @@ using Hickory.Api.Infrastructure.Middleware;
 using Hickory.Api.Infrastructure.Notifications;
 using Hickory.Api.Infrastructure.RealTime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -170,6 +172,58 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Rate Limiting - protects API from abuse
+builder.Services.AddRateLimiter(options =>
+{
+    // Global rate limit: 100 requests per minute per IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        // Use authenticated user ID if available, otherwise fall back to IP
+        var userId = context.User?.FindFirst("sub")?.Value;
+        var partitionKey = userId ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+        
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: partitionKey,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = builder.Configuration.GetValue("RateLimiting:PermitLimit", 100),
+                Window = TimeSpan.FromMinutes(builder.Configuration.GetValue("RateLimiting:WindowMinutes", 1)),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0 // No queueing, reject immediately
+            });
+    });
+    
+    // Stricter limit for authentication endpoints (prevent brute force)
+    options.AddFixedWindowLimiter("auth", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 10);
+        limiterOptions.Window = TimeSpan.FromMinutes(builder.Configuration.GetValue("RateLimiting:AuthWindowMinutes", 1));
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    
+    // Custom response for rate limited requests
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+        
+        var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
+            ? retryAfterValue.TotalSeconds
+            : 60;
+            
+        context.HttpContext.Response.Headers.RetryAfter = retryAfter.ToString();
+        
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            type = "https://httpstatuses.io/429",
+            title = "Too Many Requests",
+            status = 429,
+            detail = $"Rate limit exceeded. Try again in {retryAfter} seconds."
+        }, cancellationToken);
+    };
+});
+
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
@@ -293,6 +347,9 @@ app.UseCors("AllowWebApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Rate limiting - after auth so we can use user identity for partitioning
+app.UseRateLimiter();
 
 // Health checks endpoints
 app.MapHealthChecks("/health");
