@@ -3,23 +3,23 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Hickory.Api.IntegrationTests.TestFixtures;
+using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Hickory.Api.IntegrationTests.Features.Attachments;
 
-[Collection("Integration Tests")]
-public class AttachmentsControllerTests : IAsyncLifetime
+public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory>, IAsyncLifetime
 {
-    private readonly IntegrationTestWebAppFactory _factory;
+    private readonly ApiWebApplicationFactory _factory;
     private readonly HttpClient _client;
     private ApplicationDbContext _dbContext = null!;
     private string _authToken = string.Empty;
     private Guid _userId;
     private Guid _ticketId;
 
-    public AttachmentsControllerTests(IntegrationTestWebAppFactory factory)
+    public AttachmentsControllerTests(ApiWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
@@ -29,6 +29,7 @@ public class AttachmentsControllerTests : IAsyncLifetime
     {
         var scope = _factory.Services.CreateScope();
         _dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
         // Create test user
         var user = new User
@@ -37,8 +38,8 @@ public class AttachmentsControllerTests : IAsyncLifetime
             Email = "attachment-test@example.com",
             FirstName = "Attachment",
             LastName = "Tester",
-            Role = UserRole.Customer,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123!"),
+            Role = UserRole.EndUser,
+            PasswordHash = passwordHasher.HashPassword("Password123!"),
             CreatedAt = DateTime.UtcNow
         };
         _userId = user.Id;
