@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, LoginRequest, RegisterRequest, AuthResponse } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth-store';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/toast';
 
 export function useAuth() {
   const user = useAuthStore((state) => state.user);
@@ -18,6 +19,7 @@ export function useLogin() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (request: LoginRequest) => apiClient.login(request),
@@ -35,7 +37,11 @@ export function useLogin() {
         data.expiresAt
       );
       queryClient.invalidateQueries();
+      toast.success(`Welcome back, ${data.firstName}!`);
       router.push('/dashboard');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Login failed. Please check your credentials.');
     },
   });
 }
@@ -44,6 +50,7 @@ export function useRegister() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (request: RegisterRequest) => apiClient.register(request),
@@ -61,7 +68,11 @@ export function useRegister() {
         data.expiresAt
       );
       queryClient.invalidateQueries();
+      toast.success(`Welcome to Hickory, ${data.firstName}!`);
       router.push('/dashboard');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Registration failed. Please try again.');
     },
   });
 }
@@ -70,10 +81,12 @@ export function useLogout() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return () => {
     clearAuth();
     queryClient.clear();
+    toast.info('You have been logged out.');
     router.push('/auth/login');
   };
 }
