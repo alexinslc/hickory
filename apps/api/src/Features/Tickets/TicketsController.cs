@@ -64,6 +64,24 @@ public class TicketsController : ControllerBase
         return Ok(ticket);
     }
 
+    [HttpGet("{id}/details")]
+    public async Task<ActionResult<TicketDetailsResponse>> GetTicketDetails(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var userRole = GetUserRole();
+        var query = new GetTicketDetailsQuery(id, userId, userRole);
+        var details = await _mediator.Send(query, cancellationToken);
+
+        if (details == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(details);
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<Models.TicketDto>>> GetMyTickets(
         CancellationToken cancellationToken)

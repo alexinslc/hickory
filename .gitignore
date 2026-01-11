@@ -86,8 +86,8 @@ pnpm-lock.yaml
 
 # Local storage
 uploads/
-attachments/
-storage/
+/attachments/
+/storage/
 
 
 
