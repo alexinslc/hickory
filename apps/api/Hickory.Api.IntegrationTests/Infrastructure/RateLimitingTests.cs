@@ -239,7 +239,7 @@ public class RateLimitingTests : IClassFixture<ApiWebApplicationFactory>
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["RateLimiting:PermitLimit"] = "2",
-                    ["RateLimiting:WindowMinutes"] = "0.017" // ~1 second
+                    ["RateLimiting:WindowMinutes"] = "0.0167" // 1 second (1/60 minutes)
                 });
             });
         });
@@ -252,9 +252,12 @@ public class RateLimitingTests : IClassFixture<ApiWebApplicationFactory>
         var response3 = await client.GetAsync("/health");
 
         // Assert - Should be rate limited (if health endpoint is working)
-        // Note: If health check fails due to infrastructure issues, we skip the stricter assertions
-        if (response1.StatusCode != HttpStatusCode.Conflict && 
-            response2.StatusCode != HttpStatusCode.Conflict)
+        // Note: Conflict (409) indicates database/infrastructure initialization issues with WithWebHostBuilder
+        // This happens when testcontainers don't initialize properly in the derived factory
+        var hasInfrastructureIssues = response1.StatusCode == HttpStatusCode.Conflict || 
+                                       response2.StatusCode == HttpStatusCode.Conflict;
+        
+        if (!hasInfrastructureIssues)
         {
             response1.StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests, 
                 "first request should not be rate limited");
@@ -276,7 +279,7 @@ public class RateLimitingTests : IClassFixture<ApiWebApplicationFactory>
         else
         {
             // Infrastructure issue - test is inconclusive but we won't fail it
-            // This happens when testcontainers don't initialize properly with WithWebHostBuilder
+            // WithWebHostBuilder creates a new factory that doesn't properly initialize testcontainers
             response1.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Conflict);
         }
     }

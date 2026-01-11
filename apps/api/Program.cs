@@ -180,7 +180,6 @@ static string GetRateLimitPartitionKey(HttpContext context, string limitType, IS
     var partitionKey = userId ?? ipAddress ?? "anonymous";
     
     // Log warning when falling back to "anonymous" (security concern)
-    // Only log on first occurrence to avoid performance impact
     if (partitionKey == "anonymous")
     {
         var logger = (services ?? context.RequestServices).GetRequiredService<ILogger<Program>>();
