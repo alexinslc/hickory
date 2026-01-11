@@ -4,6 +4,7 @@ import { useAuth, useLogin, useRegister, useLogout } from '../../hooks/use-auth'
 import { apiClient } from '../../lib/api-client';
 import { useAuthStore } from '../../store/auth-store';
 import { ReactNode } from 'react';
+import { ToastProvider } from '../../components/ui/toast';
 
 // Type for the auth store state used in tests
 interface AuthState {
@@ -48,7 +49,9 @@ describe('useAuth hook', () => {
   let queryClient: QueryClient;
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>{children}</ToastProvider>
+    </QueryClientProvider>
   );
 
   // Helper function to mock the auth store with proper typing
