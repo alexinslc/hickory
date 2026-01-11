@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Apply theme to document
-  const applyTheme = (newTheme: Theme) => {
+  const applyTheme = useCallback((newTheme: Theme) => {
     const resolved = newTheme === 'system' ? getSystemTheme() : newTheme;
     setResolvedTheme(resolved);
     
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.classList.remove('dark');
     }
-  };
+  }, []);
 
   // Set theme and persist to localStorage
   const setTheme = (newTheme: Theme) => {
@@ -44,12 +44,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('hickory-theme') as Theme | null;
-    const initialTheme = savedTheme || 'system';
+    const savedTheme = localStorage.getItem('hickory-theme');
+    const validThemes: Theme[] = ['light', 'dark', 'system'];
+    const initialTheme = savedTheme && validThemes.includes(savedTheme as Theme) 
+      ? (savedTheme as Theme) 
+      : 'system';
     setThemeState(initialTheme);
     applyTheme(initialTheme);
     setMounted(true);
-  }, []);
+  }, [applyTheme]);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -60,23 +63,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
+  }, [theme, applyTheme]);
 
-  // Prevent flash of wrong theme
+  // Prevent flash of wrong theme - render null during SSR/mount
   if (!mounted) {
-    return (
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              const theme = localStorage.getItem('hickory-theme') || 'system';
-              const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-              if (isDark) document.documentElement.classList.add('dark');
-            })();
-          `,
-        }}
-      />
-    );
+    return null;
   }
 
   return (
