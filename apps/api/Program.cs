@@ -352,6 +352,59 @@ var app = builder.Build();
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// Security headers
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? string.Empty;
+    
+    // Content Security Policy - use appropriate policy based on route
+    if (path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("/api-docs", StringComparison.OrdinalIgnoreCase))
+    {
+        // Swagger UI needs to load JS, CSS, images, and fonts
+        context.Response.Headers.Append(
+            "Content-Security-Policy",
+            "default-src 'self'; " +
+            "script-src 'self' 'unsafe-inline'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data:; " +
+            "font-src 'self'; " +
+            "object-src 'none'; " +
+            "frame-ancestors 'none'");
+    }
+    else
+    {
+        // API returns JSON, restrict everything by default
+        context.Response.Headers.Append("Content-Security-Policy", "default-src 'none'; object-src 'none'; frame-ancestors 'none'");
+    }
+    
+    // Prevent MIME type sniffing
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    
+    // Control iframe embedding
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    
+    // Control referrer information
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    
+    // Enforce HTTPS
+    context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    
+    // Disable browser features
+    context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    
+    // Prevent caching of sensitive API responses (but allow caching for Swagger/OpenAPI/docs)
+    if (!path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/api-docs", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/openapi", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Headers.Append("Cache-Control", "no-store");
+        context.Response.Headers.Append("Pragma", "no-cache");
+    }
+    
+    await next();
+});
+
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
