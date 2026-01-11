@@ -72,20 +72,27 @@ export function FileUpload({ ticketId, onUploadComplete, onError }: FileUploadPr
     });
 
     if (validFiles.length > 0) {
-      setFiles((prev) => [...prev, ...validFiles]);
-      // Start uploading immediately
-      validFiles.forEach((fileItem) => uploadFile(fileItem));
+      setFiles((prev) => {
+        const newFileList = [...prev, ...validFiles];
+        // Start uploading immediately using the new file list
+        validFiles.forEach((fileItem) => uploadFile(fileItem, newFileList));
+        return newFileList;
+      });
     }
   };
 
-  const uploadFile = async (fileItem: FileWithProgress) => {
-    const fileIndex = files.findIndex((f) => f.file === fileItem.file);
+  const uploadFile = async (fileItem: FileWithProgress, currentFiles?: FileWithProgress[]) => {
+    const fileList = currentFiles || files;
+    const fileIndex = fileList.findIndex((f) => f.file === fileItem.file);
     if (fileIndex === -1) return;
 
     // Update uploading status
     setFiles((prev) => {
       const updated = [...prev];
-      updated[fileIndex] = { ...updated[fileIndex], uploading: true };
+      const index = updated.findIndex((f) => f.file === fileItem.file);
+      if (index !== -1) {
+        updated[index] = { ...updated[index], uploading: true };
+      }
       return updated;
     });
 

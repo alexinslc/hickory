@@ -55,7 +55,7 @@ export default function TicketDetailPage() {
   const router = useRouter();
   const ticketId = params.id as string;
   const { data: ticket, isLoading, error } = useGetTicketById(ticketId);
-  const { data: ticketDetails, isLoading: detailsLoading } = useTicketDetails(ticketId);
+  const { data: ticketDetails, isLoading: detailsLoading, refetch: refetchTicketDetails } = useTicketDetails(ticketId);
   const { data: comments, isLoading: commentsLoading } = useGetComments(ticketId);
   const { user } = useAuthStore();
   const addCommentMutation = useAddComment(ticketId);
@@ -246,7 +246,10 @@ export default function TicketDetailPage() {
 
                 {/* File Upload */}
                 <div className="mb-6">
-                  <FileUpload ticketId={ticketId} />
+                  <FileUpload 
+                    ticketId={ticketId}
+                    onUploadComplete={() => refetchTicketDetails()}
+                  />
                 </div>
 
                 {/* Attachment List */}
@@ -258,7 +261,8 @@ export default function TicketDetailPage() {
                 ) : ticketDetails?.attachments && ticketDetails.attachments.length > 0 ? (
                   <AttachmentList 
                     attachments={ticketDetails.attachments} 
-                    showDelete={true}
+                    canDelete={true}
+                    onDelete={() => refetchTicketDetails()}
                   />
                 ) : (
                   <div className="text-center py-4 bg-gray-50 rounded-lg">
