@@ -159,7 +159,7 @@ jobs:
           fail-on-error: true
       
       - name: Upload Coverage Reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           directory: ./coverage
@@ -192,7 +192,7 @@ jobs:
         run: npx nx test ${{ matrix.app }} --coverage --ci
       
       - name: Upload Coverage Reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always() && matrix.app == 'web'
         with:
           directory: ./coverage/apps/${{ matrix.app }}
@@ -324,7 +324,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/${{ matrix.service }}.Dockerfile
@@ -355,7 +355,7 @@ jobs:
           output: 'trivy-results.sarif'
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
