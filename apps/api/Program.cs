@@ -269,6 +269,34 @@ var app = builder.Build();
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// Security headers
+app.Use(async (context, next) =>
+{
+    // Content Security Policy - API returns JSON, restrict everything
+    context.Response.Headers.Append("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
+    
+    // Prevent MIME type sniffing
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    
+    // Control iframe embedding
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    
+    // Control referrer information
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    
+    // Enforce HTTPS
+    context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    
+    // Disable browser features
+    context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    
+    // Prevent caching of sensitive API responses
+    context.Response.Headers.Append("Cache-Control", "no-store");
+    context.Response.Headers.Append("Pragma", "no-cache");
+    
+    await next();
+});
+
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
