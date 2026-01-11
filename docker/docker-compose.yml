@@ -60,6 +60,7 @@ services:
       - JWT__Issuer=hickory-api
       - JWT__Audience=hickory-web
       - JWT__ExpirationMinutes=60
+      - Database__AutoMigrate=true
       - Logging__LogLevel__Default=Information
       - Logging__LogLevel__Microsoft.AspNetCore=Warning
       - SMTP__Host=mailhog

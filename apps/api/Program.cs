@@ -310,7 +310,7 @@ app.MapControllers();
 // SignalR hub endpoint
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// Seed database with admin user on startup (skip in test environments)
+// Auto-migrate and seed database on startup (skip in test environments)
 if (!builder.Configuration.GetValue<bool>("SkipDbSeeder"))
 {
     using (var scope = app.Services.CreateScope())
@@ -318,6 +318,15 @@ if (!builder.Configuration.GetValue<bool>("SkipDbSeeder"))
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        
+        // Auto-migrate database in development/Docker (controlled by environment)
+        if (builder.Configuration.GetValue<bool>("Database:AutoMigrate", defaultValue: false) ||
+            builder.Environment.IsDevelopment())
+        {
+            logger.LogInformation("Applying database migrations...");
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully");
+        }
         
         await DbSeeder.SeedAdminUser(context, passwordHasher, logger);
     }

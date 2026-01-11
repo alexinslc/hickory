@@ -2,64 +2,68 @@
 
 [![CI Pipeline](https://github.com/alexinslc/hickory/workflows/CI%%20Pipeline/badge.svg)](https://github.com/alexinslc/hickory/actions/workflows/ci.yml)
 
-Full-stack help desk system built with .NET 10, Next.js 16, PostgreSQL, and Redis.
+A simple help desk. That's it.
 
 ## Quick Start
 
-**Requirements:** .NET 10.0 SDK, Node.js 20+, PostgreSQL 16, Redis 7
-
 ```bash
-# Start infrastructure
-docker compose -f docker/docker-compose.yml up -d
-
-# Backend
-cd apps/api && dotnet restore && dotnet ef database update && dotnet run
-
-# Frontend
-cd apps/web && npm install && npm run dev
+# One command to start everything
+docker compose -f docker/docker-compose.yml up
 
 # Open http://localhost:3000
+# Login: admin@hickory.dev / Admin123!
 ```
+
+Done. Database migrations run automatically.
+
+## What Hickory Does
+
+- Customers submit tickets
+- Agents respond to tickets
+- Everyone gets email notifications
+- Real-time updates
+
+That's the whole product.
 
 ## Architecture
 
 ```
-Next.js :3000  →  .NET API :5000  →  PostgreSQL :5432
-                       ↓
-                   Redis :6379
+Web :3000  →  API :5000  →  PostgreSQL :5432
+                  ↓
+              Redis :6379
 ```
 
-**Stack:** .NET 10, Next.js 16, PostgreSQL 16, Redis 7, MediatR, SignalR, TanStack Query
+## Development (without Docker)
 
-## Features
+```bash
+# Requirements: .NET 10, Node.js 20+, PostgreSQL, Redis
 
-- Ticket submission and tracking
-- Agent management dashboard
-- Real-time updates (WebSockets)
-- Full-text search
-- Email notifications
-- JWT authentication with refresh tokens
-- Database connection pooling with retry/circuit breaker
-- Health checks (`/health`, `/health/ready`, `/health/live`)
+# Start infrastructure only
+docker compose -f docker/docker-compose.yml up postgres redis -d
+
+# Backend (auto-migrates in development)
+cd apps/api && dotnet run
+
+# Frontend (separate terminal)
+cd apps/web && npm install && npm run dev
+```
 
 ## Testing
 
 ```bash
 npx nx run-many --target=test --all    # All tests
-dotnet test apps/api/Hickory.Api.Tests # API tests
-npx nx test web                        # Web tests
 npx nx e2e web-e2e                     # E2E tests
 ```
 
-## Project Structure
+## Philosophy
 
-```
-apps/
-├── api/      # .NET 10 API
-├── web/      # Next.js 16 frontend
-├── cli/      # TypeScript CLI
-└── *-e2e/    # E2E tests
-```
+Hickory prioritizes simplicity over features. If you need:
+- Multi-tenancy → Deploy separate instances
+- Complex analytics → Use Metabase/Grafana
+- SSO/SAML → Use an enterprise solution
+- Workflow automation → Use Zapier
+
+We keep the core simple so it stays maintainable.
 
 ## License
 
