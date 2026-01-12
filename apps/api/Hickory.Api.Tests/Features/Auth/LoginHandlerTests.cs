@@ -69,14 +69,16 @@ public class LoginHandlerTests
 
         // Assert
         result.Should().NotBeNull();
-        result.AccessToken.Should().Be("mock-access-token");
-        result.RefreshToken.Should().Be("mock-refresh-token");
-        result.UserId.Should().Be(user.Id);
-        result.Email.Should().Be("test@example.com");
-        result.FirstName.Should().Be("John");
-        result.LastName.Should().Be("Doe");
-        result.Role.Should().Be("EndUser");
-        result.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
+        result.RequiresTwoFactor.Should().BeFalse();
+        result.AuthResponse.Should().NotBeNull();
+        result.AuthResponse!.AccessToken.Should().Be("mock-access-token");
+        result.AuthResponse.RefreshToken.Should().Be("mock-refresh-token");
+        result.AuthResponse.UserId.Should().Be(user.Id);
+        result.AuthResponse.Email.Should().Be("test@example.com");
+        result.AuthResponse.FirstName.Should().Be("John");
+        result.AuthResponse.LastName.Should().Be("Doe");
+        result.AuthResponse.Role.Should().Be("EndUser");
+        result.AuthResponse.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
 
         // Verify user's last login was updated
         var updatedUser = await dbContext.Users.FindAsync(user.Id);
@@ -243,6 +245,8 @@ public class LoginHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Role.Should().Be(role.ToString());
+        result.RequiresTwoFactor.Should().BeFalse();
+        result.AuthResponse.Should().NotBeNull();
+        result.AuthResponse!.Role.Should().Be(role.ToString());
     }
 }

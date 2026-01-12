@@ -1,4 +1,5 @@
 using Hickory.Api.Features.Auth.Models;
+using Hickory.Api.Features.Auth.TwoFactor;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Data;
 using MediatR;
@@ -6,9 +7,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hickory.Api.Features.Auth.Login;
 
-public record LoginCommand(string Email, string Password) : IRequest<AuthResponse>;
+public record LoginCommand(string Email, string Password) : IRequest<LoginResult>;
 
-public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
+/// <summary>
+/// Result of a login attempt - can be either AuthResponse (success) or TwoFactorRequiredResponse
+/// </summary>
+public class LoginResult
+{
+    public AuthResponse? AuthResponse { get; init; }
+    public TwoFactorRequiredResponse? TwoFactorRequired { get; init; }
+    
+    public bool RequiresTwoFactor => TwoFactorRequired != null;
+    
+    public static LoginResult Success(AuthResponse response) => new() { AuthResponse = response };
+    public static LoginResult TwoFactorNeeded(TwoFactorRequiredResponse response) => new() { TwoFactorRequired = response };
+}
+
+public class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
 {
     private readonly ApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
@@ -31,7 +46,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
         _jwtExpirationMinutes = double.Parse(configuration["JWT:ExpirationMinutes"] ?? "60");
     }
 
-    public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         // Find user by email
         var user = await _context.Users
@@ -54,6 +69,17 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
         {
             _logger.LogWarning("Invalid password attempt for user: {UserId}", user.Id);
             throw new UnauthorizedAccessException("Invalid email or password");
+        }
+
+        // Check if 2FA is enabled - don't complete login yet
+        if (user.TwoFactorEnabled)
+        {
+            _logger.LogInformation("2FA required for user {UserId}", user.Id);
+            return LoginResult.TwoFactorNeeded(new TwoFactorRequiredResponse
+            {
+                UserId = user.Id,
+                Email = user.Email
+            });
         }
 
         // Update last login
@@ -91,7 +117,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
 
         _logger.LogInformation("User {UserId} logged in successfully", user.Id);
 
-        return new AuthResponse
+        return LoginResult.Success(new AuthResponse
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenString,
@@ -101,6 +127,6 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponse>
             LastName = user.LastName,
             Role = user.Role.ToString(),
             ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtExpirationMinutes)
-        };
+        });
     }
 }

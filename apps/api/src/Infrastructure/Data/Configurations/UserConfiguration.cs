@@ -53,6 +53,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.RowVersion)
             .IsRowVersion();
         
+        // Two-Factor Authentication
+        builder.Property(u => u.TwoFactorEnabled)
+            .HasDefaultValue(false);
+        
+        builder.Property(u => u.TwoFactorSecret)
+            .HasMaxLength(512);
+        
+        builder.Property(u => u.TwoFactorBackupCodes)
+            .HasMaxLength(2000); // JSON array of hashed backup codes
+        
+        builder.Property(u => u.TwoFactorEnabledAt);
+        
         // Indexes
         builder.HasIndex(u => u.Email)
             .IsUnique();

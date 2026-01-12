@@ -64,4 +64,26 @@ public class User
     /// Optimistic concurrency token
     /// </summary>
     public byte[]? RowVersion { get; set; }
+    
+    // Two-Factor Authentication (2FA)
+    
+    /// <summary>
+    /// Whether 2FA is enabled for this user
+    /// </summary>
+    public bool TwoFactorEnabled { get; set; }
+    
+    /// <summary>
+    /// Encrypted TOTP secret key (Base32 encoded)
+    /// </summary>
+    public string? TwoFactorSecret { get; set; }
+    
+    /// <summary>
+    /// Hashed backup codes for 2FA recovery (JSON array)
+    /// </summary>
+    public string? TwoFactorBackupCodes { get; set; }
+    
+    /// <summary>
+    /// When 2FA was enabled
+    /// </summary>
+    public DateTime? TwoFactorEnabledAt { get; set; }
 }

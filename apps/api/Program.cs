@@ -114,6 +114,8 @@ builder.Services.AddSingleton<ICacheService, CacheService>();
 // Authentication Services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddSingleton<Hickory.Api.Features.Auth.TwoFactor.ITwoFactorService, 
+    Hickory.Api.Features.Auth.TwoFactor.TwoFactorService>();
 
 // Business Services
 builder.Services.AddScoped<ITicketNumberGenerator, TicketNumberGenerator>();

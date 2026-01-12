@@ -3,6 +3,7 @@ using Hickory.Api.Features.Auth.Logout;
 using Hickory.Api.Features.Auth.Models;
 using Hickory.Api.Features.Auth.RefreshToken;
 using Hickory.Api.Features.Auth.Register;
+using Hickory.Api.Features.Auth.TwoFactor;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,14 +26,21 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TwoFactorRequiredResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
+    public async Task<ActionResult> Login([FromBody] LoginRequest request)
     {
         try
         {
             var command = new LoginCommand(request.Email, request.Password);
-            var response = await _mediator.Send(command);
-            return Ok(response);
+            var result = await _mediator.Send(command);
+            
+            if (result.RequiresTwoFactor)
+            {
+                return Ok(result.TwoFactorRequired);
+            }
+            
+            return Ok(result.AuthResponse);
         }
         catch (UnauthorizedAccessException ex)
         {
