@@ -86,7 +86,11 @@ export default function NewTicketPage() {
     }
 
     if (errors.length > 0) {
-      setFileError(errors.length === 1 ? errors[0] : `${errors.length} files failed validation. First error: ${errors[0]}`);
+      if (errors.length === 1) {
+        setFileError(errors[0]);
+      } else {
+        setFileError(`${errors.length} files failed validation. Please check file types and sizes.`);
+      }
     }
 
     if (validFiles.length > 0) {

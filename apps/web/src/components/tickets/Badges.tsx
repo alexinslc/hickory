@@ -26,7 +26,7 @@ interface TagBadgeProps {
 
 export function TagBadge({ name, color, onRemove }: TagBadgeProps) {
   const bgColor = color || '#dbeafe'; // Default light blue (Tailwind blue-100)
-  const textColor = color ? '#1e3a8a' : '#1e40af'; // Dark blue (blue-800/blue-800) for default
+  const textColor = color ? '#1e3a8a' : '#1e40af'; // Dark blue (blue-900 for custom, blue-800 for default)
 
   return (
     <span
