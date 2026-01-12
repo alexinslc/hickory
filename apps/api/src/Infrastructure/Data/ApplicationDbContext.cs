@@ -63,6 +63,11 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     
+    /// <summary>
+    /// Audit logs for tracking system activity
+    /// </summary>
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

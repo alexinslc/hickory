@@ -36,6 +36,9 @@ builder.Host.UseSerilog();
 
 // Add services to the container.
 
+// HttpContext accessor for audit logging
+builder.Services.AddHttpContextAccessor();
+
 // Database configuration and resilience
 var databaseOptions = new DatabaseOptions();
 builder.Configuration.GetSection(DatabaseOptions.SectionName).Bind(databaseOptions);
@@ -134,12 +137,17 @@ builder.Services.AddHttpClient("webhooks", client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Audit Logging
+builder.Services.AddScoped<Hickory.Api.Infrastructure.Audit.IAuditLogService, 
+    Hickory.Api.Infrastructure.Audit.AuditLogService>();
+
 // MediatR with pipeline behaviors
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(AuditingBehavior<,>));
 });
 
 // FluentValidation
