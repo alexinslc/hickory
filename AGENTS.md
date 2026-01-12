@@ -79,3 +79,59 @@ Follow existing patterns in the codebase:
 - Use environment variables for sensitive configuration
 - Validate all user input
 - Follow existing auth/authorization patterns in the codebase
+
+## Development Environment
+
+Tools available on this machine:
+
+| Category | Tool | Version |
+|----------|------|---------|
+| **Runtimes** | Node.js | v25.2.0 |
+| | .NET | 10.0.101 |
+| | Go | 1.25.5 |
+| | Python | 3.13.2 |
+| | Ruby | 2.6.10 |
+| **Package Managers** | npm | via nvm |
+| | pnpm | installed |
+| | yarn | installed |
+| | Homebrew | installed |
+| | pipx | installed |
+| **Version Control** | Git | 2.52.0 |
+| | GitHub CLI | 2.83.2 |
+| **Containers** | Docker | 29.1.3 |
+| | Docker Compose | 2.40.3 |
+| **Cloud/Infra** | Azure CLI | 2.81.0 |
+| | Terraform | 1.14.3 |
+| | kubectl | 1.35.0 |
+| | Helm | 4.0.4 |
+| **Utilities** | jq | 1.8.1 |
+| | tmux | 3.6a |
+| | glow | 2.1.1 |
+| | tree | installed |
+| | rclone | installed |
+| **Terminal** | Warp | installed |
+| | zsh | default shell |
+
+**Notes:**
+- Use `npx nx` instead of `nx` directly (not globally installed)
+- Database clients (psql, redis-cli) run via Docker containers
+- Use `gh` CLI for GitHub operations (PRs, issues, etc.)
+- `asdf` and `rbenv` available for version management
+- `cmake` available for native builds
+
+## MCP Servers
+
+The following MCP (Model Context Protocol) servers are available for AI agents:
+
+| Server | Purpose |
+|--------|---------|
+| **GitHub** | Full GitHub integration - repos, PRs, issues, branches, code search |
+| **Context7** | Fetch up-to-date library documentation and code examples |
+| **Microsoft Docs** | Search and fetch official Microsoft/Azure documentation |
+| **Docker/Containers** | List, manage, and inspect containers, images, volumes, networks |
+
+**Usage Notes:**
+- Use GitHub MCP for creating PRs, searching code, managing issues
+- Use Context7 when you need current docs for any library (call `resolve-library-id` first)
+- Use Microsoft Docs for Azure, .NET, and other Microsoft technology questions
+- Use Container tools to manage local Docker environment
