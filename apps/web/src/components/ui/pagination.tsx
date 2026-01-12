@@ -244,11 +244,10 @@ export function Pagination({
   );
 }
 
-/** Hook to manage pagination state with URL sync */
+/** Hook to manage pagination state */
 export function usePagination(options?: {
   defaultPage?: number;
   defaultPageSize?: number;
-  syncWithUrl?: boolean;
 }) {
   const { defaultPage = 1, defaultPageSize = 10 } = options ?? {};
 
