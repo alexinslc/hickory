@@ -66,7 +66,7 @@ export function CommentForm({
             checked={isInternal}
             onChange={(e) => setIsInternal(e.target.checked)}
             disabled={isSubmitting}
-            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor={`internal-${ticketId}`} className="text-sm font-medium text-gray-700 cursor-pointer">
             Internal Note
@@ -91,7 +91,7 @@ export function CommentForm({
               ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
               : isInternal
               ? 'border-yellow-300 focus:border-yellow-500 focus:ring-yellow-500 bg-yellow-50'
-              : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
+              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
           }`}
           placeholder={isInternal ? "Add an internal note (not visible to the customer)..." : "Add your comment..."}
           disabled={isSubmitting}
@@ -134,7 +134,7 @@ export function CommentForm({
           className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
             isInternal
               ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
-              : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+              : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
           }`}
           disabled={!contentValid || isSubmitting}
         >

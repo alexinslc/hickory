@@ -66,3 +66,57 @@ export function useCreateTicket() {
     },
   });
 }
+
+// Create ticket with attachments mutation
+interface CreateTicketWithAttachmentsRequest extends CreateTicketRequest {
+  files: File[];
+}
+
+export function useCreateTicketWithAttachments() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const toast = useToast();
+
+  return useMutation({
+    mutationFn: async (request: CreateTicketWithAttachmentsRequest) => {
+      const { files, ...ticketData } = request;
+      
+      // First, create the ticket
+      const ticketResponse = await apiClient.createTicket(ticketData);
+      
+      // Then, upload all attachments
+      if (files.length > 0) {
+        const uploadPromises = files.map((file) =>
+          apiClient.uploadAttachment(ticketResponse.id, file).catch((error) => {
+            console.error(`Failed to upload ${file.name}:`, error);
+            return null; // Continue with other uploads even if one fails
+          })
+        );
+        
+        const results = await Promise.all(uploadPromises);
+        const failedCount = results.filter((r) => r === null).length;
+        
+        if (failedCount > 0 && failedCount < files.length) {
+          toast.warning(`Ticket created, but ${failedCount} attachment(s) failed to upload.`);
+        } else if (failedCount === files.length && files.length > 0) {
+          toast.warning('Ticket created, but all attachments failed to upload.');
+        }
+      }
+      
+      return ticketResponse;
+    },
+    onSuccess: (data: CreateTicketResponse) => {
+      // Invalidate tickets list
+      queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
+      
+      // Show success toast
+      toast.success('Ticket created successfully!');
+      
+      // Redirect to ticket detail page
+      router.push(`/tickets/${data.id}`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create ticket. Please try again.');
+    },
+  });
+}
