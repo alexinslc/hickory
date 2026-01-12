@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Hickory.Api.Features.Auth.Login;
+using Hickory.Api.Infrastructure.Audit;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Tests.TestUtilities;
@@ -13,6 +14,7 @@ public class LoginHandlerTests
 {
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<IJwtTokenService> _tokenServiceMock;
+    private readonly Mock<IAuditLogService> _auditLogServiceMock;
     private readonly Mock<ILogger<LoginHandler>> _loggerMock;
     private readonly Mock<IConfiguration> _configurationMock;
 
@@ -20,6 +22,7 @@ public class LoginHandlerTests
     {
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _tokenServiceMock = new Mock<IJwtTokenService>();
+        _auditLogServiceMock = MockAuditLogServiceFactory.Create();
         _loggerMock = new Mock<ILogger<LoginHandler>>();
         _configurationMock = new Mock<IConfiguration>();
 
@@ -58,6 +61,7 @@ public class LoginHandlerTests
             dbContext,
             _passwordHasherMock.Object,
             _tokenServiceMock.Object,
+            _auditLogServiceMock.Object,
             _loggerMock.Object,
             _configurationMock.Object
         );
@@ -95,6 +99,7 @@ public class LoginHandlerTests
             dbContext,
             _passwordHasherMock.Object,
             _tokenServiceMock.Object,
+            _auditLogServiceMock.Object,
             _loggerMock.Object,
             _configurationMock.Object
         );
@@ -129,6 +134,7 @@ public class LoginHandlerTests
             dbContext,
             _passwordHasherMock.Object,
             _tokenServiceMock.Object,
+            _auditLogServiceMock.Object,
             _loggerMock.Object,
             _configurationMock.Object
         );
@@ -160,6 +166,7 @@ public class LoginHandlerTests
             dbContext,
             _passwordHasherMock.Object,
             _tokenServiceMock.Object,
+            _auditLogServiceMock.Object,
             _loggerMock.Object,
             _configurationMock.Object
         );
@@ -190,6 +197,7 @@ public class LoginHandlerTests
             dbContext,
             _passwordHasherMock.Object,
             _tokenServiceMock.Object,
+            _auditLogServiceMock.Object,
             _loggerMock.Object,
             _configurationMock.Object
         );
@@ -235,6 +243,7 @@ public class LoginHandlerTests
             dbContext,
             _passwordHasherMock.Object,
             _tokenServiceMock.Object,
+            _auditLogServiceMock.Object,
             _loggerMock.Object,
             _configurationMock.Object
         );

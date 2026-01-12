@@ -1,7 +1,9 @@
 using Hickory.Api.Features.Auth.Models;
 using Hickory.Api.Features.Auth.TwoFactor;
+using Hickory.Api.Infrastructure.Audit;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Data;
+using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +30,7 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
     private readonly ApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _tokenService;
+    private readonly IAuditLogService _auditLogService;
     private readonly ILogger<LoginHandler> _logger;
     private readonly double _jwtExpirationMinutes;
     private const int MaxActiveTokensPerUser = 5;
@@ -36,12 +39,14 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
         ApplicationDbContext context,
         IPasswordHasher passwordHasher,
         IJwtTokenService tokenService,
+        IAuditLogService auditLogService,
         ILogger<LoginHandler> logger,
         IConfiguration configuration)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _auditLogService = auditLogService;
         _logger = logger;
         _jwtExpirationMinutes = double.Parse(configuration["JWT:ExpirationMinutes"] ?? "60");
     }
@@ -55,12 +60,18 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
         if (user == null)
         {
             _logger.LogWarning("Login attempt for non-existent email: {Email}", request.Email);
+            await _auditLogService.LogAuthEventAsync(
+                AuditAction.LoginFailed, request.Email, success: false, 
+                details: "User not found", cancellationToken: cancellationToken);
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
         if (!user.IsActive)
         {
             _logger.LogWarning("Login attempt for inactive user: {UserId}", user.Id);
+            await _auditLogService.LogAuthEventAsync(
+                AuditAction.LoginFailed, user.Email, user.Id, success: false, 
+                details: "Account inactive", cancellationToken: cancellationToken);
             throw new UnauthorizedAccessException("Account is inactive");
         }
 
@@ -68,6 +79,9 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
         if (user.PasswordHash == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
             _logger.LogWarning("Invalid password attempt for user: {UserId}", user.Id);
+            await _auditLogService.LogAuthEventAsync(
+                AuditAction.LoginFailed, user.Email, user.Id, success: false, 
+                details: "Invalid password", cancellationToken: cancellationToken);
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
@@ -116,6 +130,11 @@ public class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("User {UserId} logged in successfully", user.Id);
+        
+        // Audit successful login
+        await _auditLogService.LogAuthEventAsync(
+            AuditAction.Login, user.Email, user.Id, success: true, 
+            cancellationToken: cancellationToken);
 
         return LoginResult.Success(new AuthResponse
         {
