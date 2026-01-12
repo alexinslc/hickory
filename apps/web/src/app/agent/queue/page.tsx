@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 const STATUS_COLORS = {
   Open: 'bg-blue-100 text-blue-800',
   InProgress: 'bg-yellow-100 text-yellow-800',
+  OnHold: 'bg-orange-100 text-orange-800',
   Resolved: 'bg-green-100 text-green-800',
   Closed: 'bg-gray-100 text-gray-800',
   Cancelled: 'bg-red-100 text-red-800',
@@ -75,7 +76,7 @@ export default function AgentQueuePage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Agent Queue</h1>
+          <h1 className="text-3xl font-bold text-gray-900">All Tickets</h1>
           <p className="mt-2 text-gray-600">
             Manage and respond to support tickets
           </p>

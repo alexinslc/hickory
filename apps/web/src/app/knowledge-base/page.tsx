@@ -33,9 +33,10 @@ export default function KnowledgeBasePage() {
   const isAgent = user?.role === 'Agent' || user?.role === 'Administrator';
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Knowledge Base</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Knowledge Base</h1>
         {isAgent && (
           <Link
             href="/knowledge-base/new"
@@ -198,6 +199,7 @@ export default function KnowledgeBasePage() {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }

@@ -62,7 +62,7 @@ export function TicketFilter({ filters, onFiltersChange }: TicketFilterProps) {
           <button
             type="button"
             onClick={handleClearFilters}
-            className="text-sm text-indigo-600 hover:text-indigo-500"
+            className="text-sm text-blue-600 hover:text-blue-500"
           >
             Clear all
           </button>
@@ -79,7 +79,7 @@ export function TicketFilter({ filters, onFiltersChange }: TicketFilterProps) {
           value={filters.categoryId || ''}
           onChange={(e) => handleCategoryChange(e.target.value)}
           disabled={categoriesLoading}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         >
           <option value="">All Categories</option>
           {categories?.map((category) => (
@@ -109,13 +109,13 @@ export function TicketFilter({ filters, onFiltersChange }: TicketFilterProps) {
             }}
             placeholder="Add tag filter..."
             disabled={tagsLoading}
-            className="block flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="block flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <button
             type="button"
             onClick={() => handleAddTag(tagInput)}
             disabled={!tagInput.trim() || tagsLoading}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             Add
           </button>
@@ -146,13 +146,13 @@ export function TicketFilter({ filters, onFiltersChange }: TicketFilterProps) {
             {filters.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800"
+                className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => handleRemoveTag(tag)}
-                  className="inline-flex items-center justify-center hover:bg-indigo-200 rounded-full p-0.5"
+                  className="inline-flex items-center justify-center hover:bg-blue-200 rounded-full p-0.5"
                 >
                   <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

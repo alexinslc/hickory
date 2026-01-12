@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useAuthStore } from '@/store/auth-store';
+import { LogOut } from 'lucide-react';
 
 export function Navigation() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const { user, clearAuth } = useAuthStore();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,29 +21,45 @@ export function Navigation() {
     }
   };
 
+  const handleLogout = () => {
+    clearAuth();
+    router.push('/auth/login');
+  };
+
+  const isAgent = user?.role === 'Agent' || user?.role === 'Administrator';
+
   return (
     <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and main nav */}
           <div className="flex">
-            <Link href="/" className="flex items-center px-2 text-xl font-bold text-indigo-600 dark:text-indigo-400" aria-label="Hickory home">
+            <Link href="/dashboard" className="flex items-center px-2 text-xl font-bold text-blue-600 dark:text-blue-400" aria-label="Go to dashboard">
               Hickory
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8" role="navigation" aria-label="Primary">
               <Link
                 href="/tickets"
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400"
+                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
                 aria-label="View my tickets"
               >
                 My Tickets
               </Link>
+              {isAgent && (
+                <Link
+                  href="/agent/queue"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                  aria-label="View all tickets"
+                >
+                  All Tickets
+                </Link>
+              )}
               <Link
-                href="/agent/queue"
+                href="/knowledge-base"
                 className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-                aria-label="View agent queue"
+                aria-label="Browse knowledge base"
               >
-                Agent Queue
+                Knowledge Base
               </Link>
               <Link
                 href="/search"
@@ -84,7 +103,7 @@ export function Navigation() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search tickets..."
-                  className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-10 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+                  className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-10 pr-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                   aria-label="Search for tickets"
                 />
               </div>
@@ -97,11 +116,19 @@ export function Navigation() {
             <NotificationCenter />
             <Link
               href="/tickets/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
               aria-label="Create new ticket"
             >
               New Ticket
             </Link>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Log out"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
           </div>
         </div>
       </div>
@@ -116,12 +143,21 @@ export function Navigation() {
           >
             My Tickets
           </Link>
+          {isAgent && (
+            <Link
+              href="/agent/queue"
+              className="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+              aria-label="View all tickets"
+            >
+              All Tickets
+            </Link>
+          )}
           <Link
-            href="/agent/queue"
+            href="/knowledge-base"
             className="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-            aria-label="View agent queue"
+            aria-label="Browse knowledge base"
           >
-            Agent Queue
+            Knowledge Base
           </Link>
           <Link
             href="/search"
@@ -130,6 +166,13 @@ export function Navigation() {
           >
             Search
           </Link>
+          <button
+            onClick={handleLogout}
+            className="w-full text-left pl-3 pr-4 py-2 text-base font-medium text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+            aria-label="Log out"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </nav>

@@ -142,7 +142,7 @@ export function NotificationCenter() {
                               ? 'bg-yellow-500'
                               : notification.type === 'ticket.assigned'
                               ? 'bg-green-500'
-                              : 'bg-purple-500'
+                              : 'bg-blue-500'
                           }`}
                           aria-hidden="true"
                         />

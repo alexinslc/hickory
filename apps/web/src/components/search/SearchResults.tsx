@@ -26,7 +26,7 @@ export function SearchResults({
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8" role="status" aria-label="Loading search results">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" aria-hidden="true"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" aria-hidden="true"></div>
           <span className="ml-3 text-gray-600">Searching...</span>
         </div>
       </div>
@@ -140,7 +140,7 @@ export function SearchResults({
                       onClick={() => onPageChange(pageNum)}
                       className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                         page === pageNum
-                          ? 'z-10 bg-indigo-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                          ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
                           : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                       }`}
                       aria-label={`Go to page ${pageNum}`}

@@ -85,7 +85,7 @@ export function TagInput({ value, onChange, disabled, error }: TagInputProps) {
       <div
         className={`
           relative mt-1 flex flex-wrap gap-2 rounded-md border border-gray-300 p-2
-          focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500
+          focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500
           ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
           ${error ? 'border-red-300' : ''}
         `}
@@ -94,14 +94,14 @@ export function TagInput({ value, onChange, disabled, error }: TagInputProps) {
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800"
+            className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
           >
             {tag}
             {!disabled && (
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="inline-flex items-center justify-center hover:bg-indigo-200 rounded-full p-0.5"
+                className="inline-flex items-center justify-center hover:bg-blue-200 rounded-full p-0.5"
               >
                 <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -140,8 +140,8 @@ export function TagInput({ value, onChange, disabled, error }: TagInputProps) {
                 onClick={() => addTag(tag.name)}
                 className={`
                   block w-full px-4 py-2 text-left text-sm
-                  ${focusedIndex === index ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}
-                  hover:bg-indigo-50
+                  ${focusedIndex === index ? 'bg-blue-100 text-blue-900' : 'text-gray-900'}
+                  hover:bg-blue-50
                 `}
               >
                 {tag.name}

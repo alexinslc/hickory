@@ -6,7 +6,7 @@ interface CategoryBadgeProps {
 }
 
 export function CategoryBadge({ name, color }: CategoryBadgeProps) {
-  const bgColor = color || '#6366f1'; // Default indigo
+  const bgColor = color || '#6366f1'; // Default blue
 
   return (
     <span
@@ -25,8 +25,8 @@ interface TagBadgeProps {
 }
 
 export function TagBadge({ name, color, onRemove }: TagBadgeProps) {
-  const bgColor = color || '#e0e7ff'; // Default light indigo
-  const textColor = color ? '#1e1b4b' : '#4338ca'; // Dark indigo for default
+  const bgColor = color || '#e0e7ff'; // Default light blue
+  const textColor = color ? '#1e1b4b' : '#4338ca'; // Dark blue for default
 
   return (
     <span

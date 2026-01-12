@@ -1,17 +1,39 @@
 'use client';
 
-import { useState } from 'react';
-import { useCreateTicket } from '@/hooks/use-tickets';
+import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useCreateTicketWithAttachments } from '@/hooks/use-tickets';
 import { AuthGuard } from '@/components/auth-guard';
 import Link from 'next/link';
+import { Upload, X, File, Image } from 'lucide-react';
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+  'text/csv',
+  'application/zip',
+];
 
 export default function NewTicketPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Medium');
   const [touched, setTouched] = useState({ title: false, description: false });
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const createTicket = useCreateTicket();
+  const createTicket = useCreateTicketWithAttachments();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +47,7 @@ export default function NewTicketPage() {
         title,
         description,
         priority,
+        files: pendingFiles,
       });
     }
   };
@@ -32,6 +55,80 @@ export default function NewTicketPage() {
   const titleValid = title.length >= 5 && title.length <= 200;
   const descriptionValid = description.length >= 10 && description.length <= 10000;
   const isValid = titleValid && descriptionValid;
+
+  // File handling functions
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `File "${file.name}" exceeds 10MB limit`;
+    }
+    if (!ALLOWED_FILE_TYPES.includes(file.type) && file.type !== 'application/octet-stream') {
+      return `File type "${file.type}" is not allowed`;
+    }
+    return null;
+  };
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    setFileError(null);
+
+    const validFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      const error = validateFile(file);
+      if (error) {
+        setFileError(error);
+        continue;
+      }
+      // Avoid duplicates
+      if (!pendingFiles.some((f) => f.name === file.name && f.size === file.size)) {
+        validFiles.push(file);
+      }
+    }
+
+    if (validFiles.length > 0) {
+      setPendingFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
+
+  const removeFile = (file: File) => {
+    setPendingFiles((prev) => prev.filter((f) => f !== file));
+    setFileError(null);
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFiles(e.dataTransfer.files);
+  };
+
+  const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    handleFiles(e.target.files);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <Image className="w-4 h-4 text-gray-500" />;
+    }
+    return <File className="w-4 h-4 text-gray-500" />;
+  };
 
   const getTitleValidationMessage = () => {
     if (!touched.title || title.length === 0) return null;
@@ -184,6 +281,88 @@ export default function NewTicketPage() {
                       <p id="priority-description" className="mt-1 text-xs text-gray-500">
                         Select the urgency of your issue
                       </p>
+                    </div>
+
+                    {/* Attachments Section */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Attachments (optional)
+                      </label>
+                      <div
+                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                          isDragging
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                      >
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-gray-600 mb-1">
+                          Drag and drop files here, or click to select
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Maximum file size: 10MB • Supported: images, PDFs, documents
+                        </p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          multiple
+                          className="hidden"
+                          onChange={handleFileInputChange}
+                          accept={ALLOWED_FILE_TYPES.join(',')}
+                          disabled={createTicket.isPending}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={createTicket.isPending}
+                          className="mt-3 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                        >
+                          Select Files
+                        </button>
+                      </div>
+
+                      {fileError && (
+                        <p className="mt-2 text-sm text-red-600">{fileError}</p>
+                      )}
+
+                      {/* Pending Files List */}
+                      {pendingFiles.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          <p className="text-sm font-medium text-gray-700">
+                            Files to upload ({pendingFiles.length})
+                          </p>
+                          {pendingFiles.map((file, index) => (
+                            <div
+                              key={`${file.name}-${index}`}
+                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            >
+                              <div className="flex items-center space-x-3">
+                                {getFileIcon(file)}
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 truncate max-w-xs">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatFileSize(file.size)}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(file)}
+                                disabled={createTicket.isPending}
+                                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                aria-label={`Remove ${file.name}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {createTicket.isError && (

@@ -33,7 +33,7 @@ export function SearchFilters({
           <button
             type="button"
             onClick={onClearFilters}
-            className="text-sm text-indigo-600 hover:text-indigo-500"
+            className="text-sm text-blue-600 hover:text-blue-500"
           >
             Clear all
           </button>
@@ -49,7 +49,7 @@ export function SearchFilters({
           id="filter-status"
           value={status || ''}
           onChange={(e) => onStatusChange(e.target.value || undefined)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         >
           <option value="">All Statuses</option>
           <option value="Open">Open</option>
@@ -69,7 +69,7 @@ export function SearchFilters({
           id="filter-priority"
           value={priority || ''}
           onChange={(e) => onPriorityChange(e.target.value || undefined)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         >
           <option value="">All Priorities</option>
           <option value="Low">Low</option>
@@ -89,7 +89,7 @@ export function SearchFilters({
           id="filter-created-after"
           value={createdAfter || ''}
           onChange={(e) => onCreatedAfterChange(e.target.value || undefined)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         />
       </div>
 
@@ -102,7 +102,7 @@ export function SearchFilters({
           id="filter-created-before"
           value={createdBefore || ''}
           onChange={(e) => onCreatedBeforeChange(e.target.value || undefined)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         />
       </div>
     </div>
