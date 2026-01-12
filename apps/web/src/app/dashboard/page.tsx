@@ -19,10 +19,12 @@ import { useMemo } from 'react';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { data: tickets, isLoading } = useMyTickets();
+  const { data, isLoading } = useMyTickets();
+
+  const tickets = data?.items ?? [];
 
   const stats = useMemo(() => {
-    if (!tickets) {
+    if (!data) {
       return [
         {
           title: 'Open Tickets',
@@ -72,7 +74,7 @@ export default function DashboardPage() {
       {
         title: 'Open Tickets',
         value: openTickets.toString(),
-        description: `${tickets.length} total tickets`,
+        description: `${data.totalCount} total tickets`,
         icon: TicketIcon,
         trend: 'neutral' as const,
         color: 'text-blue-600',
@@ -106,7 +108,7 @@ export default function DashboardPage() {
         bgColor: 'bg-red-50',
       },
     ];
-  }, [tickets]);
+  }, [data, tickets]);
 
   const quickActions = [
     {
@@ -219,7 +221,7 @@ export default function DashboardPage() {
                       <Loader2 className="h-6 w-6 animate-spin text-gray-400" aria-hidden="true" />
                       <span className="sr-only">Loading tickets...</span>
                     </div>
-                  ) : tickets && tickets.length > 0 ? (
+                  ) : tickets.length > 0 ? (
                     <ul className="space-y-4" aria-label="Recent tickets list">
                       {tickets.slice(0, 5).map((ticket) => (
                         <li key={ticket.id} className="flex items-start gap-4 pb-4 border-b last:border-0">

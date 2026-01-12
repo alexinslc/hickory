@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Pagination, usePagination } from '@/components/ui/pagination';
 
 const STATUS_COLORS = {
   Open: 'bg-blue-100 text-blue-800',
@@ -25,8 +26,11 @@ const PRIORITY_COLORS = {
 export default function AgentQueuePage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const { data: tickets, isLoading, error, refetch } = useAgentQueue();
+  const { page, pageSize, setPage, setPageSize } = usePagination();
   const [filter, setFilter] = useState<'all' | 'unassigned' | 'mine'>('all');
+  const { data, isLoading, error, refetch } = useAgentQueue({ page, pageSize, filter });
+
+  const tickets = data?.items ?? [];
 
   // Check if user is agent or admin
   useEffect(() => {
@@ -62,15 +66,6 @@ export default function AgentQueuePage() {
     );
   }
 
-  const filteredTickets = tickets?.filter(ticket => {
-    if (filter === 'unassigned') return !ticket.assignedToId;
-    if (filter === 'mine') return ticket.assignedToId === user?.userId;
-    return true;
-  }) || [];
-
-  const unassignedCount = tickets?.filter(t => !t.assignedToId).length || 0;
-  const myTicketsCount = tickets?.filter(t => t.assignedToId === user?.userId).length || 0;
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -86,7 +81,10 @@ export default function AgentQueuePage() {
         <div className="mb-6 border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             <button
-              onClick={() => setFilter('all')}
+              onClick={() => {
+                setFilter('all');
+                setPage(1);
+              }}
               className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
                 filter === 'all'
                   ? 'border-blue-500 text-blue-600'
@@ -94,12 +92,12 @@ export default function AgentQueuePage() {
               }`}
             >
               All Tickets
-              <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-900">
-                {tickets?.length || 0}
-              </span>
             </button>
             <button
-              onClick={() => setFilter('unassigned')}
+              onClick={() => {
+                setFilter('unassigned');
+                setPage(1);
+              }}
               className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
                 filter === 'unassigned'
                   ? 'border-blue-500 text-blue-600'
@@ -107,12 +105,12 @@ export default function AgentQueuePage() {
               }`}
             >
               Unassigned
-              <span className="ml-2 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-                {unassignedCount}
-              </span>
             </button>
             <button
-              onClick={() => setFilter('mine')}
+              onClick={() => {
+                setFilter('mine');
+                setPage(1);
+              }}
               className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
                 filter === 'mine'
                   ? 'border-blue-500 text-blue-600'
@@ -120,15 +118,12 @@ export default function AgentQueuePage() {
               }`}
             >
               My Tickets
-              <span className="ml-2 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-900">
-                {myTicketsCount}
-              </span>
             </button>
           </nav>
         </div>
 
         {/* Tickets table */}
-        {filteredTickets.length === 0 ? (
+        {tickets.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <p className="text-gray-500">No tickets in this view</p>
           </div>
@@ -158,7 +153,7 @@ export default function AgentQueuePage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredTickets.map((ticket) => {
+                {tickets.map((ticket) => {
                   const age = Math.floor(
                     (Date.now() - new Date(ticket.createdAt).getTime()) / (1000 * 60 * 60)
                   );
@@ -207,6 +202,20 @@ export default function AgentQueuePage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {data && data.totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={data.totalCount}
+              totalPages={data.totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              disabled={isLoading}
+            />
           </div>
         )}
       </div>

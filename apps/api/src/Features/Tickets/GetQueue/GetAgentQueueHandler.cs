@@ -1,3 +1,4 @@
+using Hickory.Api.Common;
 using Hickory.Api.Features.Tickets.Models;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
@@ -9,10 +10,13 @@ namespace Hickory.Api.Features.Tickets.GetQueue;
 public record GetAgentQueueQuery(
     Guid? AgentId = null,
     Guid? CategoryId = null,
-    List<string>? Tags = null
-) : IRequest<List<TicketDto>>;
+    List<string>? Tags = null,
+    string? Filter = null,
+    int Page = 1,
+    int PageSize = 10
+) : IRequest<PaginatedResult<TicketDto>>;
 
-public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<TicketDto>>
+public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, PaginatedResult<TicketDto>>
 {
     private readonly ApplicationDbContext _dbContext;
 
@@ -21,7 +25,7 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
         _dbContext = dbContext;
     }
 
-    public async Task<List<TicketDto>> Handle(GetAgentQueueQuery query, CancellationToken cancellationToken)
+    public async Task<PaginatedResult<TicketDto>> Handle(GetAgentQueueQuery query, CancellationToken cancellationToken)
     {
         // Filter: unassigned tickets OR assigned to the specified agent
         var ticketsQuery = _dbContext.Tickets
@@ -33,16 +37,32 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
                 .ThenInclude(tt => tt.Tag)
             .Where(t => t.Status != TicketStatus.Closed && t.Status != TicketStatus.Cancelled);
 
-        if (query.AgentId.HasValue)
+        // Apply filter based on query parameter
+        if (!string.IsNullOrEmpty(query.Filter))
         {
+            switch (query.Filter.ToLowerInvariant())
+            {
+                case "unassigned":
+                    ticketsQuery = ticketsQuery.Where(t => t.AssignedToId == null);
+                    break;
+                case "mine":
+                    if (query.AgentId.HasValue)
+                    {
+                        ticketsQuery = ticketsQuery.Where(t => t.AssignedToId == query.AgentId.Value);
+                    }
+                    break;
+                case "all":
+                default:
+                    // No additional filtering for "all"
+                    break;
+            }
+        }
+        else if (query.AgentId.HasValue)
+        {
+            // Backward compatibility: if no filter but AgentId is provided
             // Show unassigned tickets + tickets assigned to this agent
             ticketsQuery = ticketsQuery.Where(t => 
                 t.AssignedToId == null || t.AssignedToId == query.AgentId.Value);
-        }
-        else
-        {
-            // Show all non-closed tickets for queue overview
-            // No additional filtering needed
         }
 
         // Filter by category if provided
@@ -59,13 +79,23 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
                 t.TicketTags.Any(tt => normalizedTags.Contains(tt.Tag.Name.ToLower())));
         }
 
+        // Get total count before pagination
+        var totalCount = await ticketsQuery.CountAsync(cancellationToken);
+
+        // Apply pagination with bounds checking
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+        var page = Math.Max(query.Page, 1);
+        var skip = (page - 1) * pageSize;
+
         // Sort by priority (Critical first) then by age (oldest first)
         var tickets = await ticketsQuery
             .OrderByDescending(t => t.Priority)
             .ThenBy(t => t.CreatedAt)
+            .Skip(skip)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return tickets.Select(ticket => new TicketDto
+        var ticketDtos = tickets.Select(ticket => new TicketDto
         {
             Id = ticket.Id,
             TicketNumber = ticket.TicketNumber,
@@ -89,5 +119,7 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, List<Tic
             CategoryName = ticket.Category?.Name,
             Tags = ticket.TicketTags.Select(tt => tt.Tag.Name).ToList()
         }).ToList();
+
+        return PaginatedResult<TicketDto>.Create(ticketDtos, totalCount, page, pageSize);
     }
 }
