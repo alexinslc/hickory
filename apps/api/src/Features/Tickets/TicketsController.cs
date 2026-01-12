@@ -101,10 +101,11 @@ public class TicketsController : ControllerBase
     public async Task<ActionResult<PaginatedResult<Models.TicketDto>>> GetAgentQueue(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
+        [FromQuery] string? filter = null,
         CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
-        var query = new GetAgentQueueQuery(userId, Page: page, PageSize: pageSize);
+        var query = new GetAgentQueueQuery(userId, Filter: filter, Page: page, PageSize: pageSize);
         var result = await _mediator.Send(query, cancellationToken);
 
         return Ok(result);

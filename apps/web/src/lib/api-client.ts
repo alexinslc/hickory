@@ -179,6 +179,7 @@ export interface PaginatedResult<T> {
 export interface PaginationParams {
   page?: number;
   pageSize?: number;
+  filter?: string;
 }
 
 export interface SearchTicketsParams {

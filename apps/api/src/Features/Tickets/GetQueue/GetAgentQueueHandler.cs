@@ -11,6 +11,7 @@ public record GetAgentQueueQuery(
     Guid? AgentId = null,
     Guid? CategoryId = null,
     List<string>? Tags = null,
+    string? Filter = null,
     int Page = 1,
     int PageSize = 10
 ) : IRequest<PaginatedResult<TicketDto>>;
@@ -36,16 +37,32 @@ public class GetAgentQueueHandler : IRequestHandler<GetAgentQueueQuery, Paginate
                 .ThenInclude(tt => tt.Tag)
             .Where(t => t.Status != TicketStatus.Closed && t.Status != TicketStatus.Cancelled);
 
-        if (query.AgentId.HasValue)
+        // Apply filter based on query parameter
+        if (!string.IsNullOrEmpty(query.Filter))
         {
+            switch (query.Filter.ToLowerInvariant())
+            {
+                case "unassigned":
+                    ticketsQuery = ticketsQuery.Where(t => t.AssignedToId == null);
+                    break;
+                case "mine":
+                    if (query.AgentId.HasValue)
+                    {
+                        ticketsQuery = ticketsQuery.Where(t => t.AssignedToId == query.AgentId.Value);
+                    }
+                    break;
+                case "all":
+                default:
+                    // No additional filtering for "all"
+                    break;
+            }
+        }
+        else if (query.AgentId.HasValue)
+        {
+            // Backward compatibility: if no filter but AgentId is provided
             // Show unassigned tickets + tickets assigned to this agent
             ticketsQuery = ticketsQuery.Where(t => 
                 t.AssignedToId == null || t.AssignedToId == query.AgentId.Value);
-        }
-        else
-        {
-            // Show all non-closed tickets for queue overview
-            // No additional filtering needed
         }
 
         // Filter by category if provided
