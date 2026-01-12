@@ -61,7 +61,7 @@ export default function NewTicketPage() {
     if (file.size > MAX_FILE_SIZE) {
       return `File "${file.name}" exceeds 10MB limit`;
     }
-    if (!ALLOWED_FILE_TYPES.includes(file.type) && file.type !== 'application/octet-stream') {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       return `File type "${file.type}" is not allowed`;
     }
     return null;
@@ -72,15 +72,24 @@ export default function NewTicketPage() {
     setFileError(null);
 
     const validFiles: File[] = [];
+    const errors: string[] = [];
     for (const file of Array.from(files)) {
       const error = validateFile(file);
       if (error) {
-        setFileError(error);
+        errors.push(error);
         continue;
       }
       // Avoid duplicates
       if (!pendingFiles.some((f) => f.name === file.name && f.size === file.size)) {
         validFiles.push(file);
+      }
+    }
+
+    if (errors.length > 0) {
+      if (errors.length === 1) {
+        setFileError(errors[0]);
+      } else {
+        setFileError(`${errors.length} files failed validation. Please check file types and sizes.`);
       }
     }
 
