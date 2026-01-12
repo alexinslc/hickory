@@ -1,3 +1,4 @@
+using Hickory.Api.Common;
 using Hickory.Api.Features.Tickets.AddTags;
 using Hickory.Api.Features.Tickets.Assign;
 using Hickory.Api.Features.Tickets.Close;
@@ -11,7 +12,6 @@ using Hickory.Api.Features.Tickets.RemoveTags;
 using Hickory.Api.Features.Tickets.UpdatePriority;
 using Hickory.Api.Features.Tickets.UpdateStatus;
 using Hickory.Api.Infrastructure.Data.Entities;
-using Hickory.Api.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -83,27 +83,31 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Models.TicketDto>>> GetMyTickets(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<PaginatedResult<Models.TicketDto>>> GetMyTickets(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
-        var query = new GetTicketsBySubmitterQuery(userId);
-        var tickets = await _mediator.Send(query, cancellationToken);
+        var query = new GetTicketsBySubmitterQuery(userId, Page: page, PageSize: pageSize);
+        var result = await _mediator.Send(query, cancellationToken);
 
-        return Ok(tickets);
+        return Ok(result);
     }
 
     // Agent-only endpoints
     [HttpGet("queue")]
     [Authorize(Roles = AuthorizationRoles.AgentOrAdministrator)]
-    public async Task<ActionResult<List<Models.TicketDto>>> GetAgentQueue(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<PaginatedResult<Models.TicketDto>>> GetAgentQueue(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
-        var query = new GetAgentQueueQuery(userId);
-        var tickets = await _mediator.Send(query, cancellationToken);
+        var query = new GetAgentQueueQuery(userId, Page: page, PageSize: pageSize);
+        var result = await _mediator.Send(query, cancellationToken);
 
-        return Ok(tickets);
+        return Ok(result);
     }
 
     [HttpPut("{id}/assign")]

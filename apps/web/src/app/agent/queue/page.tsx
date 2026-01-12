@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Pagination, usePagination } from '@/components/ui/pagination';
 
 const STATUS_COLORS = {
   Open: 'bg-blue-100 text-blue-800',
@@ -25,8 +26,11 @@ const PRIORITY_COLORS = {
 export default function AgentQueuePage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const { data: tickets, isLoading, error, refetch } = useAgentQueue();
+  const { page, pageSize, setPage, setPageSize } = usePagination();
+  const { data, isLoading, error, refetch } = useAgentQueue({ page, pageSize });
   const [filter, setFilter] = useState<'all' | 'unassigned' | 'mine'>('all');
+
+  const tickets = data?.items ?? [];
 
   // Check if user is agent or admin
   useEffect(() => {
@@ -62,14 +66,14 @@ export default function AgentQueuePage() {
     );
   }
 
-  const filteredTickets = tickets?.filter(ticket => {
+  const filteredTickets = tickets.filter(ticket => {
     if (filter === 'unassigned') return !ticket.assignedToId;
     if (filter === 'mine') return ticket.assignedToId === user?.userId;
     return true;
-  }) || [];
+  });
 
-  const unassignedCount = tickets?.filter(t => !t.assignedToId).length || 0;
-  const myTicketsCount = tickets?.filter(t => t.assignedToId === user?.userId).length || 0;
+  const unassignedCount = tickets.filter(t => !t.assignedToId).length;
+  const myTicketsCount = tickets.filter(t => t.assignedToId === user?.userId).length;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -95,7 +99,7 @@ export default function AgentQueuePage() {
             >
               All Tickets
               <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-900">
-                {tickets?.length || 0}
+                {data?.totalCount ?? 0}
               </span>
             </button>
             <button
@@ -207,6 +211,20 @@ export default function AgentQueuePage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {data && data.totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={data.totalCount}
+              totalPages={data.totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              disabled={isLoading}
+            />
           </div>
         )}
       </div>

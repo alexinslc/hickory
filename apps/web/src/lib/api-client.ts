@@ -166,6 +166,21 @@ export interface TagDto {
   color?: string;
 }
 
+export interface PaginatedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+}
+
 export interface SearchTicketsParams {
   q?: string;
   status?: string;
@@ -513,8 +528,8 @@ class ApiClient {
     return response.data;
   }
 
-  async getMyTickets(): Promise<TicketDto[]> {
-    const response = await this.client.get<TicketDto[]>('/api/tickets');
+  async getMyTickets(params?: PaginationParams): Promise<PaginatedResult<TicketDto>> {
+    const response = await this.client.get<PaginatedResult<TicketDto>>('/api/tickets', { params });
     return response.data;
   }
 
@@ -534,8 +549,8 @@ class ApiClient {
   }
 
   // Agent endpoints
-  async getAgentQueue(): Promise<TicketDto[]> {
-    const response = await this.client.get<TicketDto[]>('/api/tickets/queue');
+  async getAgentQueue(params?: PaginationParams): Promise<PaginatedResult<TicketDto>> {
+    const response = await this.client.get<PaginatedResult<TicketDto>>('/api/tickets/queue', { params });
     return response.data;
   }
 
