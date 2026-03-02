@@ -105,7 +105,7 @@ jobs:
       
       - name: Upload API Build Artifacts
         if: matrix.project == 'api'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: api-build
           path: |
@@ -116,7 +116,7 @@ jobs:
       
       - name: Upload Web Build Artifacts
         if: matrix.project == 'web'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: web-build
           path: apps/web/.next/
@@ -291,7 +291,7 @@ jobs:
           CI: true
       
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
