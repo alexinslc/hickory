@@ -1,7 +1,7 @@
 const RESET = '\x1b[0m';
 
 describe('CLI Color Utilities', () => {
-  const originalEnv = process.env;
+  const originalEnv = { ...process.env };
   const originalIsTTY = process.stdout.isTTY;
 
   afterEach(() => {
@@ -46,8 +46,8 @@ describe('CLI Color Utilities', () => {
 
     it('should colorize ticket priorities correctly', () => {
       const colors = loadColors();
-      expect(colors.colorizePriority('Critical')).toBe(`\x1b[31mCritical${RESET}`);
-      expect(colors.colorizePriority('High')).toBe(`\x1b[35mHigh${RESET}`);
+      expect(colors.colorizePriority('Critical')).toBe(`\x1b[1m\x1b[31mCritical${RESET}${RESET}`);
+      expect(colors.colorizePriority('High')).toBe(`\x1b[31mHigh${RESET}`);
       expect(colors.colorizePriority('Medium')).toBe(`\x1b[33mMedium${RESET}`);
       expect(colors.colorizePriority('Low')).toBe(`\x1b[32mLow${RESET}`);
       expect(colors.colorizePriority('Unknown')).toBe('Unknown');

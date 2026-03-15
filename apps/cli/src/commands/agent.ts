@@ -7,7 +7,6 @@ import {
   dim,
   red,
   green,
-  yellow,
   cyan,
   success,
   error as errorColor,

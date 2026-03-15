@@ -4,7 +4,6 @@ import { getConfig } from './auth';
 import {
   bold,
   dim,
-  cyan,
   success,
   error as errorColor,
   warning,

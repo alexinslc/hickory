@@ -6,9 +6,9 @@
  */
 
 const isColorEnabled =
-  !process.env['NO_COLOR'] &&
+  !('NO_COLOR' in process.env) &&
   process.env['FORCE_COLOR'] !== '0' &&
-  (process.stdout.isTTY || process.env['FORCE_COLOR'] === '1');
+  (process.stdout.isTTY || Number(process.env['FORCE_COLOR']) >= 1);
 
 // ANSI escape codes
 const codes = {
@@ -52,7 +52,7 @@ export const info = (text: string) => blue(text);
 // Open=green, InProgress=yellow, Resolved=blue, Closed=gray
 
 export function colorizeStatus(status: string): string {
-  switch (status.toLowerCase()) {
+  switch (status.trim().toLowerCase()) {
     case 'open':
       return green(status);
     case 'inprogress':
@@ -69,14 +69,14 @@ export function colorizeStatus(status: string): string {
 }
 
 // ── Ticket priority colors ────────────────────────────────────
-// Critical=red, High=orange(magenta fallback), Medium=yellow, Low=green
+// Critical=red+bold, High=red, Medium=yellow, Low=green
 
 export function colorizePriority(priority: string): string {
-  switch (priority.toLowerCase()) {
+  switch (priority.trim().toLowerCase()) {
     case 'critical':
-      return red(priority);
+      return bold(red(priority));
     case 'high':
-      return magenta(priority);
+      return red(priority);
     case 'medium':
       return yellow(priority);
     case 'low':
