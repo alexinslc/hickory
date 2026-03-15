@@ -1,11 +1,12 @@
 using System.Net;
 using System.Text.Json;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Hickory.Api.Infrastructure.Middleware;
 
 /// <summary>
-/// Global exception handling middleware.
+/// Global exception handling middleware that returns RFC 7807 Problem Details responses.
 /// The correlation ID is automatically included in logs via Serilog's LogContext
 /// (enriched by CorrelationIdMiddleware, which runs before this middleware).
 /// </summary>
@@ -41,24 +42,26 @@ public class ExceptionHandlingMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var response = context.Response;
-        response.ContentType = "application/json";
+        response.ContentType = "application/problem+json";
 
         var correlationId = context.Items["CorrelationId"]?.ToString();
 
-        var errorResponse = new ErrorResponse
+        var problemDetails = new ProblemDetails
         {
-            TraceId = context.TraceIdentifier,
-            CorrelationId = correlationId,
-            Timestamp = DateTime.UtcNow
+            Instance = context.Request.Path
         };
+        problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+        if (correlationId is not null)
+            problemDetails.Extensions["correlationId"] = correlationId;
 
         switch (exception)
         {
             case ValidationException validationException:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
-                errorResponse.Status = response.StatusCode;
-                errorResponse.Title = "Validation Error";
-                errorResponse.Errors = validationException.Errors
+                problemDetails.Status = response.StatusCode;
+                problemDetails.Type = "https://httpstatuses.io/400";
+                problemDetails.Title = "Validation Error";
+                problemDetails.Extensions["errors"] = validationException.Errors
                     .GroupBy(e => e.PropertyName)
                     .ToDictionary(
                         g => g.Key,
@@ -72,53 +75,46 @@ public class ExceptionHandlingMiddleware
 
             case UnauthorizedAccessException:
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                errorResponse.Status = response.StatusCode;
-                errorResponse.Title = "Unauthorized";
-                errorResponse.Detail = exception.Message;
+                problemDetails.Status = response.StatusCode;
+                problemDetails.Type = "https://httpstatuses.io/401";
+                problemDetails.Title = "Unauthorized";
+                problemDetails.Detail = exception.Message;
 
                 _logger.LogWarning(exception, "Unauthorized access attempt");
                 break;
 
             case InvalidOperationException invalidOperationException:
                 response.StatusCode = (int)HttpStatusCode.Conflict;
-                errorResponse.Status = response.StatusCode;
-                errorResponse.Title = "Operation Failed";
-                errorResponse.Detail = invalidOperationException.Message;
+                problemDetails.Status = response.StatusCode;
+                problemDetails.Type = "https://httpstatuses.io/409";
+                problemDetails.Title = "Operation Failed";
+                problemDetails.Detail = invalidOperationException.Message;
 
                 _logger.LogWarning(exception, "Invalid operation: {Message}", exception.Message);
                 break;
 
             case KeyNotFoundException:
                 response.StatusCode = (int)HttpStatusCode.NotFound;
-                errorResponse.Status = response.StatusCode;
-                errorResponse.Title = "Resource Not Found";
-                errorResponse.Detail = exception.Message;
+                problemDetails.Status = response.StatusCode;
+                problemDetails.Type = "https://httpstatuses.io/404";
+                problemDetails.Title = "Resource Not Found";
+                problemDetails.Detail = exception.Message;
 
                 _logger.LogWarning(exception, "Resource not found");
                 break;
 
             default:
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                errorResponse.Status = response.StatusCode;
-                errorResponse.Title = "Internal Server Error";
-                errorResponse.Detail = "An unexpected error occurred";
+                problemDetails.Status = response.StatusCode;
+                problemDetails.Type = "https://httpstatuses.io/500";
+                problemDetails.Title = "Internal Server Error";
+                problemDetails.Detail = "An unexpected error occurred";
 
                 _logger.LogError(exception, "Unhandled exception occurred");
                 break;
         }
 
-        var result = JsonSerializer.Serialize(errorResponse, JsonOptions);
+        var result = JsonSerializer.Serialize(problemDetails, JsonOptions);
         await response.WriteAsync(result);
     }
-}
-
-public class ErrorResponse
-{
-    public int Status { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string? Detail { get; set; }
-    public string TraceId { get; set; } = string.Empty;
-    public string? CorrelationId { get; set; }
-    public DateTime Timestamp { get; set; }
-    public Dictionary<string, string[]>? Errors { get; set; }
 }
