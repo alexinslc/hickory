@@ -129,6 +129,21 @@ function clearAuthStorage() {
 // registrations), causing the "Axios instance configuration" assertions to
 // see 0 calls and fail.
 // ---------------------------------------------------------------------------
+// Replace window.location with a writable mock for redirect testing
+const originalLocation = window.location;
+beforeAll(() => {
+  Object.defineProperty(window, 'location', {
+    writable: true,
+    value: { ...originalLocation, href: '' },
+  });
+});
+afterAll(() => {
+  Object.defineProperty(window, 'location', {
+    writable: true,
+    value: originalLocation,
+  });
+});
+
 beforeEach(() => {
   mockAxiosInstance.get.mockReset();
   mockAxiosInstance.post.mockReset();
