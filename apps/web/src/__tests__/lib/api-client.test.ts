@@ -32,33 +32,34 @@ let requestInterceptorRejected: (error: any) => any;
 let responseInterceptorFulfilled: (response: any) => any;
 let responseInterceptorRejected: (error: any) => any;
 
-// Make the mock instance callable (function with methods attached) so the
-// retry path `this.client(originalRequest)` works instead of throwing.
-const mockAxiosInstance: any = Object.assign(
-  jest.fn().mockImplementation((config: any) => Promise.resolve({ data: {}, config })),
-  {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    interceptors: {
-      request: {
-        use: jest.fn((fulfilled: any, rejected: any) => {
-          requestInterceptorFulfilled = fulfilled;
-          requestInterceptorRejected = rejected;
-        }),
-      },
-      response: {
-        use: jest.fn((fulfilled: any, rejected: any) => {
-          responseInterceptorFulfilled = fulfilled;
-          responseInterceptorRejected = rejected;
-        }),
-      },
-    },
-  }
-);
+// jest.mock is hoisted above variable declarations, so we must create the
+// mock instance inside the factory to avoid "Cannot access before init" errors.
+let mockAxiosInstance: any;
 
 jest.mock('axios', () => {
+  mockAxiosInstance = Object.assign(
+    jest.fn().mockImplementation((config: any) => Promise.resolve({ data: {}, config })),
+    {
+      get: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
+      interceptors: {
+        request: {
+          use: jest.fn((fulfilled: any, rejected: any) => {
+            requestInterceptorFulfilled = fulfilled;
+            requestInterceptorRejected = rejected;
+          }),
+        },
+        response: {
+          use: jest.fn((fulfilled: any, rejected: any) => {
+            responseInterceptorFulfilled = fulfilled;
+            responseInterceptorRejected = rejected;
+          }),
+        },
+      },
+    }
+  );
   const m: any = {
     create: jest.fn(() => mockAxiosInstance),
     post: jest.fn(),
