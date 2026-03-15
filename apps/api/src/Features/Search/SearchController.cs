@@ -1,13 +1,15 @@
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Hickory.Api.Features.Search;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class SearchController : ControllerBase
 {

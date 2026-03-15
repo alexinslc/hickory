@@ -5,6 +5,7 @@ import { Navigation } from '@/components/layout/Navigation';
 import { NotificationProvider } from '@/components/notifications/NotificationProvider';
 import { NotificationToast } from '@/components/notifications/NotificationToast';
 import { ToastProvider } from '@/components/ui/toast';
+import { KeyboardShortcutsProvider } from '@/providers/keyboard-shortcuts-provider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata = {
@@ -45,11 +46,13 @@ export default function RootLayout({
             </a>
             <QueryProvider>
               <NotificationProvider>
-                <Navigation />
-                <ErrorBoundary>
-                  <main id="main-content">{children}</main>
-                </ErrorBoundary>
-                <NotificationToast />
+                <KeyboardShortcutsProvider>
+                  <Navigation />
+                  <ErrorBoundary>
+                    <main id="main-content">{children}</main>
+                  </ErrorBoundary>
+                  <NotificationToast />
+                </KeyboardShortcutsProvider>
               </NotificationProvider>
             </QueryProvider>
           </ToastProvider>

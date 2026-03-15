@@ -5,6 +5,7 @@ import { login, logout, getConfig } from './commands/auth';
 import { createTicket, viewTicket, listTickets } from './commands/ticket';
 import { agentQueue, assignTicket, closeTicket } from './commands/agent';
 import { bold, info, warning } from './utils/colors';
+import { configList, configGet, configSet, configReset } from './commands/config';
 import { generateCompletion } from './commands/completion';
 
 const program = new Command();
@@ -83,6 +84,31 @@ agent
   .command('close <ticket>')
   .description('Close a ticket with resolution notes')
   .action(closeTicket);
+
+// Config commands
+const config = program
+  .command('config')
+  .description('View and manage CLI configuration');
+
+config
+  .command('list')
+  .description('Show all configuration settings')
+  .action(configList);
+
+config
+  .command('get <key>')
+  .description('Get a specific configuration value')
+  .action(configGet);
+
+config
+  .command('set <key> <value>')
+  .description('Set a configuration value')
+  .action(configSet);
+
+config
+  .command('reset')
+  .description('Reset all settings to defaults')
+  .action(configReset);
 
 // Completion command
 const completion = program

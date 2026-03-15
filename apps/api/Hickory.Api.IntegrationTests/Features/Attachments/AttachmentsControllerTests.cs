@@ -75,7 +75,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
             "application/json"
         );
 
-        var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
+        var loginResponse = await _client.PostAsync("/api/v1/auth/login", loginContent);
         loginResponse.EnsureSuccessStatusCode();
 
         var loginResult = await loginResponse.Content.ReadAsStringAsync();
@@ -99,7 +99,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         content.Add(streamContent, "file", fileName);
 
         // Act
-        var response = await _client.PostAsync($"/api/attachments/tickets/{_ticketId}", content);
+        var response = await _client.PostAsync($"/api/v1/attachments/tickets/{_ticketId}", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -122,7 +122,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         using var content = new MultipartFormDataContent();
 
         // Act
-        var response = await _client.PostAsync($"/api/attachments/tickets/{_ticketId}", content);
+        var response = await _client.PostAsync($"/api/v1/attachments/tickets/{_ticketId}", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -142,7 +142,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         content.Add(streamContent, "file", fileName);
 
         // Act
-        var response = await _client.PostAsync($"/api/attachments/tickets/{_ticketId}", content);
+        var response = await _client.PostAsync($"/api/v1/attachments/tickets/{_ticketId}", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -162,7 +162,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         content.Add(streamContent, "file", fileName);
 
         // Act
-        var response = await _client.PostAsync($"/api/attachments/tickets/{_ticketId}", content);
+        var response = await _client.PostAsync($"/api/v1/attachments/tickets/{_ticketId}", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -181,7 +181,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         streamContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
         uploadContent.Add(streamContent, "file", fileName);
 
-        var uploadResponse = await _client.PostAsync($"/api/attachments/tickets/{_ticketId}", uploadContent);
+        var uploadResponse = await _client.PostAsync($"/api/v1/attachments/tickets/{_ticketId}", uploadContent);
         uploadResponse.EnsureSuccessStatusCode();
 
         var uploadResponseBody = await uploadResponse.Content.ReadAsStringAsync();
@@ -189,7 +189,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         var attachmentId = attachment.GetProperty("id").GetString();
 
         // Act - Download the file
-        var downloadResponse = await _client.GetAsync($"/api/attachments/{attachmentId}");
+        var downloadResponse = await _client.GetAsync($"/api/v1/attachments/{attachmentId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, downloadResponse.StatusCode);
@@ -206,7 +206,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var response = await _client.GetAsync($"/api/attachments/{nonExistentId}");
+        var response = await _client.GetAsync($"/api/v1/attachments/{nonExistentId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -225,7 +225,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         streamContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
         uploadContent.Add(streamContent, "file", fileName);
 
-        var uploadResponse = await _client.PostAsync($"/api/attachments/tickets/{_ticketId}", uploadContent);
+        var uploadResponse = await _client.PostAsync($"/api/v1/attachments/tickets/{_ticketId}", uploadContent);
         uploadResponse.EnsureSuccessStatusCode();
 
         var uploadResponseBody = await uploadResponse.Content.ReadAsStringAsync();
@@ -233,13 +233,13 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         var attachmentId = attachment.GetProperty("id").GetString();
 
         // Act - Delete the attachment
-        var deleteResponse = await _client.DeleteAsync($"/api/attachments/{attachmentId}");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/attachments/{attachmentId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         // Verify attachment no longer exists
-        var getResponse = await _client.GetAsync($"/api/attachments/{attachmentId}");
+        var getResponse = await _client.GetAsync($"/api/v1/attachments/{attachmentId}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -250,7 +250,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var response = await _client.DeleteAsync($"/api/attachments/{nonExistentId}");
+        var response = await _client.DeleteAsync($"/api/v1/attachments/{nonExistentId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -277,7 +277,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
             streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
             uploadContent.Add(streamContent, "file", name);
 
-            var uploadResponse = await _client.PostAsync($"/api/attachments/tickets/{_ticketId}", uploadContent);
+            var uploadResponse = await _client.PostAsync($"/api/v1/attachments/tickets/{_ticketId}", uploadContent);
             uploadResponse.EnsureSuccessStatusCode();
 
             var responseBody = await uploadResponse.Content.ReadAsStringAsync();
@@ -290,7 +290,7 @@ public class AttachmentsControllerTests : IClassFixture<ApiWebApplicationFactory
 
         for (int i = 0; i < files.Length; i++)
         {
-            var downloadResponse = await _client.GetAsync($"/api/attachments/{attachmentIds[i]}");
+            var downloadResponse = await _client.GetAsync($"/api/v1/attachments/{attachmentIds[i]}");
             Assert.Equal(HttpStatusCode.OK, downloadResponse.StatusCode);
 
             var downloadedContent = await downloadResponse.Content.ReadAsByteArrayAsync();

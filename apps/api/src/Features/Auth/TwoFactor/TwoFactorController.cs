@@ -2,6 +2,7 @@ using Hickory.Api.Features.Auth.Models;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +11,9 @@ using System.Text.Json;
 
 namespace Hickory.Api.Features.Auth.TwoFactor;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/v1/auth/2fa")]
+[Route("api/v{version:apiVersion}/auth/2fa")]
 [EnableRateLimiting("auth")]
 public class TwoFactorController : ControllerBase
 {

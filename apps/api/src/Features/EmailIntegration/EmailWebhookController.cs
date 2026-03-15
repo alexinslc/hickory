@@ -4,12 +4,14 @@ using Hickory.Api.Features.EmailIntegration.InboundWebhook;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Asp.Versioning;
 using Microsoft.Extensions.Logging;
 
 namespace Hickory.Api.Features.EmailIntegration;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/webhooks")]
+[Route("api/v{version:apiVersion}/webhooks")]
 public class EmailWebhookController : ControllerBase
 {
     private readonly IMediator _mediator;

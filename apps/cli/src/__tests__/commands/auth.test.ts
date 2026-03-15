@@ -96,7 +96,7 @@ describe('CLI Auth Commands', () => {
       await login({ email: 'test@example.com', password: 'password123' });
 
       expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/login'),
+        expect.stringContaining('/api/v1/auth/login'),
         {
           email: 'test@example.com',
           password: 'password123',
