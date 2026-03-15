@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "ca5d560e27cf",
+  "strategy": "manual-commit",
+  "branch": "feature/database-backups",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/ca/5d560e27cf/0/metadata.json",
+      "transcript": "/ca/5d560e27cf/0/full.jsonl",
+      "content_hash": "/ca/5d560e27cf/0/content_hash.txt",
+      "prompt": "/ca/5d560e27cf/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1295,
+    "cache_creation_tokens": 1687413,
+    "cache_read_tokens": 102566149,
+    "output_tokens": 127133,
+    "api_call_count": 553
+  }
+}
