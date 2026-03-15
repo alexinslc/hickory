@@ -3,6 +3,8 @@ using Hickory.Api.Features.Tickets.Assign;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Tests.TestUtilities;
 using Microsoft.EntityFrameworkCore;
+using Hickory.Api.Common.Events;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hickory.Api.Tests.Features.Tickets;
 
@@ -26,8 +28,9 @@ public class AssignTicketHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(ticket.Id, agent.Id);
+        var publishEndpoint = new MockPublishEndpoint();
+        var handler = new AssignTicketHandler(dbContext, publishEndpoint, NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(ticket.Id, agent.Id, agent.Id);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
@@ -37,6 +40,14 @@ public class AssignTicketHandlerTests
         updatedTicket.Should().NotBeNull();
         updatedTicket!.AssignedToId.Should().Be(agent.Id);
         updatedTicket.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+
+        // Assert event was published with correct fields
+        publishEndpoint.PublishedMessages.Should().ContainSingle();
+        var publishedEvent = publishEndpoint.PublishedMessages[0] as TicketAssignedEvent;
+        publishedEvent.Should().NotBeNull();
+        publishedEvent!.TicketId.Should().Be(ticket.Id);
+        publishedEvent.AssignedToId.Should().Be(agent.Id);
+        publishedEvent.AssignedById.Should().Be(agent.Id);
     }
 
     [Fact]
@@ -51,8 +62,8 @@ public class AssignTicketHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(ticket.Id, agent.Id);
+        var handler = new AssignTicketHandler(dbContext, new MockPublishEndpoint(), NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(ticket.Id, agent.Id, agent.Id);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
@@ -78,8 +89,8 @@ public class AssignTicketHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(ticket.Id, agent2.Id);
+        var handler = new AssignTicketHandler(dbContext, new MockPublishEndpoint(), NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(ticket.Id, agent2.Id, agent1.Id);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
@@ -99,8 +110,8 @@ public class AssignTicketHandlerTests
         dbContext.Users.Add(agent);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(Guid.NewGuid(), agent.Id);
+        var handler = new AssignTicketHandler(dbContext, new MockPublishEndpoint(), NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(Guid.NewGuid(), agent.Id, agent.Id);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -119,8 +130,8 @@ public class AssignTicketHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(ticket.Id, Guid.NewGuid());
+        var handler = new AssignTicketHandler(dbContext, new MockPublishEndpoint(), NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(ticket.Id, Guid.NewGuid(), Guid.NewGuid());
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -145,8 +156,8 @@ public class AssignTicketHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(ticket.Id, regularUser.Id);
+        var handler = new AssignTicketHandler(dbContext, new MockPublishEndpoint(), NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(ticket.Id, regularUser.Id, Guid.NewGuid());
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -170,8 +181,8 @@ public class AssignTicketHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(ticket.Id, admin.Id);
+        var handler = new AssignTicketHandler(dbContext, new MockPublishEndpoint(), NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(ticket.Id, admin.Id, admin.Id);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
@@ -194,8 +205,8 @@ public class AssignTicketHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AssignTicketHandler(dbContext);
-        var command = new AssignTicketCommand(ticket.Id, agent2.Id);
+        var handler = new AssignTicketHandler(dbContext, new MockPublishEndpoint(), NullLogger<AssignTicketHandler>.Instance);
+        var command = new AssignTicketCommand(ticket.Id, agent2.Id, agent1.Id);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
