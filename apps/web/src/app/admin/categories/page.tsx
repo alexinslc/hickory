@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useGetAllCategories, useCreateCategory } from '@/lib/queries/categories';
 import { CreateCategoryCommand } from '@/lib/api-client';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function CategoriesPage() {
   const { data: categories, isLoading } = useGetAllCategories();
@@ -97,6 +98,8 @@ export default function CategoriesPage() {
               </div>
             )}
 
+            <fieldset disabled={createCategory.isPending}>
+            <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Name *
@@ -106,7 +109,8 @@ export default function CategoriesPage() {
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
                   formErrors.name ? 'border-red-300' : ''
                 }`}
                 placeholder="e.g., Hardware, Software, Network"
@@ -125,7 +129,8 @@ export default function CategoriesPage() {
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Optional description for this category"
               />
             </div>
@@ -139,7 +144,8 @@ export default function CategoriesPage() {
                 id="displayOrder"
                 value={formData.displayOrder}
                 onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 min="0"
               />
               <p className="mt-1 text-sm text-gray-500">
@@ -174,22 +180,31 @@ export default function CategoriesPage() {
               )}
             </div>
 
+            </div>
             <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={createCategory.isPending}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                aria-busy={createCategory.isPending || undefined}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed inline-flex items-center gap-2"
               >
-                {createCategory.isPending ? 'Creating...' : 'Create Category'}
+                {createCategory.isPending ? (
+                  <>
+                    <Spinner size="sm" className="text-white" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Category'
+                )}
               </button>
             </div>
+            </fieldset>
           </form>
         </div>
       )}

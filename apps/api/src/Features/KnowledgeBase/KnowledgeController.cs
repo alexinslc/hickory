@@ -1,10 +1,12 @@
 using Hickory.Api.Features.KnowledgeBase.Create;
 using Hickory.Api.Features.KnowledgeBase.GetById;
 using Hickory.Api.Features.KnowledgeBase.GetSuggested;
+using Hickory.Api.Features.KnowledgeBase.IncrementViewCount;
 using Hickory.Api.Features.KnowledgeBase.Models;
 using Hickory.Api.Features.KnowledgeBase.Rate;
 using Hickory.Api.Features.KnowledgeBase.Search;
 using Hickory.Api.Features.KnowledgeBase.Update;
+using Hickory.Api.Infrastructure.Caching;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Common;
 using MediatR;
@@ -22,12 +24,15 @@ namespace Hickory.Api.Features.KnowledgeBase;
 public class KnowledgeController : ControllerBase
 {
     private const string PublishedStatus = "Published";
-    
-    private readonly IMediator _mediator;
+    private static readonly TimeSpan ViewCountRateLimitWindow = TimeSpan.FromMinutes(5);
 
-    public KnowledgeController(IMediator mediator)
+    private readonly IMediator _mediator;
+    private readonly ICacheService _cacheService;
+
+    public KnowledgeController(IMediator mediator, ICacheService cacheService)
     {
         _mediator = mediator;
+        _cacheService = cacheService;
     }
 
     /// <summary>
@@ -96,12 +101,27 @@ public class KnowledgeController : ControllerBase
             }
         }
 
-        // Now increment view count if requested and authorized
+        // Increment view count if not recently viewed by the same client.
+        // Uses a per-(article, IP) cache key with a short TTL to de-duplicate rapid repeat views.
         if (incrementViewCount)
         {
-            // TODO: Implement IncrementArticleViewCountCommand
-            // Increment view count in a separate command, do not re-fetch the article
-            // await _mediator.Send(new IncrementArticleViewCountCommand(id), cancellationToken);
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var rateLimitKey = $"hickory:article-view:{id}:{clientIp}";
+            var recentlyViewed = await _cacheService.GetAsync<ViewCountMarker>(rateLimitKey, cancellationToken);
+
+            if (recentlyViewed == null)
+            {
+                await _cacheService.SetAsync(rateLimitKey, new ViewCountMarker(), ViewCountRateLimitWindow, cancellationToken);
+
+                try
+                {
+                    await _mediator.Send(new IncrementArticleViewCountCommand(id), cancellationToken);
+                }
+                catch (Exception)
+                {
+                    // View count increment failure should not break the article GET response
+                }
+            }
         }
 
         return Ok(article);
@@ -214,8 +234,16 @@ public class KnowledgeController : ControllerBase
 
     private string GetUserRole()
     {
-        return User.FindFirst(ClaimTypes.Role)?.Value 
-            ?? User.FindFirst("role")?.Value 
+        return User.FindFirst(ClaimTypes.Role)?.Value
+            ?? User.FindFirst("role")?.Value
             ?? "User";
     }
+}
+
+/// <summary>
+/// Marker class used as a cache value to track recent article views for rate-limiting.
+/// </summary>
+public class ViewCountMarker
+{
+    public DateTime ViewedAt { get; set; } = DateTime.UtcNow;
 }

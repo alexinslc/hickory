@@ -1,12 +1,16 @@
 using FluentAssertions;
+using Hickory.Api.Common.Events;
 using Hickory.Api.Features.Tickets.UpdateStatus;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Tests.TestUtilities;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hickory.Api.Tests.Features.Tickets;
 
 public class UpdateTicketStatusHandlerTests
 {
+    private static readonly Guid TestUpdatedById = Guid.NewGuid();
+
     [Theory]
     [InlineData(TicketStatus.Open, TicketStatus.InProgress)]
     [InlineData(TicketStatus.InProgress, TicketStatus.Resolved)]
@@ -16,12 +20,13 @@ public class UpdateTicketStatusHandlerTests
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
         var cacheService = new MockCacheService();
+        var publishEndpoint = new MockPublishEndpoint();
         var ticket = TestDataBuilder.CreateTestTicket(status: currentStatus);
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
-        var command = new UpdateTicketStatusCommand(ticket.Id, newStatus);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, publishEndpoint, NullLogger<UpdateTicketStatusHandler>.Instance);
+        var command = new UpdateTicketStatusCommand(ticket.Id, newStatus, TestUpdatedById);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
@@ -31,6 +36,14 @@ public class UpdateTicketStatusHandlerTests
         updatedTicket.Should().NotBeNull();
         updatedTicket!.Status.Should().Be(newStatus);
         updatedTicket.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+
+        // Assert event was published
+        publishEndpoint.PublishedMessages.Should().ContainSingle();
+        var publishedEvent = publishEndpoint.PublishedMessages[0] as TicketUpdatedEvent;
+        publishedEvent.Should().NotBeNull();
+        publishedEvent!.TicketId.Should().Be(ticket.Id);
+        publishedEvent.Status.Should().Be(newStatus.ToString());
+        publishedEvent.UpdatedById.Should().Be(TestUpdatedById);
     }
 
     [Fact]
@@ -39,8 +52,8 @@ public class UpdateTicketStatusHandlerTests
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
         var cacheService = new MockCacheService();
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
-        var command = new UpdateTicketStatusCommand(Guid.NewGuid(), TicketStatus.InProgress);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint(), NullLogger<UpdateTicketStatusHandler>.Instance);
+        var command = new UpdateTicketStatusCommand(Guid.NewGuid(), TicketStatus.InProgress, TestUpdatedById);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -62,8 +75,8 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
-        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint(), NullLogger<UpdateTicketStatusHandler>.Instance);
+        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress, TestUpdatedById);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -82,8 +95,8 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
-        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Closed);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint(), NullLogger<UpdateTicketStatusHandler>.Instance);
+        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Closed, TestUpdatedById);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -103,8 +116,8 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
-        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint(), NullLogger<UpdateTicketStatusHandler>.Instance);
+        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress, TestUpdatedById);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
@@ -124,8 +137,8 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
-        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Resolved);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint(), NullLogger<UpdateTicketStatusHandler>.Instance);
+        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Resolved, TestUpdatedById);
 
         // Act
         await handler.Handle(command, CancellationToken.None);
@@ -145,8 +158,8 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
-        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint(), NullLogger<UpdateTicketStatusHandler>.Instance);
+        var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress, TestUpdatedById);
 
         // Act
         await handler.Handle(command, CancellationToken.None);

@@ -1,6 +1,8 @@
+using System.IO.Compression;
 using System.Text;
 using System.Threading.RateLimiting;
 using FluentValidation;
+using Microsoft.AspNetCore.ResponseCompression;
 using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Auth;
 using Hickory.Api.Infrastructure.Behaviors;
@@ -315,7 +317,6 @@ builder.Services.AddOpenTelemetry()
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.AssumeDefaultVersionWhenUnspecified = true;
     options.ReportApiVersions = true;
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 })
@@ -324,6 +325,30 @@ builder.Services.AddApiVersioning(options =>
 {
     options.GroupNameFormat = "'v'VVV";
     options.SubstituteApiVersionInUrl = true;
+});
+
+// Response Compression - reduces bandwidth for API responses
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+    [
+        "application/json",
+        "application/problem+json",
+        "text/plain"
+    ]);
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.SmallestSize;
 });
 
 builder.Services.AddControllers();
@@ -381,6 +406,9 @@ app.UseCorrelationId();
 
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Response compression - placed early so responses from all downstream middleware are compressed
+app.UseResponseCompression();
 
 // Security headers
 app.Use(async (context, next) =>
