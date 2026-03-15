@@ -148,7 +148,7 @@ export function configSet(key: string, value: string): void {
   }
 
   const settings = loadSettings();
-  (settings as Record<string, unknown>)[key] = validation.parsed;
+  (settings as unknown as Record<string, unknown>)[key] = validation.parsed;
   saveSettings(settings);
 
   console.log(`${GREEN}✓${RESET} Set ${BOLD}${key}${RESET} = ${CYAN}${validation.parsed}${RESET}`);

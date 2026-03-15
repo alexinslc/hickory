@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as readline from 'readline';
+import { bold, success, error, info, gray } from '../utils/colors';
 import { startSpinner } from '../utils/spinner';
 
 const API_BASE_URL = process.env.HICKORY_API_URL || 'http://localhost:5000';
@@ -169,21 +170,21 @@ export async function login(options: { email?: string; password?: string }) {
 
     saveConfig(config);
 
-    spinner.succeed('Authentication successful!');
-    console.log(`  Welcome, ${firstName} ${lastName}`);
-    console.log(`  Role: ${role}`);
-    console.log('\nCredentials saved to:', CONFIG_FILE);
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 401) {
-        console.error('✗ Authentication failed: Invalid email or password');
-      } else if (error.response?.status === 400) {
-        console.error('✗ Authentication failed:', error.response.data.message || 'Bad request');
+    spinner.succeed(success('✓ Authentication successful!'));
+    console.log(`  Welcome, ${bold(firstName + ' ' + lastName)}`);
+    console.log(`  Role: ${info(role)}`);
+    console.log(`\nCredentials saved to: ${gray(CONFIG_FILE)}`);
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      if (err.response?.status === 401) {
+        console.error(error('✗ Authentication failed: Invalid email or password'));
+      } else if (err.response?.status === 400) {
+        console.error(error('✗ Authentication failed:'), err.response.data.message || 'Bad request');
       } else {
-        console.error('✗ Authentication failed:', error.message);
+        console.error(error('✗ Authentication failed:'), err.message);
       }
     } else {
-      console.error('✗ An unexpected error occurred:', error instanceof Error ? error.message : 'Unknown error');
+      console.error(error('✗ An unexpected error occurred:'), err instanceof Error ? err.message : 'Unknown error');
     }
     process.exit(1);
   }
@@ -198,6 +199,6 @@ export function logout() {
   }
 
   clearConfig();
-  console.log('✓ Logged out successfully.');
-  console.log(`  Goodbye, ${config.user.firstName}!`);
+  console.log(success('✓ Logged out successfully.'));
+  console.log(`  Goodbye, ${bold(config.user.firstName)}!`);
 }

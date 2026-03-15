@@ -25,6 +25,12 @@ public class MockPublishEndpoint : IPublishEndpoint
         return Task.CompletedTask;
     }
 
+    public Task Publish<T>(T message, IPipe<PublishContext> publishPipe, CancellationToken cancellationToken = default) where T : class
+    {
+        PublishedMessages.Add(message!);
+        return Task.CompletedTask;
+    }
+
     public Task Publish(object message, CancellationToken cancellationToken = default)
     {
         PublishedMessages.Add(message);
@@ -56,6 +62,12 @@ public class MockPublishEndpoint : IPublishEndpoint
     }
 
     public Task Publish<T>(object values, IPipe<PublishContext<T>> publishPipe, CancellationToken cancellationToken = default) where T : class
+    {
+        PublishedMessages.Add(values);
+        return Task.CompletedTask;
+    }
+
+    public Task Publish<T>(object values, IPipe<PublishContext> publishPipe, CancellationToken cancellationToken = default) where T : class
     {
         PublishedMessages.Add(values);
         return Task.CompletedTask;

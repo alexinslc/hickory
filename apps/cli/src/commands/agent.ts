@@ -2,21 +2,21 @@
 import axios from 'axios';
 import * as readline from 'readline';
 import { getConfig } from './auth';
+import {
+  bold,
+  dim,
+  red,
+  green,
+  cyan,
+  success,
+  error as errorColor,
+  warning,
+  colorizeStatus,
+  colorizePriority,
+} from '../utils/colors';
 import { startSpinner } from '../utils/spinner';
 
 const API_BASE_URL = process.env.HICKORY_API_URL || 'http://localhost:5000';
-
-// ANSI color codes
-const RESET = '\x1b[0m';
-const BOLD = '\x1b[1m';
-const DIM = '\x1b[2m';
-const RED = '\x1b[31m';
-const GREEN = '\x1b[32m';
-const YELLOW = '\x1b[33m';
-const BLUE = '\x1b[34m';
-const MAGENTA = '\x1b[35m';
-const CYAN = '\x1b[36m';
-const GRAY = '\x1b[90m';
 
 interface TicketDto {
   id: string;
@@ -47,7 +47,7 @@ function getAuthHeader(): string | null {
 function requireAuth(): string {
   const authHeader = getAuthHeader();
   if (!authHeader) {
-    console.error('Error: Not authenticated. Run "hickory login" first.');
+    console.error(errorColor('Error: Not authenticated. Run "hickory login" first.'));
     process.exit(1);
   }
   return authHeader;
@@ -56,11 +56,11 @@ function requireAuth(): string {
 function requireAgentRole(): void {
   const config = getConfig();
   if (!config || !config.user) {
-    console.error('Error: Not authenticated. Run "hickory login" first.');
+    console.error(errorColor('Error: Not authenticated. Run "hickory login" first.'));
     process.exit(1);
   }
   if (config.user.role !== 'Agent' && config.user.role !== 'Administrator') {
-    console.error('Error: This command requires Agent or Administrator role.');
+    console.error(errorColor('Error: This command requires Agent or Administrator role.'));
     process.exit(1);
   }
 }
@@ -79,37 +79,6 @@ function promptInput(question: string): Promise<string> {
   });
 }
 
-function getStatusColor(status: string): string {
-  switch (status.toLowerCase()) {
-    case 'open':
-      return BLUE;
-    case 'inprogress':
-      return YELLOW;
-    case 'resolved':
-      return GREEN;
-    case 'closed':
-      return GRAY;
-    case 'cancelled':
-      return RED;
-    default:
-      return RESET;
-  }
-}
-
-function getPriorityColor(priority: string): string {
-  switch (priority.toLowerCase()) {
-    case 'critical':
-      return RED;
-    case 'high':
-      return MAGENTA;
-    case 'medium':
-      return YELLOW;
-    case 'low':
-      return CYAN;
-    default:
-      return RESET;
-  }
-}
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -152,7 +121,7 @@ export async function agentQueue(options: { filter?: string }): Promise<void> {
     }
 
     if (filteredTickets.length === 0) {
-      console.log(`\n${YELLOW}No tickets found in the queue${RESET}\n`);
+      console.log('\n' + warning('No tickets found in the queue') + '\n');
       return;
     }
 
@@ -160,45 +129,45 @@ export async function agentQueue(options: { filter?: string }): Promise<void> {
     const unassignedCount = tickets.filter((t) => !t.assignedToId).length;
     const myTicketsCount = tickets.filter((t) => t.assignedToId === userId).length;
 
-    console.log(`\n${BOLD}${CYAN}=== Agent Queue ===${RESET}`);
-    console.log(`Total: ${tickets.length} | Unassigned: ${RED}${unassignedCount}${RESET} | Mine: ${GREEN}${myTicketsCount}${RESET}\n`);
+    console.log('\n' + bold(cyan('=== Agent Queue ===')));
+    console.log(`Total: ${tickets.length} | Unassigned: ${red(String(unassignedCount))} | Mine: ${green(String(myTicketsCount))}\n`);
 
     // Table header
     console.log(
-      `${DIM}${'Ticket'.padEnd(12)} ${'Title'.padEnd(40)} ${'Status'.padEnd(12)} ${'Priority'.padEnd(10)} ${'Assigned'.padEnd(20)} ${'Age'.padEnd(10)}${RESET}`
+      dim(`${'Ticket'.padEnd(12)} ${'Title'.padEnd(40)} ${'Status'.padEnd(12)} ${'Priority'.padEnd(10)} ${'Assigned'.padEnd(20)} ${'Age'.padEnd(10)}`)
     );
-    console.log('-'.repeat(120));
+    console.log(dim('-'.repeat(120)));
 
     // Display tickets
     filteredTickets.forEach((ticket) => {
       const number = ticket.ticketNumber.padEnd(12);
       const title = ticket.title.length > 40 ? ticket.title.substring(0, 37) + '...' : ticket.title.padEnd(40);
-      const status = ticket.status.padEnd(12);
-      const priority = ticket.priority.padEnd(10);
+      const statusText = ticket.status.padEnd(12);
+      const priorityText = ticket.priority.padEnd(10);
       const assigned = (ticket.assignedToName || 'Unassigned').padEnd(20);
       const age = formatDate(ticket.createdAt).padEnd(10);
 
       console.log(
-        `${number} ${title} ${getStatusColor(ticket.status)}${status}${RESET} ${getPriorityColor(ticket.priority)}${priority}${RESET} ${!ticket.assignedToName ? RED : RESET}${assigned}${RESET} ${age}`
+        `${number} ${title} ${colorizeStatus(statusText)} ${colorizePriority(priorityText)} ${!ticket.assignedToName ? red(assigned) : assigned} ${age}`
       );
     });
 
-    console.log('-'.repeat(120));
-    console.log(`\n${BOLD}Commands:${RESET}`);
-    console.log(`  View ticket:    ${CYAN}hickory agent view <ticket-number>${RESET}`);
-    console.log(`  Assign to me:   ${CYAN}hickory agent assign <ticket-number>${RESET}`);
-    console.log(`  Close ticket:   ${CYAN}hickory agent close <ticket-number>${RESET}`);
-    console.log(`\n${BOLD}Filters:${RESET}`);
-    console.log(`  Unassigned:     ${CYAN}hickory agent queue --filter unassigned${RESET}`);
-    console.log(`  My tickets:     ${CYAN}hickory agent queue --filter mine${RESET}\n`);
+    console.log(dim('-'.repeat(120)));
+    console.log(`\n${bold('Commands:')}`);
+    console.log(`  View ticket:    ${cyan('hickory agent view <ticket-number>')}`);
+    console.log(`  Assign to me:   ${cyan('hickory agent assign <ticket-number>')}`);
+    console.log(`  Close ticket:   ${cyan('hickory agent close <ticket-number>')}`);
+    console.log(`\n${bold('Filters:')}`);
+    console.log(`  Unassigned:     ${cyan('hickory agent queue --filter unassigned')}`);
+    console.log(`  My tickets:     ${cyan('hickory agent queue --filter mine')}\n`);
   } catch (error: unknown) {
     const err = error as any;
     if (err.response?.status === 401) {
-      console.error('Error: Authentication failed. Please login again.');
+      console.error(errorColor('Error: Authentication failed. Please login again.'));
     } else if (err.response?.status === 403) {
-      console.error('Error: Access denied. This command requires Agent or Administrator role.');
+      console.error(errorColor('Error: Access denied. This command requires Agent or Administrator role.'));
     } else {
-      console.error(`Error fetching agent queue: ${err.response?.data?.message || err.message}`);
+      console.error(errorColor(`Error fetching agent queue: ${err.response?.data?.message || err.message}`));
     }
     process.exit(1);
   }
@@ -212,8 +181,8 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
   const userId = config?.user?.userId;
 
   if (!ticketNumber) {
-    console.error('Error: Ticket number is required');
-    console.log(`Usage: ${CYAN}hickory agent assign <ticket-number>${RESET}`);
+    console.error(errorColor('Error: Ticket number is required'));
+    console.log(`Usage: ${cyan('hickory agent assign <ticket-number>')}`);
     process.exit(1);
   }
 
@@ -230,14 +199,14 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
     );
 
     if (!ticket) {
-      spinner.fail(`Ticket ${ticketNumber} not found in the queue`);
+      spinner.fail(errorColor(`Ticket ${ticketNumber} not found in the queue`));
       process.exit(1);
     }
 
     spinner.succeed(`Found ticket ${ticket.ticketNumber}`);
 
     if (ticket.assignedToId) {
-      console.log(`\n${YELLOW}Warning: Ticket is already assigned to ${ticket.assignedToName}${RESET}`);
+      console.log('\n' + warning(`Warning: Ticket is already assigned to ${ticket.assignedToName}`));
       const confirm = await promptInput('Do you want to reassign it to yourself? (y/n): ');
       if (confirm.toLowerCase() !== 'y' && confirm.toLowerCase() !== 'yes') {
         console.log('Assignment cancelled.');
@@ -254,21 +223,21 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
       { headers: { Authorization: authHeader } }
     );
 
-    spinner.succeed(`Ticket ${ticket.ticketNumber} assigned to you successfully`);
-    console.log(`  Status: ${getStatusColor(ticket.status)}${ticket.status}${RESET}`);
-    console.log(`  Priority: ${getPriorityColor(ticket.priority)}${ticket.priority}${RESET}`);
+    spinner.succeed(`Ticket ${bold(ticket.ticketNumber)} assigned to you successfully`);
+    console.log(`  Status: ${colorizeStatus(ticket.status)}`);
+    console.log(`  Priority: ${colorizePriority(ticket.priority)}`);
     console.log(`  Title: ${ticket.title}`);
-    console.log(`\nView details: ${CYAN}hickory agent view ${ticket.ticketNumber}${RESET}\n`);
+    console.log(`\nView details: ${cyan('hickory agent view ' + ticket.ticketNumber)}\n`);
   } catch (error: unknown) {
     const err = error as any;
     if (err.response?.status === 401) {
-      console.error('Error: Authentication failed. Please login again.');
+      console.error(errorColor('Error: Authentication failed. Please login again.'));
     } else if (err.response?.status === 403) {
-      console.error('Error: Access denied. This command requires Agent or Administrator role.');
+      console.error(errorColor('Error: Access denied. This command requires Agent or Administrator role.'));
     } else if (err.response?.status === 404) {
-      console.error(`Error: Ticket ${ticketNumber} not found`);
+      console.error(errorColor(`Error: Ticket ${ticketNumber} not found`));
     } else {
-      console.error(`Error assigning ticket: ${err.response?.data?.title || err.message}`);
+      console.error(errorColor(`Error assigning ticket: ${err.response?.data?.title || err.message}`));
     }
     process.exit(1);
   }
@@ -280,8 +249,8 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
   const authHeader = requireAuth();
 
   if (!ticketNumber) {
-    console.error('Error: Ticket number is required');
-    console.log(`Usage: ${CYAN}hickory agent close <ticket-number>${RESET}`);
+    console.error(errorColor('Error: Ticket number is required'));
+    console.log(`Usage: ${cyan('hickory agent close <ticket-number>')}`);
     process.exit(1);
   }
 
@@ -298,26 +267,26 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
     );
 
     if (!ticket) {
-      spinner.fail(`Ticket ${ticketNumber} not found in the queue`);
+      spinner.fail(errorColor(`Ticket ${ticketNumber} not found in the queue`));
       process.exit(1);
     }
 
     if (ticket.status === 'Closed') {
-      spinner.fail(`Ticket ${ticketNumber} is already closed`);
+      spinner.fail(errorColor(`Ticket ${ticketNumber} is already closed`));
       process.exit(1);
     }
 
     spinner.succeed(`Found ticket ${ticket.ticketNumber}`);
 
     // Display ticket info
-    console.log(`\n${BOLD}Closing Ticket: ${ticket.ticketNumber}${RESET}`);
+    console.log('\n' + bold(`Closing Ticket: ${ticket.ticketNumber}`));
     console.log(`Title: ${ticket.title}`);
-    console.log(`Status: ${getStatusColor(ticket.status)}${ticket.status}${RESET}`);
-    console.log(`Priority: ${getPriorityColor(ticket.priority)}${ticket.priority}${RESET}\n`);
+    console.log(`Status: ${colorizeStatus(ticket.status)}`);
+    console.log(`Priority: ${colorizePriority(ticket.priority)}\n`);
 
     // Prompt for resolution notes
-    console.log(`${BOLD}Resolution Notes${RESET} (minimum 10 characters):`);
-    console.log(`${DIM}Describe how the issue was resolved. Press Enter twice when done.${RESET}\n`);
+    console.log(bold('Resolution Notes') + ' (minimum 10 characters):');
+    console.log(dim('Describe how the issue was resolved. Press Enter twice when done.') + '\n');
 
     let resolutionNotes = '';
     let line = '';
@@ -344,7 +313,7 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
     resolutionNotes = resolutionNotes.trim();
 
     if (resolutionNotes.length < 10) {
-      console.error('\nError: Resolution notes must be at least 10 characters long');
+      console.error('\n' + errorColor('Error: Resolution notes must be at least 10 characters long'));
       process.exit(1);
     }
 
@@ -357,26 +326,26 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
       { headers: { Authorization: authHeader } }
     );
 
-    spinner.succeed(`Ticket ${ticket.ticketNumber} closed successfully`);
-    console.log(`\nResolution notes saved:`);
-    console.log(`${DIM}${resolutionNotes}${RESET}\n`);
+    spinner.succeed(`Ticket ${bold(ticket.ticketNumber)} closed successfully`);
+    console.log('\nResolution notes saved:');
+    console.log(dim(resolutionNotes) + '\n');
   } catch (error: unknown) {
     const err = error as any;
     if (err.response?.status === 401) {
-      console.error('\nError: Authentication failed. Please login again.');
+      console.error('\n' + errorColor('Error: Authentication failed. Please login again.'));
     } else if (err.response?.status === 403) {
-      console.error('\nError: Access denied. This command requires Agent or Administrator role.');
+      console.error('\n' + errorColor('Error: Access denied. This command requires Agent or Administrator role.'));
     } else if (err.response?.status === 404) {
-      console.error(`\nError: Ticket ${ticketNumber} not found`);
+      console.error('\n' + errorColor(`Error: Ticket ${ticketNumber} not found`));
     } else if (err.response?.status === 400) {
       const errors = err.response?.data?.errors;
       if (errors && errors.ResolutionNotes) {
-        console.error(`\nError: ${errors.ResolutionNotes.join(', ')}`);
+        console.error('\n' + errorColor(`Error: ${errors.ResolutionNotes.join(', ')}`));
       } else {
-        console.error(`\nError: ${err.response?.data?.title || err.message}`);
+        console.error('\n' + errorColor(`Error: ${err.response?.data?.title || err.message}`));
       }
     } else {
-      console.error(`\nError closing ticket: ${err.response?.data?.title || err.message}`);
+      console.error('\n' + errorColor(`Error closing ticket: ${err.response?.data?.title || err.message}`));
     }
     process.exit(1);
   }
