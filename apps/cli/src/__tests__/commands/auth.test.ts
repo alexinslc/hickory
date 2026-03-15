@@ -112,7 +112,7 @@ describe('CLI Auth Commands', () => {
         'utf-8'
       );
 
-      expect(mockSpinner.succeed).toHaveBeenCalledWith('Authentication successful!');
+      expect(mockSpinner.succeed).toHaveBeenCalledWith('✓ Authentication successful!');
       expect(consoleLogSpy).toHaveBeenCalledWith('  Welcome, Test User');
     });
 

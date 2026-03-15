@@ -25,7 +25,7 @@ _hickory_completions() {
   _init_completion || return
 
   # Top-level commands
-  local commands="login logout whoami ticket agent completion"
+  local commands="login logout whoami ticket agent config completion"
 
   # Global options
   local global_options="-h --help -V --version"
@@ -33,6 +33,7 @@ _hickory_completions() {
   # Subcommands
   local ticket_commands="create view list"
   local agent_commands="queue assign close"
+  local config_commands="list get set reset"
   local completion_commands="bash zsh"
 
   # Options
@@ -53,6 +54,10 @@ _hickory_completions() {
           ;;
         agent)
           COMPREPLY=( $(compgen -W "\${agent_commands}" -- "\${cur}") )
+          return
+          ;;
+        config)
+          COMPREPLY=( $(compgen -W "\${config_commands}" -- "\${cur}") )
           return
           ;;
         completion)
