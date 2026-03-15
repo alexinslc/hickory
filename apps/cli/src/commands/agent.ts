@@ -14,6 +14,7 @@ import {
   colorizeStatus,
   colorizePriority,
 } from '../utils/colors';
+import { startSpinner } from '../utils/spinner';
 
 const API_BASE_URL = process.env.HICKORY_API_URL || 'http://localhost:5000';
 
@@ -99,11 +100,15 @@ export async function agentQueue(options: { filter?: string }): Promise<void> {
   const authHeader = requireAuth();
 
   try {
+    const spinner = startSpinner('Fetching agent queue...');
+
     const response = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/tickets/queue`, {
       headers: { Authorization: authHeader },
     });
 
     const tickets = response.data;
+    spinner.succeed(`Loaded ${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} from queue`);
+
     const config = getConfig();
     const userId = config?.user?.userId;
 
@@ -183,6 +188,8 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
 
   try {
     // First, get the ticket to find its ID
+    let spinner = startSpinner('Looking up ticket...');
+
     const listResponse = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/tickets/queue`, {
       headers: { Authorization: authHeader },
     });
@@ -192,9 +199,11 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
     );
 
     if (!ticket) {
-      console.error(errorColor(`Error: Ticket ${ticketNumber} not found in the queue`));
+      spinner.fail(errorColor(`Ticket ${ticketNumber} not found in the queue`));
       process.exit(1);
     }
+
+    spinner.succeed(`Found ticket ${ticket.ticketNumber}`);
 
     if (ticket.assignedToId) {
       console.log('\n' + warning(`Warning: Ticket is already assigned to ${ticket.assignedToName}`));
@@ -206,13 +215,15 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
     }
 
     // Assign the ticket
+    spinner = startSpinner('Assigning ticket...');
+
     await axios.put(
       `${API_BASE_URL}/api/tickets/${ticket.id}/assign`,
       { agentId: userId },
       { headers: { Authorization: authHeader } }
     );
 
-    console.log(`\n${success('✓')} Ticket ${bold(ticket.ticketNumber)} assigned to you successfully`);
+    spinner.succeed(`Ticket ${bold(ticket.ticketNumber)} assigned to you successfully`);
     console.log(`  Status: ${colorizeStatus(ticket.status)}`);
     console.log(`  Priority: ${colorizePriority(ticket.priority)}`);
     console.log(`  Title: ${ticket.title}`);
@@ -245,6 +256,8 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
 
   try {
     // First, get the ticket to find its ID and validate
+    let spinner = startSpinner('Looking up ticket...');
+
     const listResponse = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/tickets/queue`, {
       headers: { Authorization: authHeader },
     });
@@ -254,14 +267,16 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
     );
 
     if (!ticket) {
-      console.error(errorColor(`Error: Ticket ${ticketNumber} not found in the queue`));
+      spinner.fail(errorColor(`Ticket ${ticketNumber} not found in the queue`));
       process.exit(1);
     }
 
     if (ticket.status === 'Closed') {
-      console.error(errorColor(`Error: Ticket ${ticketNumber} is already closed`));
+      spinner.fail(errorColor(`Ticket ${ticketNumber} is already closed`));
       process.exit(1);
     }
+
+    spinner.succeed(`Found ticket ${ticket.ticketNumber}`);
 
     // Display ticket info
     console.log('\n' + bold(`Closing Ticket: ${ticket.ticketNumber}`));
@@ -303,13 +318,15 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
     }
 
     // Close the ticket
+    spinner = startSpinner('Closing ticket...');
+
     await axios.post(
       `${API_BASE_URL}/api/tickets/${ticket.id}/close`,
       { resolutionNotes },
       { headers: { Authorization: authHeader } }
     );
 
-    console.log(`\n${success('✓')} Ticket ${bold(ticket.ticketNumber)} closed successfully`);
+    spinner.succeed(`Ticket ${bold(ticket.ticketNumber)} closed successfully`);
     console.log('\nResolution notes saved:');
     console.log(dim(resolutionNotes) + '\n');
   } catch (error: unknown) {

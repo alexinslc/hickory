@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as readline from 'readline';
 import { bold, success, error, info, gray } from '../utils/colors';
+import { startSpinner } from '../utils/spinner';
 
 const API_BASE_URL = process.env.HICKORY_API_URL || 'http://localhost:5000';
 const CONFIG_DIR = path.join(os.homedir(), '.hickory');
@@ -146,7 +147,7 @@ export async function login(options: { email?: string; password?: string }) {
       password = await promptPassword('Password: ');
     }
 
-    console.log(info('Authenticating...'));
+    const spinner = startSpinner('Authenticating...');
 
     const response = await axios.post<LoginResponse>(`${API_BASE_URL}/api/auth/login`, {
       email,
@@ -169,7 +170,7 @@ export async function login(options: { email?: string; password?: string }) {
 
     saveConfig(config);
 
-    console.log(success('✓ Authentication successful!'));
+    spinner.succeed(success('✓ Authentication successful!'));
     console.log(`  Welcome, ${bold(firstName + ' ' + lastName)}`);
     console.log(`  Role: ${info(role)}`);
     console.log(`\nCredentials saved to: ${gray(CONFIG_FILE)}`);

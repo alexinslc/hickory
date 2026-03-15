@@ -11,6 +11,7 @@ import {
   colorizeStatus,
   colorizePriority,
 } from '../utils/colors';
+import { startSpinner } from '../utils/spinner';
 
 const API_BASE_URL = process.env.HICKORY_API_URL || 'http://localhost:5000';
 
@@ -174,7 +175,7 @@ export async function createTicket() {
     }
 
     // Create the ticket
-    console.log('\n' + info('Creating ticket...'));
+    const spinner = startSpinner('Creating ticket...');
 
     const response = await axios.post<{ data: TicketDto }>(
       `${API_BASE_URL}/api/tickets`,
@@ -193,7 +194,7 @@ export async function createTicket() {
 
     const ticket = response.data.data;
 
-    console.log('\n' + success(bold('✓ Ticket created successfully!')) + '\n');
+    spinner.succeed(success(bold('✓ Ticket created successfully!')) + '\n');
     console.log(`Ticket Number: ${bold(ticket.ticketNumber)}`);
     console.log(`Title: ${ticket.title}`);
     console.log(`Priority: ${colorizePriority(ticket.priority)}`);
@@ -228,6 +229,8 @@ export async function viewTicket(ticketIdentifier: string) {
   }
 
   try {
+    const spinner = startSpinner('Fetching ticket...');
+
     const response = await axios.get<{ data: TicketDto }>(
       `${API_BASE_URL}/api/tickets/${ticketIdentifier}`,
       {
@@ -239,6 +242,7 @@ export async function viewTicket(ticketIdentifier: string) {
 
     const ticket = response.data.data;
 
+    spinner.succeed('Ticket loaded');
     console.log('\n' + dim('='.repeat(80)));
     console.log(bold(`${ticket.ticketNumber}: ${ticket.title}`));
     console.log(dim('='.repeat(80)));
@@ -297,6 +301,8 @@ export async function listTickets() {
   const authHeader = requireAuth();
 
   try {
+    const spinner = startSpinner('Fetching tickets...');
+
     const response = await axios.get<{ data: TicketDto[] }>(
       `${API_BASE_URL}/api/tickets/my`,
       {
@@ -307,7 +313,9 @@ export async function listTickets() {
     );
 
     const tickets = response.data.data;
-    
+
+    spinner.succeed(`Loaded ${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`);
+
     if (tickets.length === 0) {
       console.log('\nNo tickets found.');
       console.log(`Create your first ticket: ${bold('hickory ticket create')}\n`);

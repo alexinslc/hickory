@@ -45,7 +45,7 @@ export function InternalNoteForm({ ticketId, onSubmit, isSubmitting = false }: I
   const validationError = getValidationMessage();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-yellow-50 border border-yellow-300 rounded-lg p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-yellow-50 border border-yellow-300 rounded-lg p-4" aria-busy={isSubmitting || undefined}>
       {/* Header with Icon */}
       <div className="flex items-center gap-2 border-b border-yellow-300 pb-2">
         <svg className="w-5 h-5 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
