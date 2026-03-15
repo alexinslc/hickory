@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "2287c9185bdd",
+  "strategy": "manual-commit",
+  "branch": "feature/rfc7807-problem-details",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/22/87c9185bdd/0/metadata.json",
+      "transcript": "/22/87c9185bdd/0/full.jsonl",
+      "content_hash": "/22/87c9185bdd/0/content_hash.txt",
+      "prompt": "/22/87c9185bdd/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1239,
+    "cache_creation_tokens": 1337248,
+    "cache_read_tokens": 87389630,
+    "output_tokens": 110732,
+    "api_call_count": 507
+  }
+}
