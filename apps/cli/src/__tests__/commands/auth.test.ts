@@ -18,6 +18,16 @@ jest.mock('readline', () => ({
   })),
 }));
 
+const mockSpinner = {
+  update: jest.fn(),
+  succeed: jest.fn(),
+  fail: jest.fn(),
+  stop: jest.fn(),
+};
+jest.mock('../../utils/spinner', () => ({
+  startSpinner: jest.fn(() => mockSpinner),
+}));
+
 // Now import the module under test AFTER mocks are set up
 import { login, logout, getConfig } from '../../commands/auth';
 
@@ -45,6 +55,10 @@ describe('CLI Auth Commands', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSpinner.update.mockClear();
+    mockSpinner.succeed.mockClear();
+    mockSpinner.fail.mockClear();
+    mockSpinner.stop.mockClear();
     
     // Mock console methods
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -95,7 +109,7 @@ describe('CLI Auth Commands', () => {
         'utf-8'
       );
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('✓ Authentication successful!');
+      expect(mockSpinner.succeed).toHaveBeenCalledWith('Authentication successful!');
       expect(consoleLogSpy).toHaveBeenCalledWith('  Welcome, Test User');
     });
 
