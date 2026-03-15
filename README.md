@@ -79,9 +79,9 @@ cd apps/web && npm install && npm run dev
 ## Testing
 
 ```bash
-npx nx run-many --target=test --all    # All tests
+npx nx run-many --target=test --all    # All frontend tests (Jest)
 npx nx e2e web-e2e                     # E2E tests (Playwright)
-dotnet test                            # .NET unit + integration tests
+dotnet test                            # .NET unit + integration tests (Docker required for integration)
 npm run test:performance               # Performance tests
 ```
 
