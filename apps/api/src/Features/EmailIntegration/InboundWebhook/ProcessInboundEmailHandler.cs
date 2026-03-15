@@ -174,13 +174,13 @@ public partial class ProcessInboundEmailHandler : IRequestHandler<ProcessInbound
         return user;
     }
 
-    internal static string? ExtractTicketNumber(string subject)
+    public static string? ExtractTicketNumber(string subject)
     {
         var match = TicketReferencePattern().Match(subject);
         return match.Success ? match.Groups[1].Value.ToUpperInvariant() : null;
     }
 
-    internal static string ParseEmailAddress(string from)
+    public static string ParseEmailAddress(string from)
     {
         // Handle formats like "John Doe <john@example.com>" or just "john@example.com"
         var angleStart = from.IndexOf('<');
