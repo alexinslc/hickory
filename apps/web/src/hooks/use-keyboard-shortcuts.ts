@@ -26,20 +26,31 @@ function isEditableElement(): boolean {
 
 /**
  * Check if a keyboard event matches a shortcut definition.
+ *
+ * Modifier matching is strict: each modifier flag must match exactly.
+ * A `mod` shortcut (ctrl OR meta) is represented by setting both `ctrl`
+ * and `meta` to true -- the matcher then accepts either modifier key.
  */
 function matchesShortcut(event: KeyboardEvent, shortcut: KeyboardShortcut): boolean {
-  const requiresMod = shortcut.ctrl || shortcut.meta;
+  // When both ctrl and meta are specified, treat as a "mod" shortcut that
+  // accepts either Ctrl or Cmd (Meta). Otherwise enforce each flag exactly.
+  const isMod = shortcut.ctrl && shortcut.meta;
 
-  if (requiresMod) {
-    // For modifier shortcuts, accept either Ctrl or Meta (Cmd on Mac)
-    const modPressed = event.ctrlKey || event.metaKey;
-    if (!modPressed) return false;
+  if (isMod) {
+    // At least one of Ctrl / Meta must be pressed
+    if (!event.ctrlKey && !event.metaKey) return false;
   } else {
-    // For non-modifier shortcuts, reject if Ctrl/Meta/Alt is held
-    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    // Enforce ctrl exactly
+    if (!!shortcut.ctrl !== event.ctrlKey) return false;
+    // Enforce meta exactly
+    if (!!shortcut.meta !== event.metaKey) return false;
   }
 
-  if (shortcut.shift && !event.shiftKey) return false;
+  // Enforce shift exactly so Ctrl+Shift+K does not trigger a Ctrl+K shortcut
+  if (!!shortcut.shift !== event.shiftKey) return false;
+
+  // Reject if Alt is held (unless we add alt support later)
+  if (event.altKey) return false;
 
   return event.key.toLowerCase() === shortcut.key.toLowerCase();
 }

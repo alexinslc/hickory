@@ -42,6 +42,7 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
       key: 'n',
       ctrl: true,
       meta: true,
+      shift: true,
       description: 'New ticket',
       category: 'Navigation',
       action: () => {

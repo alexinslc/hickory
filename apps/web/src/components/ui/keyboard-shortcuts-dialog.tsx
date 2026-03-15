@@ -21,14 +21,44 @@ interface KeyboardShortcutsDialogProps {
 export function KeyboardShortcutsDialog({ isOpen, onClose, shortcuts }: KeyboardShortcutsDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Focus trap and Escape to close
+  // Focus trap: trap Tab within the dialog and restore focus on close
   useEffect(() => {
     if (!isOpen) return;
+
+    // Capture the previously focused element so we can restore it on close
+    const previouslyFocused = document.activeElement as HTMLElement | null;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         onClose();
+        return;
+      }
+
+      // Trap Tab focus within the dialog
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (!first) {
+          e.preventDefault();
+          return;
+        }
+
+        if (e.shiftKey) {
+          if (document.activeElement === first || document.activeElement === dialogRef.current) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last || document.activeElement === dialogRef.current) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
       }
     };
 
@@ -37,7 +67,11 @@ export function KeyboardShortcutsDialog({ isOpen, onClose, shortcuts }: Keyboard
     // Focus the dialog on open
     dialogRef.current?.focus();
 
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to the previously focused element
+      previouslyFocused?.focus();
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -95,7 +129,7 @@ export function KeyboardShortcutsDialog({ isOpen, onClose, shortcuts }: Keyboard
                   <ul className="space-y-2">
                     {items.map((shortcut) => (
                       <li
-                        key={`${shortcut.key}-${shortcut.ctrl ? 'ctrl' : ''}`}
+                        key={`${shortcut.category}-${shortcut.description}-${shortcut.key}-${shortcut.ctrl ? 'ctrl' : ''}${shortcut.meta ? 'meta' : ''}${shortcut.shift ? 'shift' : ''}`}
                         className="flex items-center justify-between"
                       >
                         <span className="text-sm text-gray-700 dark:text-gray-300">
