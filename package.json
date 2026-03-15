@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:performance": "npm run test:perf:ticket-submission",
     "test:perf:ticket-submission": "ts-node --project tests/performance/tsconfig.json tests/performance/ticket-submission.perf.test.ts",
-    "prepare": "husky"
+    "prepare": "node -e \"try{require('husky')()}catch(e){}\""
   },
   "repository": {
     "type": "git",
