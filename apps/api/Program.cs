@@ -130,6 +130,7 @@ builder.Services.AddSingleton<Hickory.Api.Infrastructure.Storage.IFileStorageSer
     Hickory.Api.Infrastructure.Storage.LocalFileStorageService>();
 
 // Notification Services
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection(SmtpSettings.SectionName));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IWebhookService, WebhookService>();
 builder.Services.AddHttpClient("webhooks", client =>
