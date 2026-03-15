@@ -27,10 +27,14 @@ process.env.NEXT_PUBLIC_API_URL = TEST_API_BASE_URL;
 // ---------------------------------------------------------------------------
 // Mock axios. We capture interceptor callbacks so we can test them directly.
 // ---------------------------------------------------------------------------
-let requestInterceptorFulfilled: (config: any) => any;
-let requestInterceptorRejected: (error: any) => any;
-let responseInterceptorFulfilled: (response: any) => any;
-let responseInterceptorRejected: (error: any) => any;
+// eslint-disable-next-line no-var -- var needed to avoid temporal dead zone with hoisted jest.mock
+var requestInterceptorFulfilled: (config: any) => any;
+// eslint-disable-next-line no-var
+var requestInterceptorRejected: (error: any) => any;
+// eslint-disable-next-line no-var
+var responseInterceptorFulfilled: (response: any) => any;
+// eslint-disable-next-line no-var
+var responseInterceptorRejected: (error: any) => any;
 
 // jest.mock is hoisted above variable declarations, so we must create the
 // mock instance inside the factory to avoid "Cannot access before init" errors.
