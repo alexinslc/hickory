@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Hickory.Api.Common.Services;
 using Hickory.Api.Features.EmailIntegration.InboundWebhook;
+using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Tests.TestUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -320,7 +321,7 @@ public class ProcessInboundEmailHandlerTests
     }
 
     private ProcessInboundEmailHandler CreateHandler(
-        Infrastructure.Data.ApplicationDbContext dbContext)
+        ApplicationDbContext dbContext)
     {
         return new ProcessInboundEmailHandler(
             dbContext,
