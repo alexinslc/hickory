@@ -33,7 +33,11 @@ public enum AuditAction
     TicketAssigned = 32,
     TicketClosed = 33,
     TicketReopened = 34,
-    CommentAdded = 35
+    CommentAdded = 35,
+
+    // GDPR / Privacy
+    DataExported = 40,
+    AccountDeleted = 41
 }
 
 /// <summary>
