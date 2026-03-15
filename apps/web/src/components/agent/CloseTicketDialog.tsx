@@ -86,7 +86,7 @@ export function CloseTicketDialog({
             </div>
 
             {/* Body */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} aria-busy={isSubmitting || undefined}>
               <div className="px-6 py-4 space-y-4">
                 {/* Ticket Info */}
                 <div className="bg-gray-50 rounded-md p-4">

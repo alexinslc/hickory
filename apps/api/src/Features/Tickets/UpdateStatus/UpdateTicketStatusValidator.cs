@@ -18,5 +18,9 @@ public class UpdateTicketStatusValidator : AbstractValidator<UpdateTicketStatusC
         RuleFor(x => x.NewStatus)
             .NotEqual(TicketStatus.Closed)
             .WithMessage("Use CloseTicket command to close a ticket with resolution notes");
+
+        RuleFor(x => x.UpdatedById)
+            .NotEmpty()
+            .WithMessage("UpdatedById is required");
     }
 }

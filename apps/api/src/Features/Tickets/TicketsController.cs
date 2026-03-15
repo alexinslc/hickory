@@ -118,7 +118,8 @@ public class TicketsController : ControllerBase
         [FromBody] AssignTicketRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new AssignTicketCommand(id, request.AgentId);
+        var userId = GetUserId();
+        var command = new AssignTicketCommand(id, request.AgentId, userId);
         await _mediator.Send(command, cancellationToken);
 
         return NoContent();
@@ -131,7 +132,8 @@ public class TicketsController : ControllerBase
         [FromBody] UpdateTicketStatusRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateTicketStatusCommand(id, request.NewStatus);
+        var userId = GetUserId();
+        var command = new UpdateTicketStatusCommand(id, request.NewStatus, userId);
         await _mediator.Send(command, cancellationToken);
 
         return NoContent();
@@ -170,7 +172,8 @@ public class TicketsController : ControllerBase
         [FromBody] ReassignTicketRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new ReassignTicketCommand(id, request.NewAgentId);
+        var userId = GetUserId();
+        var command = new ReassignTicketCommand(id, request.NewAgentId, userId);
         await _mediator.Send(command, cancellationToken);
 
         return NoContent();
