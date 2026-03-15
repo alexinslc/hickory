@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:performance": "npm run test:perf:ticket-submission",
-    "test:perf:ticket-submission": "ts-node --project tests/performance/tsconfig.json tests/performance/ticket-submission.perf.test.ts"
+    "test:perf:ticket-submission": "ts-node --project tests/performance/tsconfig.json tests/performance/ticket-submission.perf.test.ts",
+    "prepare": "node -e \"try{require('husky')()}catch(e){}\""
   },
   "repository": {
     "type": "git",
@@ -47,10 +48,12 @@
     "esbuild": "^0.25.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.0.0",
+    "husky": "^9.1.7",
     "jest": "^30.0.2",
     "jest-environment-jsdom": "^30.0.2",
     "jest-environment-node": "^30.0.2",
     "jest-util": "^30.0.2",
+    "lint-staged": "^15.4.3",
     "nx": "22.0.1",
     "postcss": "^8.5.6",
     "prettier": "^3.7.4",
@@ -60,6 +63,14 @@
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.52.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "eslint --no-warn-ignored"
+    ],
+    "*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yaml,yml}": [
+      "prettier --check"
+    ]
   },
   "nx": {},
   "dependencies": {
