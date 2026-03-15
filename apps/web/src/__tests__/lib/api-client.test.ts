@@ -1,4 +1,4 @@
-import { handleApiError } from '../../lib/api-client';
+import { handleApiError, getFieldErrors } from '../../lib/api-client';
 
 describe('apiClient', () => {
   describe('error handling', () => {
@@ -77,6 +77,129 @@ describe('apiClient', () => {
 
     it('should handle 500 server errors', () => {
       expect(true).toBe(true); // Placeholder
+    });
+  });
+
+  describe('getFieldErrors', () => {
+    it('returns null for non-object errors', () => {
+      expect(getFieldErrors(null)).toBeNull();
+      expect(getFieldErrors(undefined)).toBeNull();
+      expect(getFieldErrors('string error')).toBeNull();
+      expect(getFieldErrors(42)).toBeNull();
+    });
+
+    it('returns null when error has no response', () => {
+      expect(getFieldErrors({})).toBeNull();
+      expect(getFieldErrors(new Error('plain error'))).toBeNull();
+    });
+
+    it('returns null when response has no errors field', () => {
+      const error = {
+        response: { data: { title: 'Bad Request', status: 400 } },
+      };
+      expect(getFieldErrors(error)).toBeNull();
+    });
+
+    it('returns null when errors object is empty', () => {
+      const error = { response: { data: { errors: {} } } };
+      expect(getFieldErrors(error)).toBeNull();
+    });
+
+    it('normalizes PascalCase keys from the API to camelCase field names', () => {
+      const error = {
+        response: {
+          data: {
+            errors: {
+              Title: ['Title is required'],
+              Description: ['Description is too short'],
+            },
+          },
+        },
+      };
+
+      const result = getFieldErrors(error);
+      expect(result).toEqual({
+        title: ['Title is required'],
+        description: ['Description is too short'],
+      });
+    });
+
+    it('preserves already-camelCase keys', () => {
+      const error = {
+        response: {
+          data: {
+            errors: {
+              firstName: ['First name is required'],
+              lastName: ['Last name is required'],
+            },
+          },
+        },
+      };
+
+      const result = getFieldErrors(error);
+      expect(result).toEqual({
+        firstName: ['First name is required'],
+        lastName: ['Last name is required'],
+      });
+    });
+
+    it('handles multiple error messages per field', () => {
+      const error = {
+        response: {
+          data: {
+            errors: {
+              Password: [
+                'Password must be at least 8 characters',
+                'Password must contain an uppercase letter',
+              ],
+            },
+          },
+        },
+      };
+
+      const result = getFieldErrors(error);
+      expect(result).toEqual({
+        password: [
+          'Password must be at least 8 characters',
+          'Password must contain an uppercase letter',
+        ],
+      });
+    });
+
+    it('coerces non-array messages to string arrays', () => {
+      const error = {
+        response: {
+          data: {
+            errors: {
+              Email: 'Email is invalid',
+            },
+          },
+        },
+      };
+
+      const result = getFieldErrors(error);
+      expect(result).toEqual({
+        email: ['Email is invalid'],
+      });
+    });
+
+    it('handles mixed PascalCase and camelCase keys', () => {
+      const error = {
+        response: {
+          data: {
+            errors: {
+              CategoryId: ['Invalid category'],
+              priority: ['Priority is required'],
+            },
+          },
+        },
+      };
+
+      const result = getFieldErrors(error);
+      expect(result).toEqual({
+        categoryId: ['Invalid category'],
+        priority: ['Priority is required'],
+      });
     });
   });
 
