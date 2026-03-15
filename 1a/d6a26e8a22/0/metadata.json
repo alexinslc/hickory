@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "1ad6a26e8a22",
+  "session_id": "f72cff64-efaa-4708-a5ee-c7c8e75d7844",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-15T19:14:26.180161Z",
+  "branch": "feature/cli-config",
+  "checkpoints_count": 9,
+  "files_touched": [
+    "README.md",
+    "apps/api/Program.cs",
+    "apps/web/src/app/knowledge-base/[id]/edit/page.tsx",
+    "apps/web/src/components/tickets/NewTicketForm.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "6b139cb32cbd",
+  "token_usage": {
+    "input_tokens": 1009,
+    "cache_creation_tokens": 953535,
+    "cache_read_tokens": 34310943,
+    "output_tokens": 70655,
+    "api_call_count": 303
+  },
+  "session_metrics": {
+    "turn_count": 29
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-15T19:14:25.82957Z",
+    "agent_lines": 0,
+    "human_added": 6380,
+    "human_modified": 111,
+    "human_removed": 0,
+    "total_committed": 6427,
+    "agent_percentage": 0
+  }
+}

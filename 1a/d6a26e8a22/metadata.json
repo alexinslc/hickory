@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "1ad6a26e8a22",
+  "strategy": "manual-commit",
+  "branch": "feature/cli-config",
+  "checkpoints_count": 9,
+  "files_touched": [
+    "README.md",
+    "apps/api/Program.cs",
+    "apps/web/src/app/knowledge-base/[id]/edit/page.tsx",
+    "apps/web/src/components/tickets/NewTicketForm.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/1a/d6a26e8a22/0/metadata.json",
+      "transcript": "/1a/d6a26e8a22/0/full.jsonl",
+      "content_hash": "/1a/d6a26e8a22/0/content_hash.txt",
+      "prompt": "/1a/d6a26e8a22/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1009,
+    "cache_creation_tokens": 953535,
+    "cache_read_tokens": 34310943,
+    "output_tokens": 70655,
+    "api_call_count": 303
+  }
+}
