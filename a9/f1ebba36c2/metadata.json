@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "a9f1ebba36c2",
+  "strategy": "manual-commit",
+  "branch": "feature/signalr-resilience",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/a9/f1ebba36c2/0/metadata.json",
+      "transcript": "/a9/f1ebba36c2/0/full.jsonl",
+      "content_hash": "/a9/f1ebba36c2/0/content_hash.txt",
+      "prompt": "/a9/f1ebba36c2/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1328,
+    "cache_creation_tokens": 1698926,
+    "cache_read_tokens": 114549989,
+    "output_tokens": 132848,
+    "api_call_count": 586
+  }
+}
