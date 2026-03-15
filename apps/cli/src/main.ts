@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { login, logout, getConfig } from './commands/auth';
 import { createTicket, viewTicket, listTickets } from './commands/ticket';
 import { agentQueue, assignTicket, closeTicket } from './commands/agent';
+import { bold, info, warning } from './utils/colors';
 
 const program = new Command();
 
@@ -31,13 +32,13 @@ program
   .action(() => {
     const config = getConfig();
     if (!config || !config.user) {
-      console.log('Not authenticated. Run "hickory login" to authenticate.');
+      console.log(warning('Not authenticated.') + ' Run "hickory login" to authenticate.');
       return;
     }
-    console.log('Authenticated as:');
-    console.log(`  Name: ${config.user.firstName} ${config.user.lastName}`);
-    console.log(`  Email: ${config.user.email}`);
-    console.log(`  Role: ${config.user.role}`);
+    console.log(bold('Authenticated as:'));
+    console.log(`  Name: ${bold(config.user.firstName + ' ' + config.user.lastName)}`);
+    console.log(`  Email: ${info(config.user.email)}`);
+    console.log(`  Role: ${info(config.user.role)}`);
     console.log(`  User ID: ${config.user.userId}`);
   });
 
