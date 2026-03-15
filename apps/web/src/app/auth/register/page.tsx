@@ -38,27 +38,29 @@ export default function RegisterPage() {
 
   // Client-side validation
   const firstNameError = useMemo(() => {
-    if (!touched.firstName || firstName.length === 0) return null;
-    if (firstName.trim().length < 1) return 'First name is required';
+    if (!touched.firstName) return null;
+    if (firstName.length === 0 || firstName.trim().length < 1) return 'First name is required';
     if (firstName.length > 100) return 'First name must be no more than 100 characters';
     return null;
   }, [firstName, touched.firstName]);
 
   const lastNameError = useMemo(() => {
-    if (!touched.lastName || lastName.length === 0) return null;
-    if (lastName.trim().length < 1) return 'Last name is required';
+    if (!touched.lastName) return null;
+    if (lastName.length === 0 || lastName.trim().length < 1) return 'Last name is required';
     if (lastName.length > 100) return 'Last name must be no more than 100 characters';
     return null;
   }, [lastName, touched.lastName]);
 
   const emailError = useMemo(() => {
-    if (!touched.email || email.length === 0) return null;
+    if (!touched.email) return null;
+    if (email.length === 0) return 'Email is required';
     if (!email.includes('@')) return 'Please enter a valid email address';
     return null;
   }, [email, touched.email]);
 
   const passwordError = useMemo(() => {
-    if (!touched.password || password.length === 0) return null;
+    if (!touched.password) return null;
+    if (password.length === 0) return 'Password is required';
     if (password.length < 8) return 'Password must be at least 8 characters';
     if (!/[A-Z]/.test(password)) return 'Password must contain an uppercase letter';
     if (!/[a-z]/.test(password)) return 'Password must contain a lowercase letter';
@@ -71,7 +73,11 @@ export default function RegisterPage() {
     firstName.trim().length >= 1 &&
     lastName.trim().length >= 1 &&
     email.includes('@') &&
-    password.length >= 8;
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password);
 
   // Server-side field errors
   const serverFieldErrors = register.isError ? getFieldErrors(register.error) : null;

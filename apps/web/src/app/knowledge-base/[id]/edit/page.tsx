@@ -58,21 +58,21 @@ export default function ArticleEditorPage() {
 
   // Client-side validation
   const titleError = useMemo(() => {
-    if (!touched.title || title.length === 0) return null;
-    if (title.trim().length < 1) return 'Title is required';
+    if (!touched.title) return null;
+    if (title.length === 0 || title.trim().length < 1) return 'Title is required';
     if (title.length > 500) return 'Title must be no more than 500 characters';
     return null;
   }, [title, touched.title]);
 
   const contentError = useMemo(() => {
-    if (!touched.content || content.length === 0) return null;
-    if (content.trim().length < 1) return 'Content is required';
+    if (!touched.content) return null;
+    if (content.length === 0 || content.trim().length < 1) return 'Content is required';
     return null;
   }, [content, touched.content]);
 
   const categoryError = useMemo(() => {
-    if (!touched.category || category.length === 0) return null;
-    if (category.trim().length < 1) return 'Category is required';
+    if (!touched.category) return null;
+    if (category.length === 0 || category.trim().length < 1) return 'Category is required';
     return null;
   }, [category, touched.category]);
 

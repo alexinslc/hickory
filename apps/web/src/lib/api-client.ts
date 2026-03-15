@@ -740,18 +740,19 @@ export function handleApiError(error: unknown): string {
     return error.response.data.message;
   }
 
-  // Check for response data with title (FluentValidation / ProblemDetails format)
-  if (isAxiosError(error) && error.response?.data?.title) {
-    return error.response.data.detail || error.response.data.title;
-  }
-
-  // Check for validation errors
+  // Check for validation errors first (before title) so per-field messages aren't lost
+  // when the API returns both title and errors (e.g., FluentValidation ProblemDetails)
   if (isAxiosError(error) && error.response?.data?.errors) {
     const errors = error.response.data.errors;
     const errorMessages = Object.entries(errors)
       .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
       .join('; ');
     return errorMessages;
+  }
+
+  // Check for response data with title (FluentValidation / ProblemDetails format)
+  if (isAxiosError(error) && error.response?.data?.title) {
+    return error.response.data.detail || error.response.data.title;
   }
 
   // Check for error message property

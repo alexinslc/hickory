@@ -31,14 +31,15 @@ export default function LoginPage() {
 
   // Client-side validation
   const emailError = useMemo(() => {
-    if (!touched.email || email.length === 0) return null;
+    if (!touched.email) return null;
+    if (email.length === 0) return 'Email is required';
     if (!email.includes('@')) return 'Please enter a valid email address';
     return null;
   }, [email, touched.email]);
 
   const passwordError = useMemo(() => {
-    if (!touched.password || password.length === 0) return null;
-    if (password.length < 1) return 'Password is required';
+    if (!touched.password) return null;
+    if (password.length === 0) return 'Password is required';
     return null;
   }, [password, touched.password]);
 

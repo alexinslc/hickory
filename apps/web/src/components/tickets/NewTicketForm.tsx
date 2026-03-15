@@ -56,14 +56,16 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
   const isValid = titleValid && descriptionValid;
 
   const getTitleValidationMessage = () => {
-    if (!touched.title || title.length === 0) return null;
+    if (!touched.title) return null;
+    if (title.length === 0) return 'Title is required';
     if (title.length < 5) return 'Title must be at least 5 characters';
     if (title.length > 200) return 'Title must be no more than 200 characters';
     return null;
   };
 
   const getDescriptionValidationMessage = () => {
-    if (!touched.description || description.length === 0) return null;
+    if (!touched.description) return null;
+    if (description.length === 0) return 'Description is required';
     if (description.length < 10) return 'Description must be at least 10 characters';
     if (description.length > 10000) return 'Description must be no more than 10,000 characters';
     return null;
@@ -169,8 +171,14 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           id="priority"
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+          className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 sm:text-sm ${
+            serverPriorityError
+              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+          }`}
           disabled={createTicket.isPending}
+          aria-invalid={!!serverPriorityError || undefined}
+          aria-describedby={serverPriorityError ? 'priority-error' : 'priority-description'}
         >
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
@@ -178,12 +186,12 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           <option value="Critical">Critical</option>
         </select>
         {serverPriorityError ? (
-          <p className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+          <p id="priority-error" className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
             <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
             {serverPriorityError}
           </p>
         ) : (
-          <p className="mt-1 text-xs text-gray-500">
+          <p id="priority-description" className="mt-1 text-xs text-gray-500">
             Select the urgency level of your issue
           </p>
         )}
@@ -198,8 +206,14 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           id="category"
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+          className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 sm:text-sm ${
+            serverCategoryError
+              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+          }`}
           disabled={createTicket.isPending}
+          aria-invalid={!!serverCategoryError || undefined}
+          aria-describedby={serverCategoryError ? 'category-error' : 'category-description'}
         >
           <option value="">Select a category (optional)</option>
           {categories?.filter(c => c.isActive).map((category) => (
@@ -209,12 +223,12 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           ))}
         </select>
         {serverCategoryError ? (
-          <p className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+          <p id="category-error" className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
             <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
             {serverCategoryError}
           </p>
         ) : (
-          <p className="mt-1 text-xs text-gray-500">
+          <p id="category-description" className="mt-1 text-xs text-gray-500">
             Help us route your ticket to the right team
           </p>
         )}
