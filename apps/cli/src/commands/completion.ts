@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /**
  * Shell completion script generation for bash and zsh.
  *
