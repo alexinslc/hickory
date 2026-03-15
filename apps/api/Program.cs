@@ -359,6 +359,9 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
+// Correlation ID - reads/generates X-Correlation-Id and enriches Serilog context
+app.UseCorrelationId();
+
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

@@ -4,7 +4,9 @@ using MediatR;
 namespace Hickory.Api.Infrastructure.Behaviors;
 
 /// <summary>
-/// MediatR pipeline behavior that logs request execution time and details
+/// MediatR pipeline behavior that logs request execution time and details.
+/// The correlation ID is automatically included via Serilog's LogContext
+/// (enriched by CorrelationIdMiddleware).
 /// </summary>
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
@@ -29,9 +31,9 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         try
         {
             var response = await next();
-            
+
             stopwatch.Stop();
-            
+
             _logger.LogInformation(
                 "Handled {RequestName} in {ElapsedMilliseconds}ms",
                 requestName,
@@ -42,7 +44,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         catch (Exception ex)
         {
             stopwatch.Stop();
-            
+
             _logger.LogError(
                 ex,
                 "Error handling {RequestName} after {ElapsedMilliseconds}ms",

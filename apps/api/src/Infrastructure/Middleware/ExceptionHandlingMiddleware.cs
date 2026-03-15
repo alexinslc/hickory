@@ -5,7 +5,9 @@ using FluentValidation;
 namespace Hickory.Api.Infrastructure.Middleware;
 
 /// <summary>
-/// Global exception handling middleware
+/// Global exception handling middleware.
+/// The correlation ID is automatically included in logs via Serilog's LogContext
+/// (enriched by CorrelationIdMiddleware, which runs before this middleware).
 /// </summary>
 public class ExceptionHandlingMiddleware
 {
@@ -41,9 +43,12 @@ public class ExceptionHandlingMiddleware
         var response = context.Response;
         response.ContentType = "application/json";
 
+        var correlationId = context.Items["CorrelationId"]?.ToString();
+
         var errorResponse = new ErrorResponse
         {
             TraceId = context.TraceIdentifier,
+            CorrelationId = correlationId,
             Timestamp = DateTime.UtcNow
         };
 
@@ -58,7 +63,7 @@ public class ExceptionHandlingMiddleware
                     .ToDictionary(
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToArray());
-                
+
                 _logger.LogWarning(
                     exception,
                     "Validation error: {ValidationErrors}",
@@ -70,7 +75,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Unauthorized";
                 errorResponse.Detail = exception.Message;
-                
+
                 _logger.LogWarning(exception, "Unauthorized access attempt");
                 break;
 
@@ -79,7 +84,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Operation Failed";
                 errorResponse.Detail = invalidOperationException.Message;
-                
+
                 _logger.LogWarning(exception, "Invalid operation: {Message}", exception.Message);
                 break;
 
@@ -88,7 +93,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Resource Not Found";
                 errorResponse.Detail = exception.Message;
-                
+
                 _logger.LogWarning(exception, "Resource not found");
                 break;
 
@@ -97,7 +102,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Internal Server Error";
                 errorResponse.Detail = "An unexpected error occurred";
-                
+
                 _logger.LogError(exception, "Unhandled exception occurred");
                 break;
         }
@@ -113,6 +118,7 @@ public class ErrorResponse
     public string Title { get; set; } = string.Empty;
     public string? Detail { get; set; }
     public string TraceId { get; set; } = string.Empty;
+    public string? CorrelationId { get; set; }
     public DateTime Timestamp { get; set; }
     public Dictionary<string, string[]>? Errors { get; set; }
 }
