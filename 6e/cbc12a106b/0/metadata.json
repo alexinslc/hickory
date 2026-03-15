@@ -1,0 +1,22 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "6ecbc12a106b",
+  "session_id": "f72cff64-efaa-4708-a5ee-c7c8e75d7844",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-15T20:16:44.199531Z",
+  "branch": "fix/interceptor-tests",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "turn_id": "6b139cb32cbd",
+  "token_usage": {
+    "input_tokens": 1152,
+    "cache_creation_tokens": 1018709,
+    "cache_read_tokens": 69271954,
+    "output_tokens": 94624,
+    "api_call_count": 444
+  },
+  "session_metrics": {
+    "turn_count": 29
+  }
+}
