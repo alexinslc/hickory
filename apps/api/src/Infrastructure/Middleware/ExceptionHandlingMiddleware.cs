@@ -41,9 +41,12 @@ public class ExceptionHandlingMiddleware
         var response = context.Response;
         response.ContentType = "application/json";
 
+        var correlationId = context.Items["CorrelationId"]?.ToString();
+
         var errorResponse = new ErrorResponse
         {
             TraceId = context.TraceIdentifier,
+            CorrelationId = correlationId,
             Timestamp = DateTime.UtcNow
         };
 
@@ -58,10 +61,11 @@ public class ExceptionHandlingMiddleware
                     .ToDictionary(
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToArray());
-                
+
                 _logger.LogWarning(
                     exception,
-                    "Validation error: {ValidationErrors}",
+                    "Validation error [CorrelationId: {CorrelationId}]: {ValidationErrors}",
+                    correlationId,
                     string.Join("; ", validationException.Errors.Select(e => $"{e.PropertyName}: {e.ErrorMessage}")));
                 break;
 
@@ -70,8 +74,11 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Unauthorized";
                 errorResponse.Detail = exception.Message;
-                
-                _logger.LogWarning(exception, "Unauthorized access attempt");
+
+                _logger.LogWarning(
+                    exception,
+                    "Unauthorized access attempt [CorrelationId: {CorrelationId}]",
+                    correlationId);
                 break;
 
             case InvalidOperationException invalidOperationException:
@@ -79,8 +86,12 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Operation Failed";
                 errorResponse.Detail = invalidOperationException.Message;
-                
-                _logger.LogWarning(exception, "Invalid operation: {Message}", exception.Message);
+
+                _logger.LogWarning(
+                    exception,
+                    "Invalid operation [CorrelationId: {CorrelationId}]: {Message}",
+                    correlationId,
+                    exception.Message);
                 break;
 
             case KeyNotFoundException:
@@ -88,8 +99,11 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Resource Not Found";
                 errorResponse.Detail = exception.Message;
-                
-                _logger.LogWarning(exception, "Resource not found");
+
+                _logger.LogWarning(
+                    exception,
+                    "Resource not found [CorrelationId: {CorrelationId}]",
+                    correlationId);
                 break;
 
             default:
@@ -97,8 +111,11 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Status = response.StatusCode;
                 errorResponse.Title = "Internal Server Error";
                 errorResponse.Detail = "An unexpected error occurred";
-                
-                _logger.LogError(exception, "Unhandled exception occurred");
+
+                _logger.LogError(
+                    exception,
+                    "Unhandled exception occurred [CorrelationId: {CorrelationId}]",
+                    correlationId);
                 break;
         }
 
@@ -113,6 +130,7 @@ public class ErrorResponse
     public string Title { get; set; } = string.Empty;
     public string? Detail { get; set; }
     public string TraceId { get; set; } = string.Empty;
+    public string? CorrelationId { get; set; }
     public DateTime Timestamp { get; set; }
     public Dictionary<string, string[]>? Errors { get; set; }
 }

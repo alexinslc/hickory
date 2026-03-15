@@ -362,6 +362,9 @@ var app = builder.Build();
 // Global exception handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// Correlation ID - reads/generates X-Correlation-Id and enriches Serilog context
+app.UseCorrelationId();
+
 // Security headers
 app.Use(async (context, next) =>
 {
