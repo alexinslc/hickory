@@ -15,20 +15,35 @@ export function useAgentQueue(params?: PaginationParams): UseQueryResult<Paginat
   return useQuery({
     queryKey: agentKeys.queue(params),
     queryFn: () => apiClient.getAgentQueue(params),
-    staleTime: 10000, // 10 seconds - more frequent updates for agent queue
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    staleTime: 10000,
+    refetchInterval: 30000,
   });
 }
 
-// Assign ticket mutation
+// Assign ticket mutation with optimistic update
 export function useAssignTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ ticketId, agentId, rowVersion }: { ticketId: string; agentId: string; rowVersion: string }) =>
       apiClient.assignTicket(ticketId, { agentId, rowVersion }),
-    onSuccess: (_, variables) => {
-      // Invalidate agent queue and ticket details
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
+      const previous = queryClient.getQueryData<TicketDto>(ticketKeys.detail(variables.ticketId));
+      if (previous) {
+        queryClient.setQueryData<TicketDto>(ticketKeys.detail(variables.ticketId), {
+          ...previous,
+          assignedToId: variables.agentId,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(ticketKeys.detail(variables.ticketId), context.previous);
+      }
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
@@ -36,14 +51,30 @@ export function useAssignTicket() {
   });
 }
 
-// Update ticket status mutation
+// Update ticket status mutation with optimistic update
 export function useUpdateTicketStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ ticketId, newStatus, rowVersion }: { ticketId: string; newStatus: string; rowVersion: string }) =>
       apiClient.updateTicketStatus(ticketId, { newStatus, rowVersion }),
-    onSuccess: (_, variables) => {
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
+      const previous = queryClient.getQueryData<TicketDto>(ticketKeys.detail(variables.ticketId));
+      if (previous) {
+        queryClient.setQueryData<TicketDto>(ticketKeys.detail(variables.ticketId), {
+          ...previous,
+          status: variables.newStatus,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(ticketKeys.detail(variables.ticketId), context.previous);
+      }
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
@@ -51,14 +82,30 @@ export function useUpdateTicketStatus() {
   });
 }
 
-// Update ticket priority mutation
+// Update ticket priority mutation with optimistic update
 export function useUpdateTicketPriority() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ ticketId, newPriority, rowVersion }: { ticketId: string; newPriority: string; rowVersion: string }) =>
       apiClient.updateTicketPriority(ticketId, { newPriority, rowVersion }),
-    onSuccess: (_, variables) => {
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
+      const previous = queryClient.getQueryData<TicketDto>(ticketKeys.detail(variables.ticketId));
+      if (previous) {
+        queryClient.setQueryData<TicketDto>(ticketKeys.detail(variables.ticketId), {
+          ...previous,
+          priority: variables.newPriority,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(ticketKeys.detail(variables.ticketId), context.previous);
+      }
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
@@ -66,14 +113,32 @@ export function useUpdateTicketPriority() {
   });
 }
 
-// Close ticket mutation
+// Close ticket mutation with optimistic update
 export function useCloseTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ ticketId, resolutionNotes, rowVersion }: { ticketId: string; resolutionNotes: string; rowVersion: string }) =>
       apiClient.closeTicket(ticketId, { resolutionNotes, rowVersion }),
-    onSuccess: (_, variables) => {
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
+      const previous = queryClient.getQueryData<TicketDto>(ticketKeys.detail(variables.ticketId));
+      if (previous) {
+        queryClient.setQueryData<TicketDto>(ticketKeys.detail(variables.ticketId), {
+          ...previous,
+          status: 'Closed',
+          resolutionNotes: variables.resolutionNotes,
+          closedAt: new Date().toISOString(),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(ticketKeys.detail(variables.ticketId), context.previous);
+      }
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
@@ -81,14 +146,30 @@ export function useCloseTicket() {
   });
 }
 
-// Reassign ticket mutation
+// Reassign ticket mutation with optimistic update
 export function useReassignTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ ticketId, newAgentId, rowVersion }: { ticketId: string; newAgentId: string; rowVersion: string }) =>
       apiClient.reassignTicket(ticketId, { newAgentId, rowVersion }),
-    onSuccess: (_, variables) => {
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
+      const previous = queryClient.getQueryData<TicketDto>(ticketKeys.detail(variables.ticketId));
+      if (previous) {
+        queryClient.setQueryData<TicketDto>(ticketKeys.detail(variables.ticketId), {
+          ...previous,
+          assignedToId: variables.newAgentId,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(ticketKeys.detail(variables.ticketId), context.previous);
+      }
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
