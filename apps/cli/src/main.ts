@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { login, logout, getConfig } from './commands/auth';
 import { createTicket, viewTicket, listTickets } from './commands/ticket';
 import { agentQueue, assignTicket, closeTicket } from './commands/agent';
+import { generateCompletion } from './commands/completion';
 
 const program = new Command();
 
@@ -81,5 +82,42 @@ agent
   .command('close <ticket>')
   .description('Close a ticket with resolution notes')
   .action(closeTicket);
+
+// Completion command
+const completion = program
+  .command('completion')
+  .description('Generate shell completion scripts')
+  .addHelpText('after', `
+Installation:
+
+  Bash (add to ~/.bashrc):
+    eval "$(hickory completion bash)"
+
+  Zsh (add to ~/.zshrc):
+    eval "$(hickory completion zsh)"
+
+  Alternatively, save to a file:
+
+  Bash:
+    hickory completion bash > /etc/bash_completion.d/hickory
+    # or
+    hickory completion bash > ~/.local/share/bash-completion/completions/hickory
+
+  Zsh:
+    hickory completion zsh > ~/.zsh/completions/_hickory
+    # Then ensure ~/.zsh/completions is in your fpath (add to ~/.zshrc before compinit):
+    #   fpath=(~/.zsh/completions $fpath)
+    #   autoload -Uz compinit && compinit
+`);
+
+completion
+  .command('bash')
+  .description('Generate bash completion script')
+  .action(() => generateCompletion('bash'));
+
+completion
+  .command('zsh')
+  .description('Generate zsh completion script')
+  .action(() => generateCompletion('zsh'));
 
 program.parse(process.argv);
