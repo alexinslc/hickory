@@ -1,19 +1,23 @@
+using Hickory.Api.Common.Events;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hickory.Api.Features.Tickets.Reassign;
 
-public record ReassignTicketCommand(Guid TicketId, Guid NewAgentId) : IRequest<Unit>;
+public record ReassignTicketCommand(Guid TicketId, Guid NewAgentId, Guid ReassignedById = default) : IRequest<Unit>;
 
 public class ReassignTicketHandler : IRequestHandler<ReassignTicketCommand, Unit>
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public ReassignTicketHandler(ApplicationDbContext dbContext)
+    public ReassignTicketHandler(ApplicationDbContext dbContext, IPublishEndpoint publishEndpoint)
     {
         _dbContext = dbContext;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Unit> Handle(ReassignTicketCommand command, CancellationToken cancellationToken)
@@ -57,6 +61,37 @@ public class ReassignTicketHandler : IRequestHandler<ReassignTicketCommand, Unit
         {
             throw new InvalidOperationException(
                 "The ticket was modified by another user. Please refresh and try again.");
+        }
+
+        // Publish event for email notifications
+        if (command.ReassignedById != default)
+        {
+            var submitter = await _dbContext.Users
+                .Where(u => u.Id == ticket.SubmitterId)
+                .Select(u => new { u.FirstName, u.LastName, u.Email })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var reassignedBy = await _dbContext.Users
+                .Where(u => u.Id == command.ReassignedById)
+                .Select(u => new { u.FirstName, u.LastName, u.Email })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            await _publishEndpoint.Publish(new TicketAssignedEvent
+            {
+                TicketId = ticket.Id,
+                TicketNumber = ticket.TicketNumber,
+                Title = ticket.Title,
+                SubmitterId = ticket.SubmitterId,
+                SubmitterName = submitter != null ? $"{submitter.FirstName} {submitter.LastName}" : "Unknown",
+                SubmitterEmail = submitter?.Email ?? "",
+                AssignedToId = newAgent.Id,
+                AssignedToName = $"{newAgent.FirstName} {newAgent.LastName}",
+                AssignedToEmail = newAgent.Email,
+                AssignedById = command.ReassignedById,
+                AssignedByName = reassignedBy != null ? $"{reassignedBy.FirstName} {reassignedBy.LastName}" : "Unknown",
+                AssignedByEmail = reassignedBy?.Email ?? "",
+                AssignedAt = DateTime.UtcNow
+            }, cancellationToken);
         }
 
         return Unit.Value;

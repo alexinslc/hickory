@@ -2,6 +2,7 @@ using FluentAssertions;
 using Hickory.Api.Features.Comments.Create;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Tests.TestUtilities;
+using Hickory.Api.Common.Events;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hickory.Api.Tests.Features.Comments;
@@ -19,7 +20,7 @@ public class AddCommentHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AddCommentHandler(dbContext);
+        var handler = new AddCommentHandler(dbContext, new MockPublishEndpoint());
         var request = new AddCommentRequest
         {
             Content = "This is a test comment",
@@ -54,7 +55,7 @@ public class AddCommentHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AddCommentHandler(dbContext);
+        var handler = new AddCommentHandler(dbContext, new MockPublishEndpoint());
         var request = new AddCommentRequest
         {
             Content = "Internal agent note",
@@ -83,7 +84,7 @@ public class AddCommentHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AddCommentHandler(dbContext);
+        var handler = new AddCommentHandler(dbContext, new MockPublishEndpoint());
         var request = new AddCommentRequest
         {
             Content = "User attempting internal note",
@@ -112,7 +113,7 @@ public class AddCommentHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AddCommentHandler(dbContext);
+        var handler = new AddCommentHandler(dbContext, new MockPublishEndpoint());
         var request = new AddCommentRequest
         {
             Content = "Admin internal note",
@@ -136,7 +137,7 @@ public class AddCommentHandlerTests
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AddCommentHandler(dbContext);
+        var handler = new AddCommentHandler(dbContext, new MockPublishEndpoint());
         var request = new AddCommentRequest { Content = "Test comment" };
         var command = new AddCommentCommand(Guid.NewGuid(), request, user.Id, "User");
 
@@ -158,7 +159,7 @@ public class AddCommentHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AddCommentHandler(dbContext);
+        var handler = new AddCommentHandler(dbContext, new MockPublishEndpoint());
         var request = new AddCommentRequest { Content = "Test comment" };
         var command = new AddCommentCommand(ticket.Id, request, user.Id, "User");
 
@@ -180,7 +181,7 @@ public class AddCommentHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new AddCommentHandler(dbContext);
+        var handler = new AddCommentHandler(dbContext, new MockPublishEndpoint());
 
         // Act - Add 3 comments
         var command1 = new AddCommentCommand(ticket.Id, new AddCommentRequest { Content = "Comment 1" }, user.Id, "User");

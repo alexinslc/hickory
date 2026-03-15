@@ -2,6 +2,7 @@ using FluentAssertions;
 using Hickory.Api.Features.Tickets.UpdateStatus;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Tests.TestUtilities;
+using Hickory.Api.Common.Events;
 
 namespace Hickory.Api.Tests.Features.Tickets;
 
@@ -20,7 +21,7 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint());
         var command = new UpdateTicketStatusCommand(ticket.Id, newStatus);
 
         // Act
@@ -39,7 +40,7 @@ public class UpdateTicketStatusHandlerTests
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
         var cacheService = new MockCacheService();
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint());
         var command = new UpdateTicketStatusCommand(Guid.NewGuid(), TicketStatus.InProgress);
 
         // Act & Assert
@@ -62,7 +63,7 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint());
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
 
         // Act & Assert
@@ -82,7 +83,7 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint());
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Closed);
 
         // Act & Assert
@@ -103,7 +104,7 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint());
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
 
         // Act
@@ -124,7 +125,7 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint());
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.Resolved);
 
         // Act
@@ -145,7 +146,7 @@ public class UpdateTicketStatusHandlerTests
         dbContext.Tickets.Add(ticket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new UpdateTicketStatusHandler(dbContext, cacheService);
+        var handler = new UpdateTicketStatusHandler(dbContext, cacheService, new MockPublishEndpoint());
         var command = new UpdateTicketStatusCommand(ticket.Id, TicketStatus.InProgress);
 
         // Act
