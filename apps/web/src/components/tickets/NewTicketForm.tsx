@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useCreateTicket } from '@/hooks/use-tickets';
 import { useGetAllCategories } from '@/lib/queries/categories';
+import { getFieldErrors } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react';
 
 interface NewTicketFormProps {
   onSuccess?: (ticketId: string) => void;
@@ -67,8 +69,22 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
     return null;
   };
 
-  const titleError = getTitleValidationMessage();
-  const descriptionError = getDescriptionValidationMessage();
+  const clientTitleError = getTitleValidationMessage();
+  const clientDescriptionError = getDescriptionValidationMessage();
+
+  // Server-side field errors
+  const serverFieldErrors = createTicket.isError ? getFieldErrors(createTicket.error) : null;
+  const serverTitleError = serverFieldErrors?.title?.[0] ?? null;
+  const serverDescriptionError = serverFieldErrors?.description?.[0] ?? null;
+  const serverPriorityError = serverFieldErrors?.priority?.[0] ?? null;
+  const serverCategoryError = serverFieldErrors?.categoryId?.[0] ?? null;
+
+  // Combine client + server errors
+  const titleError = clientTitleError || serverTitleError;
+  const descriptionError = clientDescriptionError || serverDescriptionError;
+
+  // General server error (not field-specific)
+  const hasGeneralError = createTicket.isError && !serverFieldErrors;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -97,7 +113,8 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           aria-describedby={titleError ? 'title-error' : 'title-description'}
         />
         {titleError ? (
-          <p id="title-error" className="mt-1 text-xs text-red-600">
+          <p id="title-error" className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+            <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
             {titleError}
           </p>
         ) : (
@@ -132,7 +149,8 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           aria-describedby={descriptionError ? 'description-error' : 'description-description'}
         />
         {descriptionError ? (
-          <p id="description-error" className="mt-1 text-xs text-red-600">
+          <p id="description-error" className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+            <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
             {descriptionError}
           </p>
         ) : (
@@ -159,9 +177,16 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           <option value="High">High</option>
           <option value="Critical">Critical</option>
         </select>
-        <p className="mt-1 text-xs text-gray-500">
-          Select the urgency level of your issue
-        </p>
+        {serverPriorityError ? (
+          <p className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+            <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+            {serverPriorityError}
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-gray-500">
+            Select the urgency level of your issue
+          </p>
+        )}
       </div>
 
       {/* Category Field */}
@@ -183,19 +208,24 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
             </option>
           ))}
         </select>
-        <p className="mt-1 text-xs text-gray-500">
-          Help us route your ticket to the right team
-        </p>
+        {serverCategoryError ? (
+          <p className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+            <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+            {serverCategoryError}
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-gray-500">
+            Help us route your ticket to the right team
+          </p>
+        )}
       </div>
 
       {/* Error Display */}
-      {createTicket.isError && (
-        <div className="rounded-md bg-red-50 p-4">
+      {hasGeneralError && (
+        <div className="rounded-md bg-red-50 p-4" role="alert">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+              <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">

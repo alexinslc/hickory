@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useLogin } from '@/hooks/use-auth';
+import { getFieldErrors } from '@/lib/api-client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +13,48 @@ import { TicketIcon, LogIn, AlertCircle, Loader2 } from 'lucide-react';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [touched, setTouched] = useState({ email: false, password: false });
   const login = useLogin();
+
+  const handleBlur = useCallback((field: 'email' | 'password') => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ email: true, password: true });
+
+    if (!isValid) return;
+
     login.mutate({ email, password });
   };
+
+  // Client-side validation
+  const emailError = useMemo(() => {
+    if (!touched.email || email.length === 0) return null;
+    if (!email.includes('@')) return 'Please enter a valid email address';
+    return null;
+  }, [email, touched.email]);
+
+  const passwordError = useMemo(() => {
+    if (!touched.password || password.length === 0) return null;
+    if (password.length < 1) return 'Password is required';
+    return null;
+  }, [password, touched.password]);
+
+  const isValid = email.includes('@') && password.length > 0;
+
+  // Server-side field errors
+  const serverFieldErrors = login.isError ? getFieldErrors(login.error) : null;
+  const serverEmailError = serverFieldErrors?.email?.[0] ?? null;
+  const serverPasswordError = serverFieldErrors?.password?.[0] ?? null;
+
+  // Combine client + server errors (client errors take priority when field is being edited)
+  const displayEmailError = emailError || serverEmailError;
+  const displayPasswordError = passwordError || serverPasswordError;
+
+  // General server error (not field-specific)
+  const hasGeneralError = login.isError && !serverFieldErrors;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -45,11 +82,13 @@ export default function LoginPage() {
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
-          
-          <form onSubmit={handleSubmit} aria-label="Login form">
+
+          <form onSubmit={handleSubmit} aria-label="Login form" noValidate>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="email">
+                  Email <span className="text-destructive" aria-hidden="true">*</span>
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -57,18 +96,30 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => handleBlur('email')}
                   disabled={login.isPending}
                   required
                   autoComplete="email"
                   aria-required="true"
+                  aria-invalid={!!displayEmailError || undefined}
+                  aria-describedby={displayEmailError ? 'email-error' : undefined}
+                  className={displayEmailError ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {displayEmailError && (
+                  <p id="email-error" className="flex items-center gap-1 text-xs text-destructive" role="alert">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                    {displayEmailError}
+                  </p>
+                )}
               </div>
-              
-              <div className="space-y-2">
+
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link 
-                    href="/auth/forgot-password" 
+                  <Label htmlFor="password">
+                    Password <span className="text-destructive" aria-hidden="true">*</span>
+                  </Label>
+                  <Link
+                    href="/auth/forgot-password"
                     className="text-xs text-primary hover:underline"
                   >
                     Forgot password?
@@ -81,14 +132,24 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => handleBlur('password')}
                   disabled={login.isPending}
                   required
                   autoComplete="current-password"
                   aria-required="true"
+                  aria-invalid={!!displayPasswordError || undefined}
+                  aria-describedby={displayPasswordError ? 'password-error' : undefined}
+                  className={displayPasswordError ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {displayPasswordError && (
+                  <p id="password-error" className="flex items-center gap-1 text-xs text-destructive" role="alert">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                    {displayPasswordError}
+                  </p>
+                )}
               </div>
 
-              {login.isError && (
+              {hasGeneralError && (
                 <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive border border-destructive/20" role="alert">
                   <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" aria-hidden="true" />
                   <div className="text-sm">
@@ -102,9 +163,9 @@ export default function LoginPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col space-y-4">
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 size="lg"
                 disabled={login.isPending}
               >
@@ -123,8 +184,8 @@ export default function LoginPage() {
 
               <div className="text-sm text-center text-muted-foreground">
                 Don't have an account?{' '}
-                <Link 
-                  href="/auth/register" 
+                <Link
+                  href="/auth/register"
                   className="text-primary font-medium hover:underline"
                 >
                   Create account
@@ -136,7 +197,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-500 mt-8">
-          © 2025 Hickory Help Desk. All rights reserved.
+          &copy; 2025 Hickory Help Desk. All rights reserved.
         </p>
       </div>
     </div>

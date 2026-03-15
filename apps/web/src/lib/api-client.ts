@@ -709,31 +709,40 @@ class ApiClient {
 export const apiClient = new ApiClient();
 
 /**
+ * Type guard for axios error structure
+ */
+function isAxiosError(err: unknown): err is { response?: { data?: { message?: string; title?: string; detail?: string; errors?: Record<string, string[]> } } } {
+  if (typeof err !== 'object' || err === null || !('response' in err)) {
+    return false;
+  }
+  const response = (err as { response: unknown }).response;
+  if (typeof response !== 'object' || response === null) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Type guard for error with message
+ */
+function hasMessage(err: unknown): err is { message: string } {
+  return typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string';
+}
+
+/**
  * Extracts a user-friendly error message from an API error
  * @param error - The error object from an API call
  * @returns A formatted error message string
  */
 export function handleApiError(error: unknown): string {
-  // Type guard for axios error structure
-  const isAxiosError = (err: unknown): err is { response?: { data?: { message?: string; errors?: Record<string, unknown> } } } => {
-    if (typeof err !== 'object' || err === null || !('response' in err)) {
-      return false;
-    }
-    const response = (err as { response: unknown }).response;
-    if (typeof response !== 'object' || response === null) {
-      return false;
-    }
-    return true;
-  };
-
-  // Type guard for error with message
-  const hasMessage = (err: unknown): err is { message: string } => {
-    return typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string';
-  };
-
   // Check for response data with message
   if (isAxiosError(error) && error.response?.data?.message) {
     return error.response.data.message;
+  }
+
+  // Check for response data with title (FluentValidation / ProblemDetails format)
+  if (isAxiosError(error) && error.response?.data?.title) {
+    return error.response.data.detail || error.response.data.title;
   }
 
   // Check for validation errors
@@ -752,4 +761,29 @@ export function handleApiError(error: unknown): string {
 
   // Default fallback
   return 'An unexpected error occurred';
+}
+
+/**
+ * Extracts field-level validation errors from an API error response.
+ * Returns a record mapping field names (lowercased) to arrays of error messages.
+ * Useful for displaying inline validation errors next to form fields.
+ *
+ * @param error - The error object from an API call
+ * @returns A record of field names to error message arrays, or null if no field errors
+ */
+export function getFieldErrors(error: unknown): Record<string, string[]> | null {
+  if (!isAxiosError(error) || !error.response?.data?.errors) {
+    return null;
+  }
+
+  const errors = error.response.data.errors;
+  const fieldErrors: Record<string, string[]> = {};
+
+  for (const [field, messages] of Object.entries(errors)) {
+    // Normalize field name to camelCase for matching form field names
+    const normalizedField = field.charAt(0).toLowerCase() + field.slice(1);
+    fieldErrors[normalizedField] = Array.isArray(messages) ? messages : [String(messages)];
+  }
+
+  return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
 }

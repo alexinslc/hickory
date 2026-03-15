@@ -3,8 +3,10 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useArticle, useUpdateArticle, useCreateArticle } from '@/hooks/use-knowledge-base';
 import { useAuth } from '@/hooks/use-auth';
+import { getFieldErrors } from '@/lib/api-client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 export default function ArticleEditorPage() {
   const params = useParams();
@@ -15,7 +17,7 @@ export default function ArticleEditorPage() {
 
   // Only fetch if editing existing article (useArticle has enabled check built-in)
   const { data: article, isLoading } = useArticle(articleId);
-  
+
   const updateArticle = useUpdateArticle(articleId);
   const createArticle = useCreateArticle();
 
@@ -25,6 +27,15 @@ export default function ArticleEditorPage() {
   const [tags, setTags] = useState('');
   const [status, setStatus] = useState('Draft');
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState({
+    title: false,
+    content: false,
+    category: false,
+  });
+
+  const handleBlur = useCallback((field: keyof typeof touched) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }, []);
 
   // Load article data when editing
   useEffect(() => {
@@ -39,18 +50,53 @@ export default function ArticleEditorPage() {
 
   // Authorization check
   const isAgent = user?.role === 'Agent' || user?.role === 'Administrator';
-  
+
   if (!isAgent) {
     router.push('/knowledge-base');
     return null;
   }
 
+  // Client-side validation
+  const titleError = useMemo(() => {
+    if (!touched.title || title.length === 0) return null;
+    if (title.trim().length < 1) return 'Title is required';
+    if (title.length > 500) return 'Title must be no more than 500 characters';
+    return null;
+  }, [title, touched.title]);
+
+  const contentError = useMemo(() => {
+    if (!touched.content || content.length === 0) return null;
+    if (content.trim().length < 1) return 'Content is required';
+    return null;
+  }, [content, touched.content]);
+
+  const categoryError = useMemo(() => {
+    if (!touched.category || category.length === 0) return null;
+    if (category.trim().length < 1) return 'Category is required';
+    return null;
+  }, [category, touched.category]);
+
+  // Server-side field errors
+  const mutationError = isNewArticle ? createArticle.error : updateArticle.error;
+  const isMutationError = isNewArticle ? createArticle.isError : updateArticle.isError;
+  const serverFieldErrors = isMutationError ? getFieldErrors(mutationError) : null;
+
+  const serverTitleError = serverFieldErrors?.title?.[0] ?? null;
+  const serverContentError = serverFieldErrors?.content?.[0] ?? null;
+  const serverCategoryError = serverFieldErrors?.category?.[0] ?? null;
+
+  const displayTitleError = titleError || serverTitleError;
+  const displayContentError = contentError || serverContentError;
+  const displayCategoryError = categoryError || serverCategoryError;
+
+  const isValid = title.trim().length > 0 && content.trim().length > 0 && category.trim().length > 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setTouched({ title: true, content: true, category: true });
 
-    if (!title.trim() || !content.trim() || !category.trim()) {
-      setError('Please fill in all required fields');
+    if (!isValid) {
       return;
     }
 
@@ -80,10 +126,14 @@ export default function ArticleEditorPage() {
         router.push(`/knowledge-base/${articleId}`);
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || 'Failed to save article');
-      } else {
-        setError('Failed to save article');
+      // Only set general error if there are no field-specific errors
+      const fieldErrors = getFieldErrors(err);
+      if (!fieldErrors) {
+        if (err instanceof Error) {
+          setError(err.message || 'Failed to save article');
+        } else {
+          setError('Failed to save article');
+        }
       }
     }
   };
@@ -106,7 +156,7 @@ export default function ArticleEditorPage() {
           href={isNewArticle ? '/knowledge-base' : `/knowledge-base/${articleId}`}
           className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
         >
-          ← Cancel
+          &larr; Cancel
         </Link>
       </div>
 
@@ -116,41 +166,76 @@ export default function ArticleEditorPage() {
         </h1>
 
         {error && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4" role="alert">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <p className="text-red-800 dark:text-red-200">{error}</p>
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Title */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium mb-2">
-              Title <span className="text-red-500">*</span>
+              Title <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <input
               id="title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => handleBlur('title')}
               required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+              aria-required="true"
+              aria-invalid={!!displayTitleError || undefined}
+              aria-describedby={displayTitleError ? 'article-title-error' : undefined}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 ${
+                displayTitleError
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+              }`}
             />
+            {displayTitleError && (
+              <p id="article-title-error" className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+                <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                {displayTitleError}
+              </p>
+            )}
           </div>
 
           {/* Category */}
           <div>
             <label htmlFor="category" className="block text-sm font-medium mb-2">
-              Category <span className="text-red-500">*</span>
+              Category <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <input
               id="category"
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              onBlur={() => handleBlur('category')}
               required
+              aria-required="true"
+              aria-invalid={!!displayCategoryError || undefined}
+              aria-describedby={displayCategoryError ? 'article-category-error' : 'article-category-hint'}
               placeholder="e.g., Billing, Technical, Account"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 ${
+                displayCategoryError
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+              }`}
             />
+            {displayCategoryError ? (
+              <p id="article-category-error" className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+                <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                {displayCategoryError}
+              </p>
+            ) : (
+              <p id="article-category-hint" className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Group related articles by category
+              </p>
+            )}
           </div>
 
           {/* Tags */}
@@ -171,29 +256,44 @@ export default function ArticleEditorPage() {
           {/* Content */}
           <div>
             <label htmlFor="content" className="block text-sm font-medium mb-2">
-              Content (Markdown) <span className="text-red-500">*</span>
+              Content (Markdown) <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onBlur={() => handleBlur('content')}
               required
               rows={20}
+              aria-required="true"
+              aria-invalid={!!displayContentError || undefined}
+              aria-describedby={displayContentError ? 'article-content-error' : undefined}
               placeholder="Write your article content using Markdown formatting..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 font-mono text-sm"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 font-mono text-sm ${
+                displayContentError
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+              }`}
             />
+            {displayContentError && (
+              <p id="article-content-error" className="mt-1 flex items-center gap-1 text-xs text-red-600" role="alert">
+                <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                {displayContentError}
+              </p>
+            )}
           </div>
 
           {/* Status */}
           <div>
             <label htmlFor="status" className="block text-sm font-medium mb-2">
-              Status <span className="text-red-500">*</span>
+              Status <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <select
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               required
+              aria-required="true"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
             >
               <option value="Draft">Draft</option>
