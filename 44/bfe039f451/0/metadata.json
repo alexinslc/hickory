@@ -1,0 +1,22 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "44bfe039f451",
+  "session_id": "f72cff64-efaa-4708-a5ee-c7c8e75d7844",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-15T19:15:35.11407Z",
+  "branch": "feature/keyboard-shortcuts",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "turn_id": "6b139cb32cbd",
+  "token_usage": {
+    "input_tokens": 1016,
+    "cache_creation_tokens": 956732,
+    "cache_read_tokens": 35816884,
+    "output_tokens": 71811,
+    "api_call_count": 310
+  },
+  "session_metrics": {
+    "turn_count": 29
+  }
+}

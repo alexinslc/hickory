@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "44bfe039f451",
+  "strategy": "manual-commit",
+  "branch": "feature/keyboard-shortcuts",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/44/bfe039f451/0/metadata.json",
+      "transcript": "/44/bfe039f451/0/full.jsonl",
+      "content_hash": "/44/bfe039f451/0/content_hash.txt",
+      "prompt": "/44/bfe039f451/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1016,
+    "cache_creation_tokens": 956732,
+    "cache_read_tokens": 35816884,
+    "output_tokens": 71811,
+    "api_call_count": 310
+  }
+}
