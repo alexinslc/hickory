@@ -44,7 +44,7 @@ export function useAssignTicket() {
       }
     },
     onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
+      queryClient.invalidateQueries({ queryKey: agentKeys.all });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
@@ -75,7 +75,7 @@ export function useUpdateTicketStatus() {
       }
     },
     onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
+      queryClient.invalidateQueries({ queryKey: agentKeys.all });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
@@ -106,7 +106,7 @@ export function useUpdateTicketPriority() {
       }
     },
     onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
+      queryClient.invalidateQueries({ queryKey: agentKeys.all });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
@@ -139,7 +139,7 @@ export function useCloseTicket() {
       }
     },
     onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
+      queryClient.invalidateQueries({ queryKey: agentKeys.all });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
@@ -170,7 +170,7 @@ export function useReassignTicket() {
       }
     },
     onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: agentKeys.queue() });
+      queryClient.invalidateQueries({ queryKey: agentKeys.all });
       queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
