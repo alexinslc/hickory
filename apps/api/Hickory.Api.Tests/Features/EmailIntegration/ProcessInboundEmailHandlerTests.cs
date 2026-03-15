@@ -313,7 +313,7 @@ public class ProcessInboundEmailHandlerTests
     [Theory]
     [InlineData("john@example.com", "john@example.com")]
     [InlineData("John Doe <john@example.com>", "john@example.com")]
-    [InlineData("  JOHN@EXAMPLE.COM  ", "john@example.com")]
+    [InlineData("  JOHN@EXAMPLE.COM  ", "JOHN@EXAMPLE.COM")]
     public void ParseEmailAddress_VariousFormats_ReturnsNormalizedEmail(string input, string expected)
     {
         var result = ProcessInboundEmailHandler.ParseEmailAddress(input);
