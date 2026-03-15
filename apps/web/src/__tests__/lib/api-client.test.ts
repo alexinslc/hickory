@@ -34,7 +34,8 @@ let responseInterceptorRejected: (error: any) => any;
 
 // jest.mock is hoisted above variable declarations, so we must create the
 // mock instance inside the factory to avoid "Cannot access before init" errors.
-let mockAxiosInstance: any;
+// eslint-disable-next-line no-var -- var needed to avoid temporal dead zone with hoisted jest.mock
+var mockAxiosInstance: any;
 
 jest.mock('axios', () => {
   mockAxiosInstance = Object.assign(
