@@ -32,6 +32,7 @@ public class DeleteAccountHandler : IRequestHandler<DeleteAccountCommand, Delete
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
             ?? throw new KeyNotFoundException($"User with ID {request.UserId} not found");
 
+        var now = DateTime.UtcNow;
         var userEmail = user.Email;
 
         // Anonymize user data
@@ -64,7 +65,7 @@ public class DeleteAccountHandler : IRequestHandler<DeleteAccountCommand, Delete
 
         foreach (var token in refreshTokens)
         {
-            token.RevokedAt = DateTime.UtcNow;
+            token.RevokedAt = now;
             token.RevokedReason = "Account deleted";
         }
 
@@ -72,7 +73,7 @@ public class DeleteAccountHandler : IRequestHandler<DeleteAccountCommand, Delete
 
         // Log the deletion for audit compliance
         await _auditLogService.LogAsync(
-            AuditAction.UserDeactivated,
+            AuditAction.AccountDeleted,
             userId: request.UserId,
             userEmail: userEmail,
             entityType: "User",
@@ -84,7 +85,7 @@ public class DeleteAccountHandler : IRequestHandler<DeleteAccountCommand, Delete
         {
             Success = true,
             Message = "Your account has been deleted and your personal data has been anonymized.",
-            DeletedAt = DateTime.UtcNow
+            DeletedAt = now
         };
     }
 }

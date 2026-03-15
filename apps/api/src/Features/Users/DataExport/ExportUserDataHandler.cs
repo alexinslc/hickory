@@ -1,4 +1,6 @@
+using Hickory.Api.Infrastructure.Audit;
 using Hickory.Api.Infrastructure.Data;
+using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,10 +55,12 @@ public record CommentExportDto
 public class ExportUserDataHandler : IRequestHandler<ExportUserDataQuery, UserDataExportDto>
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IAuditLogService _auditLogService;
 
-    public ExportUserDataHandler(ApplicationDbContext dbContext)
+    public ExportUserDataHandler(ApplicationDbContext dbContext, IAuditLogService auditLogService)
     {
         _dbContext = dbContext;
+        _auditLogService = auditLogService;
     }
 
     public async Task<UserDataExportDto> Handle(ExportUserDataQuery request, CancellationToken cancellationToken)
@@ -99,6 +103,16 @@ public class ExportUserDataHandler : IRequestHandler<ExportUserDataQuery, UserDa
                 UpdatedAt = c.UpdatedAt
             })
             .ToListAsync(cancellationToken);
+
+        // Log the data export for audit compliance
+        await _auditLogService.LogAsync(
+            AuditAction.DataExported,
+            userId: request.UserId,
+            userEmail: user.Email,
+            entityType: "User",
+            entityId: request.UserId.ToString(),
+            details: "User data exported per GDPR right to access request",
+            cancellationToken: cancellationToken);
 
         return new UserDataExportDto
         {

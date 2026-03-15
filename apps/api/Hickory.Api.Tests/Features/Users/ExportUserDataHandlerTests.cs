@@ -1,13 +1,22 @@
 using FluentAssertions;
 using Hickory.Api.Features.Users.DataExport;
+using Hickory.Api.Infrastructure.Audit;
 using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Tests.TestUtilities;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace Hickory.Api.Tests.Features.Users;
 
 public class ExportUserDataHandlerTests
 {
+    private readonly Mock<IAuditLogService> _auditLogServiceMock;
+
+    public ExportUserDataHandlerTests()
+    {
+        _auditLogServiceMock = new Mock<IAuditLogService>();
+    }
+
     [Fact]
     public async Task Handle_ValidUser_ReturnsAllUserData()
     {
@@ -35,7 +44,7 @@ public class ExportUserDataHandlerTests
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
 
-        var handler = new ExportUserDataHandler(dbContext);
+        var handler = new ExportUserDataHandler(dbContext, _auditLogServiceMock.Object);
         var query = new ExportUserDataQuery(user.Id);
 
         // Act
@@ -62,7 +71,7 @@ public class ExportUserDataHandlerTests
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var handler = new ExportUserDataHandler(dbContext);
+        var handler = new ExportUserDataHandler(dbContext, _auditLogServiceMock.Object);
         var query = new ExportUserDataQuery(user.Id);
 
         // Act
@@ -79,7 +88,7 @@ public class ExportUserDataHandlerTests
     {
         // Arrange
         var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
-        var handler = new ExportUserDataHandler(dbContext);
+        var handler = new ExportUserDataHandler(dbContext, _auditLogServiceMock.Object);
         var query = new ExportUserDataQuery(Guid.NewGuid());
 
         // Act
@@ -87,6 +96,38 @@ public class ExportUserDataHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task Handle_ValidUser_LogsAuditEvent()
+    {
+        // Arrange
+        var dbContext = TestDbContextFactory.CreateInMemoryDbContext();
+        var user = TestDataBuilder.CreateTestUser(email: "john@example.com");
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        var handler = new ExportUserDataHandler(dbContext, _auditLogServiceMock.Object);
+        var query = new ExportUserDataQuery(user.Id);
+
+        // Act
+        await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        _auditLogServiceMock.Verify(
+            a => a.LogAsync(
+                AuditAction.DataExported,
+                user.Id,
+                "john@example.com",
+                "User",
+                user.Id.ToString(),
+                null,
+                null,
+                It.Is<string>(s => s.Contains("GDPR")),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Once
+        );
     }
 
     [Fact]
@@ -103,7 +144,7 @@ public class ExportUserDataHandlerTests
         dbContext.Tickets.AddRange(myTicket, otherTicket);
         await dbContext.SaveChangesAsync();
 
-        var handler = new ExportUserDataHandler(dbContext);
+        var handler = new ExportUserDataHandler(dbContext, _auditLogServiceMock.Object);
         var query = new ExportUserDataQuery(user.Id);
 
         // Act

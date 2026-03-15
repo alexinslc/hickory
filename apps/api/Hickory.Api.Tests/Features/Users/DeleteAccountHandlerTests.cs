@@ -154,7 +154,7 @@ public class DeleteAccountHandlerTests
         // Assert
         _auditLogServiceMock.Verify(
             a => a.LogAsync(
-                AuditAction.UserDeactivated,
+                AuditAction.AccountDeleted,
                 user.Id,
                 "john@example.com",
                 "User",
