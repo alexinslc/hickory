@@ -3,13 +3,15 @@ using Hickory.Api.Features.Attachments.Download;
 using Hickory.Api.Features.Attachments.Upload;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Hickory.Api.Features.Attachments;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/attachments")]
+[Route("api/v{version:apiVersion}/attachments")]
 [Authorize]
 public class AttachmentsController : ControllerBase
 {

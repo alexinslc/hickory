@@ -133,7 +133,7 @@ export async function agentQueue(options: { filter?: string }): Promise<void> {
   try {
     const spinner = startSpinner('Fetching agent queue...');
 
-    const response = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/tickets/queue`, {
+    const response = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/v1/tickets/queue`, {
       headers: { Authorization: authHeader },
     });
 
@@ -221,7 +221,7 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
     // First, get the ticket to find its ID
     let spinner = startSpinner('Looking up ticket...');
 
-    const listResponse = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/tickets/queue`, {
+    const listResponse = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/v1/tickets/queue`, {
       headers: { Authorization: authHeader },
     });
 
@@ -249,7 +249,7 @@ export async function assignTicket(ticketNumber: string): Promise<void> {
     spinner = startSpinner('Assigning ticket...');
 
     await axios.put(
-      `${API_BASE_URL}/api/tickets/${ticket.id}/assign`,
+      `${API_BASE_URL}/api/v1/tickets/${ticket.id}/assign`,
       { agentId: userId },
       { headers: { Authorization: authHeader } }
     );
@@ -289,7 +289,7 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
     // First, get the ticket to find its ID and validate
     let spinner = startSpinner('Looking up ticket...');
 
-    const listResponse = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/tickets/queue`, {
+    const listResponse = await axios.get<TicketDto[]>(`${API_BASE_URL}/api/v1/tickets/queue`, {
       headers: { Authorization: authHeader },
     });
 
@@ -352,7 +352,7 @@ export async function closeTicket(ticketNumber: string): Promise<void> {
     spinner = startSpinner('Closing ticket...');
 
     await axios.post(
-      `${API_BASE_URL}/api/tickets/${ticket.id}/close`,
+      `${API_BASE_URL}/api/v1/tickets/${ticket.id}/close`,
       { resolutionNotes },
       { headers: { Authorization: authHeader } }
     );

@@ -4,12 +4,14 @@ using Hickory.Api.Features.Users.GetPreferences;
 using Hickory.Api.Features.Users.UpdatePreferences;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hickory.Api.Features.Users;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/v1/users")]
+[Route("api/v{version:apiVersion}/users")]
 [Authorize]
 public class UsersController : ControllerBase
 {

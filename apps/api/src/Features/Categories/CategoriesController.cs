@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Hickory.Api.Features.Categories.Create;
 using Hickory.Api.Features.Categories.GetAll;
@@ -7,8 +8,9 @@ using Hickory.Api.Common;
 
 namespace Hickory.Api.Features.Categories;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class CategoriesController : ControllerBase
 {

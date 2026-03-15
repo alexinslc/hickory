@@ -191,7 +191,7 @@ export async function createTicket() {
     const spinner = startSpinner('Creating ticket...');
 
     const response = await axios.post<{ data: TicketDto }>(
-      `${API_BASE_URL}/api/tickets`,
+      `${API_BASE_URL}/api/v1/tickets`,
       {
         title,
         description,
@@ -245,7 +245,7 @@ export async function viewTicket(ticketIdentifier: string) {
     const spinner = startSpinner('Fetching ticket...');
 
     const response = await axios.get<{ data: TicketDto }>(
-      `${API_BASE_URL}/api/tickets/${ticketIdentifier}`,
+      `${API_BASE_URL}/api/v1/tickets/${ticketIdentifier}`,
       {
         headers: {
           Authorization: authHeader,
@@ -317,7 +317,7 @@ export async function listTickets() {
     const spinner = startSpinner('Fetching tickets...');
 
     const response = await axios.get<{ data: TicketDto[] }>(
-      `${API_BASE_URL}/api/tickets/my`,
+      `${API_BASE_URL}/api/v1/tickets/my`,
       {
         headers: {
           Authorization: authHeader,

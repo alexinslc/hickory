@@ -1,12 +1,14 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Hickory.Api.Features.Tags.GetAll;
 
 namespace Hickory.Api.Features.Tags;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class TagsController : ControllerBase
 {

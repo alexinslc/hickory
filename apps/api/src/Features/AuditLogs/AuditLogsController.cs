@@ -2,12 +2,14 @@ using Hickory.Api.Common;
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hickory.Api.Features.AuditLogs;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/v1/audit-logs")]
+[Route("api/v{version:apiVersion}/audit-logs")]
 [Authorize(Roles = AuthorizationRoles.Administrator)]
 public class AuditLogsController : ControllerBase
 {

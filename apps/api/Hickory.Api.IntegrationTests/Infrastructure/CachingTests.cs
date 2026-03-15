@@ -38,7 +38,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
             priority = "Medium"
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/tickets", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/tickets", createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var ticket = await createResponse.Content.ReadFromJsonAsync<TicketDto>();
         ticket.Should().NotBeNull();
@@ -47,7 +47,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
         // Act - First call (cache miss)
-        var response1 = await _client.GetAsync($"/api/tickets/{ticket!.Id}");
+        var response1 = await _client.GetAsync($"/api/v1/tickets/{ticket!.Id}");
         response1.StatusCode.Should().Be(HttpStatusCode.OK);
         var ticket1 = await response1.Content.ReadFromJsonAsync<TicketDto>();
 
@@ -58,7 +58,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         cachedTicket!.Id.Should().Be(ticket.Id);
 
         // Act - Second call (cache hit)
-        var response2 = await _client.GetAsync($"/api/tickets/{ticket.Id}");
+        var response2 = await _client.GetAsync($"/api/v1/tickets/{ticket.Id}");
         response2.StatusCode.Should().Be(HttpStatusCode.OK);
         var ticket2 = await response2.Content.ReadFromJsonAsync<TicketDto>();
 
@@ -85,11 +85,11 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
             priority = "Low"
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/tickets", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/tickets", createRequest);
         var ticket = await createResponse.Content.ReadFromJsonAsync<TicketDto>();
 
         // First GET to cache the ticket
-        await _client.GetAsync($"/api/tickets/{ticket!.Id}");
+        await _client.GetAsync($"/api/v1/tickets/{ticket!.Id}");
 
         using var scope = _factory.Services.CreateScope();
         var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
@@ -106,7 +106,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         };
 
         var updateResponse = await _client.PatchAsJsonAsync(
-            $"/api/tickets/{ticket.Id}/status", updateRequest);
+            $"/api/v1/tickets/{ticket.Id}/status", updateRequest);
         updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Assert - Cache should be cleared
@@ -132,7 +132,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
             tags = new[] { "test", "caching" }
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/knowledge", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/knowledge", createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var article = await createResponse.Content.ReadFromJsonAsync<ArticleDto>();
         article.Should().NotBeNull();
@@ -141,7 +141,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
         // Act - First call (cache miss)
-        var response1 = await _client.GetAsync($"/api/knowledge/{article!.Id}");
+        var response1 = await _client.GetAsync($"/api/v1/knowledge/{article!.Id}");
         response1.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Verify it was cached
@@ -151,7 +151,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         cachedArticle!.Id.Should().Be(article.Id);
 
         // Act - Second call (cache hit)
-        var response2 = await _client.GetAsync($"/api/knowledge/{article.Id}");
+        var response2 = await _client.GetAsync($"/api/v1/knowledge/{article.Id}");
         response2.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Assert
@@ -174,11 +174,11 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
             status = "Draft"
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/knowledge", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/knowledge", createRequest);
         var article = await createResponse.Content.ReadFromJsonAsync<ArticleDto>();
 
         // First GET to cache the article
-        await _client.GetAsync($"/api/knowledge/{article!.Id}");
+        await _client.GetAsync($"/api/v1/knowledge/{article!.Id}");
 
         using var scope = _factory.Services.CreateScope();
         var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
@@ -195,7 +195,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         };
 
         var updateResponse = await _client.PutAsJsonAsync(
-            $"/api/knowledge/{article.Id}", updateRequest);
+            $"/api/v1/knowledge/{article.Id}", updateRequest);
         updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Assert - Cache should be cleared
@@ -222,7 +222,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
         await cacheService.GetAsync<TicketDto>("test-key-2", CancellationToken.None); // hit
 
         // Act
-        var response = await _client.GetAsync("/api/cache/statistics");
+        var response = await _client.GetAsync("/api/v1/cache/statistics");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -250,7 +250,7 @@ public class CachingTests : IClassFixture<ApiWebApplicationFactory>
             TimeSpan.FromMinutes(5), CancellationToken.None);
 
         // Act
-        var response = await _client.DeleteAsync("/api/cache/tickets");
+        var response = await _client.DeleteAsync("/api/v1/cache/tickets");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
