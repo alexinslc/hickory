@@ -1,3 +1,8 @@
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.Extensions.Options;
+using MimeKit;
+
 namespace Hickory.Api.Infrastructure.Notifications;
 
 /// <summary>
@@ -43,18 +48,21 @@ public interface IEmailService
 }
 
 /// <summary>
-/// SMTP implementation of email service
-/// For development, logs emails to console. In production, configure SMTP settings.
+/// SMTP implementation of email service using MailKit.
+/// Defaults to MailHog settings for development (localhost:1025, no auth).
+/// Configure via Smtp section in appsettings.json or environment variables (SMTP__Host, etc.).
 /// </summary>
 public class EmailService : IEmailService
 {
     private readonly ILogger<EmailService> _logger;
     private readonly IConfiguration _configuration;
+    private readonly SmtpSettings _smtpSettings;
 
-    public EmailService(ILogger<EmailService> logger, IConfiguration configuration)
+    public EmailService(ILogger<EmailService> logger, IConfiguration configuration, IOptions<SmtpSettings> smtpSettings)
     {
         _logger = logger;
         _configuration = configuration;
+        _smtpSettings = smtpSettings.Value;
     }
 
     public async Task SendTicketCreatedEmailAsync(
@@ -67,23 +75,10 @@ public class EmailService : IEmailService
         CancellationToken cancellationToken = default)
     {
         var subject = $"New Ticket Created: {ticketNumber} - {title}";
-        var body = $@"
-Hello {toName},
+        var ticketUrl = GetTicketUrl(ticketNumber);
+        var htmlBody = EmailTemplates.TicketCreated(toName, ticketNumber, title, description, priority, ticketUrl);
 
-A new support ticket has been created:
-
-Ticket: {ticketNumber}
-Title: {title}
-Priority: {priority}
-Description: {description}
-
-View ticket: {GetTicketUrl(ticketNumber)}
-
-Thank you,
-Hickory Support Team
-";
-
-        await SendEmailAsync(toEmail, subject, body, cancellationToken);
+        await SendEmailAsync(toEmail, toName, subject, htmlBody, cancellationToken);
     }
 
     public async Task SendTicketUpdatedEmailAsync(
@@ -96,23 +91,10 @@ Hickory Support Team
         CancellationToken cancellationToken = default)
     {
         var subject = $"Ticket Updated: {ticketNumber} - {title}";
-        var changes = string.Join(", ", changedFields);
-        var body = $@"
-Hello {toName},
+        var ticketUrl = GetTicketUrl(ticketNumber);
+        var htmlBody = EmailTemplates.TicketUpdated(toName, ticketNumber, title, updatedBy, changedFields, ticketUrl);
 
-Your support ticket has been updated by {updatedBy}:
-
-Ticket: {ticketNumber}
-Title: {title}
-Changed: {changes}
-
-View ticket: {GetTicketUrl(ticketNumber)}
-
-Thank you,
-Hickory Support Team
-";
-
-        await SendEmailAsync(toEmail, subject, body, cancellationToken);
+        await SendEmailAsync(toEmail, toName, subject, htmlBody, cancellationToken);
     }
 
     public async Task SendTicketAssignedEmailAsync(
@@ -124,21 +106,10 @@ Hickory Support Team
         CancellationToken cancellationToken = default)
     {
         var subject = $"Ticket Assigned to You: {ticketNumber} - {title}";
-        var body = $@"
-Hello {toName},
+        var ticketUrl = GetTicketUrl(ticketNumber);
+        var htmlBody = EmailTemplates.TicketAssigned(toName, ticketNumber, title, assignedBy, ticketUrl);
 
-A support ticket has been assigned to you by {assignedBy}:
-
-Ticket: {ticketNumber}
-Title: {title}
-
-View ticket: {GetTicketUrl(ticketNumber)}
-
-Thank you,
-Hickory Support Team
-";
-
-        await SendEmailAsync(toEmail, subject, body, cancellationToken);
+        await SendEmailAsync(toEmail, toName, subject, htmlBody, cancellationToken);
     }
 
     public async Task SendCommentAddedEmailAsync(
@@ -159,52 +130,63 @@ Hickory Support Team
         }
 
         var subject = $"New Comment on Ticket: {ticketNumber} - {ticketTitle}";
-        var body = $@"
-Hello {toName},
+        var ticketUrl = GetTicketUrl(ticketNumber);
+        var htmlBody = EmailTemplates.CommentAdded(toName, ticketNumber, ticketTitle, commentAuthor, commentContent, ticketUrl);
 
-{commentAuthor} has added a comment to your support ticket:
-
-Ticket: {ticketNumber}
-Title: {ticketTitle}
-
-Comment:
-{commentContent}
-
-View ticket: {GetTicketUrl(ticketNumber)}
-
-Thank you,
-Hickory Support Team
-";
-
-        await SendEmailAsync(toEmail, subject, body, cancellationToken);
+        await SendEmailAsync(toEmail, toName, subject, htmlBody, cancellationToken);
     }
 
-    private async Task SendEmailAsync(
+    internal async Task SendEmailAsync(
         string toEmail,
+        string toName,
         string subject,
-        string body,
+        string htmlBody,
         CancellationToken cancellationToken)
     {
-        // For development, just log the email
-        // In production, implement actual SMTP sending using System.Net.Mail or a service like SendGrid
-        _logger.LogInformation(
-            "Sending email to {Email}: {Subject}\n{Body}",
-            toEmail,
-            subject,
-            body);
+        if (!_smtpSettings.Enabled)
+        {
+            _logger.LogInformation("Email sending is disabled. Would have sent to {Email}: {Subject}", toEmail, subject);
+            return;
+        }
 
-        // TODO: Implement actual email sending
-        // var smtpHost = _configuration["Email:SmtpHost"];
-        // var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
-        // var smtpUsername = _configuration["Email:Username"];
-        // var smtpPassword = _configuration["Email:Password"];
-        // var fromEmail = _configuration["Email:FromAddress"];
-        // var fromName = _configuration["Email:FromName"];
-        //
-        // using var client = new SmtpClient(smtpHost, smtpPort);
-        // await client.SendMailAsync(fromEmail, toEmail, subject, body);
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(_smtpSettings.FromName, _smtpSettings.FromAddress));
+        message.To.Add(new MailboxAddress(toName, toEmail));
+        message.Subject = subject;
 
-        await Task.CompletedTask;
+        var bodyBuilder = new BodyBuilder
+        {
+            HtmlBody = htmlBody
+        };
+        message.Body = bodyBuilder.ToMessageBody();
+
+        try
+        {
+            using var client = new SmtpClient();
+
+            var secureSocketOptions = _smtpSettings.UseSsl
+                ? SecureSocketOptions.StartTls
+                : SecureSocketOptions.None;
+
+            await client.ConnectAsync(_smtpSettings.Host, _smtpSettings.Port, secureSocketOptions, cancellationToken);
+
+            // Only authenticate if credentials are provided
+            if (!string.IsNullOrEmpty(_smtpSettings.Username) && !string.IsNullOrEmpty(_smtpSettings.Password))
+            {
+                await client.AuthenticateAsync(_smtpSettings.Username, _smtpSettings.Password, cancellationToken);
+            }
+
+            await client.SendAsync(message, cancellationToken);
+            await client.DisconnectAsync(true, cancellationToken);
+
+            _logger.LogInformation("Email sent successfully to {Email}: {Subject}", toEmail, subject);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send email to {Email}: {Subject}. SMTP Host: {Host}:{Port}",
+                toEmail, subject, _smtpSettings.Host, _smtpSettings.Port);
+            throw;
+        }
     }
 
     private string GetTicketUrl(string ticketNumber)
