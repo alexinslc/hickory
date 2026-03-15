@@ -19,6 +19,12 @@
 import axios from 'axios';
 
 // ---------------------------------------------------------------------------
+// Set the env var BEFORE importing the client so API_BASE_URL is deterministic.
+// ---------------------------------------------------------------------------
+const TEST_API_BASE_URL = 'http://localhost:5000';
+process.env.NEXT_PUBLIC_API_URL = TEST_API_BASE_URL;
+
+// ---------------------------------------------------------------------------
 // Mock axios. We capture interceptor callbacks so we can test them directly.
 // ---------------------------------------------------------------------------
 let requestInterceptorFulfilled: (config: any) => any;
@@ -26,26 +32,31 @@ let requestInterceptorRejected: (error: any) => any;
 let responseInterceptorFulfilled: (response: any) => any;
 let responseInterceptorRejected: (error: any) => any;
 
-const mockAxiosInstance = {
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  delete: jest.fn(),
-  interceptors: {
-    request: {
-      use: jest.fn((fulfilled, rejected) => {
-        requestInterceptorFulfilled = fulfilled;
-        requestInterceptorRejected = rejected;
-      }),
+// Make the mock instance callable (function with methods attached) so the
+// retry path `this.client(originalRequest)` works instead of throwing.
+const mockAxiosInstance: any = Object.assign(
+  jest.fn().mockImplementation((config: any) => Promise.resolve({ data: {}, config })),
+  {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    interceptors: {
+      request: {
+        use: jest.fn((fulfilled: any, rejected: any) => {
+          requestInterceptorFulfilled = fulfilled;
+          requestInterceptorRejected = rejected;
+        }),
+      },
+      response: {
+        use: jest.fn((fulfilled: any, rejected: any) => {
+          responseInterceptorFulfilled = fulfilled;
+          responseInterceptorRejected = rejected;
+        }),
+      },
     },
-    response: {
-      use: jest.fn((fulfilled, rejected) => {
-        responseInterceptorFulfilled = fulfilled;
-        responseInterceptorRejected = rejected;
-      }),
-    },
-  },
-};
+  }
+);
 
 jest.mock('axios', () => {
   const m: any = {
@@ -106,8 +117,19 @@ function clearAuthStorage() {
 }
 
 // ---------------------------------------------------------------------------
+// Clear only per-test state (HTTP method mocks, localStorage, location).
+// We intentionally do NOT use jest.clearAllMocks() here because that would
+// wipe call history from module-init time (axios.create, interceptor
+// registrations), causing the "Axios instance configuration" assertions to
+// see 0 calls and fail.
+// ---------------------------------------------------------------------------
 beforeEach(() => {
-  jest.clearAllMocks();
+  mockAxiosInstance.get.mockReset();
+  mockAxiosInstance.post.mockReset();
+  mockAxiosInstance.put.mockReset();
+  mockAxiosInstance.delete.mockReset();
+  mockAxiosInstance.mockClear();
+  (axios.post as jest.Mock).mockReset();
   clearAuthStorage();
   window.location.href = '';
 });
@@ -886,7 +908,7 @@ describe('Response interceptor', () => {
     await expect(responseInterceptorRejected(error)).rejects.toBe(error);
   });
 
-  it('attempts token refresh on first 401', async () => {
+  it('attempts token refresh on first 401 and retries the original request', async () => {
     setAuthStorage('old-token', 'valid-refresh-token');
 
     const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -898,24 +920,35 @@ describe('Response interceptor', () => {
       },
     });
 
+    // Make the callable mock instance resolve for the retry call
+    const retryResponse = { data: { retried: true } };
+    mockAxiosInstance.mockResolvedValueOnce(retryResponse);
+
+    const originalConfig = { _retry: false, headers: {} };
     const error = {
       response: { status: 401 },
-      config: { _retry: false, headers: {} },
+      config: originalConfig,
     };
 
-    // The interceptor will attempt refresh then try to call this.client(originalRequest).
-    // Since our mock is not callable, this will throw, but we can verify
-    // the refresh endpoint was called correctly.
-    try {
-      await responseInterceptorRejected(error);
-    } catch {
-      // Expected - mock client is not a callable function
-    }
+    const result = await responseInterceptorRejected(error);
 
+    // Verify the refresh endpoint was called
     expect(mockedAxios.post).toHaveBeenCalledWith(
-      'http://localhost:5000/api/v1/auth/refresh',
+      `${TEST_API_BASE_URL}/api/v1/auth/refresh`,
       { refreshToken: 'valid-refresh-token' }
     );
+
+    // Verify the original request was retried with the new token
+    expect(mockAxiosInstance).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _retry: true,
+        headers: { Authorization: 'Bearer new-access-token' },
+      })
+    );
+
+    // Verify we got the retried response back (not a redirect)
+    expect(result).toEqual(retryResponse);
+    expect(window.location.href).toBe('');
   });
 
   it('clears auth and redirects to login when refresh fails', async () => {
@@ -1245,7 +1278,7 @@ describe('Error propagation', () => {
 describe('Axios instance configuration', () => {
   it('creates axios instance with correct baseURL and headers', () => {
     expect(axios.create).toHaveBeenCalledWith({
-      baseURL: 'http://localhost:5000',
+      baseURL: TEST_API_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
       },
