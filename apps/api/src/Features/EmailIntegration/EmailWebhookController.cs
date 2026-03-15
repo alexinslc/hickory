@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Hickory.Api.Features.EmailIntegration.InboundWebhook;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +65,14 @@ public class EmailWebhookController : ControllerBase
             return false;
         }
 
-        return string.Equals(configuredSecret, providedSecret, StringComparison.Ordinal);
+        if (string.IsNullOrEmpty(providedSecret))
+        {
+            return false;
+        }
+
+        var configuredBytes = Encoding.UTF8.GetBytes(configuredSecret);
+        var providedBytes = Encoding.UTF8.GetBytes(providedSecret);
+
+        return CryptographicOperations.FixedTimeEquals(configuredBytes, providedBytes);
     }
 }

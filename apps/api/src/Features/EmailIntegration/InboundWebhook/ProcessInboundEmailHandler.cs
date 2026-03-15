@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using FluentValidation;
 using Hickory.Api.Common.Services;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
@@ -35,6 +36,11 @@ public partial class ProcessInboundEmailHandler : IRequestHandler<ProcessInbound
         var request = command.Request;
         var senderEmail = ParseEmailAddress(request.From);
         var body = GetEmailBody(request);
+
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            throw new ValidationException("Email body is empty after removing quoted text");
+        }
 
         // Try to find an existing ticket by subject reference
         var ticketNumber = ExtractTicketNumber(request.Subject);
@@ -73,8 +79,8 @@ public partial class ProcessInboundEmailHandler : IRequestHandler<ProcessInbound
         {
             Id = Guid.NewGuid(),
             TicketNumber = ticketNumber,
-            Title = subject,
-            Description = body,
+            Title = Truncate(subject, 200),
+            Description = Truncate(body, 10000),
             Status = TicketStatus.Open,
             Priority = TicketPriority.Medium,
             SubmitterId = user.Id
@@ -115,7 +121,7 @@ public partial class ProcessInboundEmailHandler : IRequestHandler<ProcessInbound
         var comment = new Comment
         {
             Id = Guid.NewGuid(),
-            Content = body,
+            Content = Truncate(body, 5000),
             IsInternal = false,
             TicketId = ticket.Id,
             AuthorId = user.Id
@@ -181,9 +187,9 @@ public partial class ProcessInboundEmailHandler : IRequestHandler<ProcessInbound
         var angleEnd = from.IndexOf('>');
         if (angleStart >= 0 && angleEnd > angleStart)
         {
-            return from.Substring(angleStart + 1, angleEnd - angleStart - 1).Trim().ToLowerInvariant();
+            return from.Substring(angleStart + 1, angleEnd - angleStart - 1).Trim();
         }
-        return from.Trim().ToLowerInvariant();
+        return from.Trim();
     }
 
     internal static string GetEmailBody(InboundEmailRequest request)
@@ -248,12 +254,19 @@ public partial class ProcessInboundEmailHandler : IRequestHandler<ProcessInbound
         {
             var parts = senderName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
             return parts.Length >= 2
-                ? (parts[0], parts[1])
-                : (parts[0], string.Empty);
+                ? (Truncate(parts[0], 100), Truncate(parts[1], 100))
+                : (Truncate(parts[0], 100), string.Empty);
         }
 
         // Use email prefix as first name
         var emailPrefix = email.Split('@')[0];
-        return (emailPrefix, string.Empty);
+        return (Truncate(emailPrefix, 100), string.Empty);
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value))
+            return value;
+        return value.Length <= maxLength ? value : value[..maxLength];
     }
 }
