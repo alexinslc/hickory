@@ -27,38 +27,44 @@ process.env.NEXT_PUBLIC_API_URL = TEST_API_BASE_URL;
 // ---------------------------------------------------------------------------
 // Mock axios. We capture interceptor callbacks so we can test them directly.
 // ---------------------------------------------------------------------------
-let requestInterceptorFulfilled: (config: any) => any;
-let requestInterceptorRejected: (error: any) => any;
-let responseInterceptorFulfilled: (response: any) => any;
-let responseInterceptorRejected: (error: any) => any;
+// eslint-disable-next-line no-var -- var needed to avoid temporal dead zone with hoisted jest.mock
+var requestInterceptorFulfilled: (config: any) => any;
+// eslint-disable-next-line no-var
+var requestInterceptorRejected: (error: any) => any;
+// eslint-disable-next-line no-var
+var responseInterceptorFulfilled: (response: any) => any;
+// eslint-disable-next-line no-var
+var responseInterceptorRejected: (error: any) => any;
 
-// Make the mock instance callable (function with methods attached) so the
-// retry path `this.client(originalRequest)` works instead of throwing.
-const mockAxiosInstance: any = Object.assign(
-  jest.fn().mockImplementation((config: any) => Promise.resolve({ data: {}, config })),
-  {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    interceptors: {
-      request: {
-        use: jest.fn((fulfilled: any, rejected: any) => {
-          requestInterceptorFulfilled = fulfilled;
-          requestInterceptorRejected = rejected;
-        }),
-      },
-      response: {
-        use: jest.fn((fulfilled: any, rejected: any) => {
-          responseInterceptorFulfilled = fulfilled;
-          responseInterceptorRejected = rejected;
-        }),
-      },
-    },
-  }
-);
+// jest.mock is hoisted above variable declarations, so we must create the
+// mock instance inside the factory to avoid "Cannot access before init" errors.
+// eslint-disable-next-line no-var -- var needed to avoid temporal dead zone with hoisted jest.mock
+var mockAxiosInstance: any;
 
 jest.mock('axios', () => {
+  mockAxiosInstance = Object.assign(
+    jest.fn().mockImplementation((config: any) => Promise.resolve({ data: {}, config })),
+    {
+      get: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
+      interceptors: {
+        request: {
+          use: jest.fn((fulfilled: any, rejected: any) => {
+            requestInterceptorFulfilled = fulfilled;
+            requestInterceptorRejected = rejected;
+          }),
+        },
+        response: {
+          use: jest.fn((fulfilled: any, rejected: any) => {
+            responseInterceptorFulfilled = fulfilled;
+            responseInterceptorRejected = rejected;
+          }),
+        },
+      },
+    }
+  );
   const m: any = {
     create: jest.fn(() => mockAxiosInstance),
     post: jest.fn(),
@@ -222,7 +228,7 @@ describe('Ticket endpoints', () => {
       priority: 'Medium',
     });
 
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/tickets', {
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/v1/tickets', {
       title: 'Test',
       description: 'desc',
       priority: 'Medium',
@@ -240,7 +246,7 @@ describe('Ticket endpoints', () => {
       categoryId: 'cat1',
     });
 
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/tickets', {
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/v1/tickets', {
       title: 'Test',
       description: 'desc',
       priority: 'High',
@@ -253,7 +259,7 @@ describe('Ticket endpoints', () => {
 
     const result = await apiClient.getTicketById('t1');
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/tickets/t1');
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/tickets/t1');
     expect(result).toEqual(ticketDto);
   });
 
@@ -271,7 +277,7 @@ describe('Ticket endpoints', () => {
 
     const result = await apiClient.getMyTickets({ page: 1, pageSize: 10 });
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/tickets', {
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/tickets', {
       params: { page: 1, pageSize: 10 },
     });
     expect(result).toEqual(paginated);
@@ -291,7 +297,7 @@ describe('Ticket endpoints', () => {
 
     await apiClient.getMyTickets();
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/tickets', {
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/tickets', {
       params: undefined,
     });
   });
@@ -303,7 +309,7 @@ describe('Ticket endpoints', () => {
 
     await apiClient.getMyTickets({ page: 2, pageSize: 5, filter: 'open' });
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/tickets', {
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/tickets', {
       params: { page: 2, pageSize: 5, filter: 'open' },
     });
   });
@@ -330,7 +336,7 @@ describe('Comment endpoints', () => {
       isInternal: false,
     });
 
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/tickets/t1/comments', {
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/v1/tickets/t1/comments', {
       content: 'Hello',
       isInternal: false,
     });
@@ -346,7 +352,7 @@ describe('Comment endpoints', () => {
       isInternal: true,
     });
 
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/tickets/t1/comments', {
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/v1/tickets/t1/comments', {
       content: 'Internal note',
       isInternal: true,
     });
@@ -358,7 +364,7 @@ describe('Comment endpoints', () => {
 
     const result = await apiClient.getComments('t1');
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/tickets/t1/comments');
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/tickets/t1/comments');
     expect(result).toEqual([commentDto]);
   });
 });
@@ -381,7 +387,7 @@ describe('Agent endpoints', () => {
 
     const result = await apiClient.getAgentQueue({ page: 1, pageSize: 10 });
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/tickets/queue', {
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/tickets/queue', {
       params: { page: 1, pageSize: 10 },
     });
     expect(result).toEqual(paginated);
@@ -392,7 +398,7 @@ describe('Agent endpoints', () => {
 
     await apiClient.assignTicket('t1', { agentId: 'a1', rowVersion: 'AAAA' });
 
-    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/tickets/t1/assign', {
+    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/v1/tickets/t1/assign', {
       agentId: 'a1',
       rowVersion: 'AAAA',
     });
@@ -406,7 +412,7 @@ describe('Agent endpoints', () => {
       rowVersion: 'AAAA',
     });
 
-    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/tickets/t1/status', {
+    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/v1/tickets/t1/status', {
       newStatus: 'InProgress',
       rowVersion: 'AAAA',
     });
@@ -420,7 +426,7 @@ describe('Agent endpoints', () => {
       rowVersion: 'BBBB',
     });
 
-    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/tickets/t1/priority', {
+    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/v1/tickets/t1/priority', {
       newPriority: 'High',
       rowVersion: 'BBBB',
     });
@@ -434,7 +440,7 @@ describe('Agent endpoints', () => {
       rowVersion: 'CCCC',
     });
 
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/tickets/t1/close', {
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/v1/tickets/t1/close', {
       resolutionNotes: 'Done',
       rowVersion: 'CCCC',
     });
@@ -445,7 +451,7 @@ describe('Agent endpoints', () => {
 
     await apiClient.reassignTicket('t1', { newAgentId: 'a2', rowVersion: 'DDDD' });
 
-    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/tickets/t1/reassign', {
+    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/v1/tickets/t1/reassign', {
       newAgentId: 'a2',
       rowVersion: 'DDDD',
     });
@@ -541,7 +547,7 @@ describe('Attachment endpoints', () => {
 
     const result = await apiClient.getTicketDetails('t1');
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/tickets/t1/details');
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/tickets/t1/details');
     expect(result).toEqual(details);
   });
 
@@ -561,7 +567,7 @@ describe('Attachment endpoints', () => {
     const result = await apiClient.uploadAttachment('t1', mockFile, onProgress);
 
     expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-      '/api/attachments/tickets/t1',
+      '/api/v1/attachments/tickets/t1',
       expect.any(FormData),
       expect.objectContaining({
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -578,7 +584,7 @@ describe('Attachment endpoints', () => {
     await apiClient.uploadAttachment('t1', mockFile);
 
     expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-      '/api/attachments/tickets/t1',
+      '/api/v1/attachments/tickets/t1',
       expect.any(FormData),
       expect.objectContaining({
         onUploadProgress: undefined,
@@ -601,7 +607,7 @@ describe('Attachment endpoints', () => {
 
     await apiClient.downloadAttachment('att1', 'file.pdf');
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/attachments/att1', {
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/attachments/att1', {
       responseType: 'blob',
     });
     expect(mockLink.setAttribute).toHaveBeenCalledWith('download', 'file.pdf');
@@ -614,7 +620,7 @@ describe('Attachment endpoints', () => {
 
     await apiClient.deleteAttachment('att1');
 
-    expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/api/attachments/att1');
+    expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/api/v1/attachments/att1');
   });
 });
 
@@ -762,7 +768,7 @@ describe('Knowledge Base endpoints', () => {
       page: 1,
     });
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/knowledge', {
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/knowledge', {
       params: { searchTerm: 'password', page: 1 },
     });
     expect(result).toEqual(searchResult);
@@ -773,7 +779,7 @@ describe('Knowledge Base endpoints', () => {
 
     const result = await apiClient.getArticleById('a1');
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/knowledge/a1');
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/knowledge/a1');
     expect(result).toEqual(article);
   });
 
@@ -787,7 +793,7 @@ describe('Knowledge Base endpoints', () => {
       tags: ['password'],
     });
 
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/knowledge', {
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/v1/knowledge', {
       title: 'How to reset password',
       content: 'Steps...',
       category: 'Account',
@@ -801,7 +807,7 @@ describe('Knowledge Base endpoints', () => {
 
     const result = await apiClient.updateArticle('a1', { title: 'Updated Title' });
 
-    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/knowledge/a1', {
+    expect(mockAxiosInstance.put).toHaveBeenCalledWith('/api/v1/knowledge/a1', {
       title: 'Updated Title',
     });
     expect(result).toEqual(article);
@@ -812,7 +818,7 @@ describe('Knowledge Base endpoints', () => {
 
     await apiClient.rateArticle('a1', { isHelpful: true });
 
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/knowledge/a1/rate', {
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/v1/knowledge/a1/rate', {
       isHelpful: true,
     });
   });
@@ -825,7 +831,7 @@ describe('Knowledge Base endpoints', () => {
       limit: 5,
     });
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/knowledge/suggested', {
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/knowledge/suggested', {
       params: { searchTerm: 'billing', limit: 5 },
     });
     expect(result).toEqual([]);
