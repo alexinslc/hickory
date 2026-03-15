@@ -109,16 +109,14 @@ docker compose -f docker/docker-compose.yml ps
 - **API Health**: http://localhost:5000/health
 - **MailHog UI**: http://localhost:8025 (email testing)
 
-### 4. Initialize Database
+### 4. Database Migrations (Automatic)
 
+Database migrations run automatically on API startup when `Database__AutoMigrate=true`
+(the default in docker-compose.yml) or when `ASPNETCORE_ENVIRONMENT=Development`.
+No manual migration step is needed for local development.
+
+If you need to run migrations manually for any reason:
 ```bash
-# Run migrations (first time only)
-docker compose -f docker/docker-compose.yml exec api \
-  dotnet ef database update --project Hickory.Api.csproj
-
-# Or, if migrations aren't set up yet:
-docker compose -f docker/docker-compose.yml exec api \
-  dotnet ef migrations add InitialCreate --project Hickory.Api.csproj
 docker compose -f docker/docker-compose.yml exec api \
   dotnet ef database update --project Hickory.Api.csproj
 ```
@@ -632,6 +630,5 @@ For issues and questions:
 
 ---
 
-**Last Updated**: 2025-01-26  
-**Docker Compose Version**: 3.8  
+**Last Updated**: 2026-03-15
 **Tested With**: Docker 24.0+, Docker Compose 2.20+

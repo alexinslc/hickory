@@ -33,15 +33,15 @@ USER dotnet
 # Expose port
 EXPOSE 8080
 
-# Health check using /health endpoint
+# Health check using /health/live endpoint (liveness only - no external dependency checks)
 # The API provides multiple health endpoints:
-# - /health: Overall health status
+# - /health: Overall health status (checks DB + Redis)
 # - /health/ready: Readiness check (database and cache connections)
 # - /health/live: Liveness check (application responsiveness)
-# Using /health for Docker as it provides comprehensive status
-# Note: Using curl which is available in the aspnet image
+# Using /health/live for Docker liveness - the compose file can override for readiness
+# Note: curl is available in the Ubuntu-based aspnet:10.0 image
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:8080/health/live || exit 1
 
 # Set entry point
 ENTRYPOINT ["dotnet", "Hickory.Api.dll"]

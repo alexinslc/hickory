@@ -44,11 +44,8 @@ hickory/
 # Dev Container (recommended)
 # Open in VS Code and "Reopen in Container"
 
-# Or Docker Compose
+# Or Docker Compose (one-command startup - migrations run automatically)
 docker compose -f docker/docker-compose.yml up -d
-
-# Initialize database
-docker compose -f docker/docker-compose.yml exec api dotnet ef database update
 ```
 
 ### Commands
@@ -75,4 +72,4 @@ npm run test:performance
 ## Environment
 Uses `.devcontainer` for consistent development. Services (PostgreSQL, Redis, MailHog) auto-configured.
 
-See `docker/QUICKSTART.md` for detailed setup.
+See `docker/README.md` for detailed setup.
