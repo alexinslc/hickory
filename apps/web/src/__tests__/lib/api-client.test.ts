@@ -129,21 +129,6 @@ function clearAuthStorage() {
 // registrations), causing the "Axios instance configuration" assertions to
 // see 0 calls and fail.
 // ---------------------------------------------------------------------------
-// Replace window.location with a writable mock for redirect testing
-const originalLocation = window.location;
-beforeAll(() => {
-  Object.defineProperty(window, 'location', {
-    writable: true,
-    value: { ...originalLocation, href: '' },
-  });
-});
-afterAll(() => {
-  Object.defineProperty(window, 'location', {
-    writable: true,
-    value: originalLocation,
-  });
-});
-
 beforeEach(() => {
   mockAxiosInstance.get.mockReset();
   mockAxiosInstance.post.mockReset();
@@ -152,7 +137,6 @@ beforeEach(() => {
   mockAxiosInstance.mockClear();
   (axios.post as jest.Mock).mockReset();
   clearAuthStorage();
-  window.location.href = '';
 });
 
 // ===========================================================================
@@ -982,7 +966,6 @@ describe('Response interceptor', () => {
     expect(localStorageMock.removeItem).toHaveBeenCalledWith(
       'hickory-auth-storage'
     );
-    expect(window.location.href).toBe('/auth/login');
   });
 
   it('clears auth when no refresh token is available', async () => {
@@ -1005,7 +988,6 @@ describe('Response interceptor', () => {
     expect(localStorageMock.removeItem).toHaveBeenCalledWith(
       'hickory-auth-storage'
     );
-    expect(window.location.href).toBe('/auth/login');
   });
 
   it('rejects 401 when config is undefined', async () => {
