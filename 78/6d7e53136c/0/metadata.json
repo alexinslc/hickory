@@ -1,0 +1,22 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "786d7e53136c",
+  "session_id": "f72cff64-efaa-4708-a5ee-c7c8e75d7844",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-15T19:46:35.281449Z",
+  "branch": "feature/cli-colors",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "turn_id": "6b139cb32cbd",
+  "token_usage": {
+    "input_tokens": 1088,
+    "cache_creation_tokens": 993356,
+    "cache_read_tokens": 52875651,
+    "output_tokens": 83006,
+    "api_call_count": 382
+  },
+  "session_metrics": {
+    "turn_count": 29
+  }
+}
