@@ -5,6 +5,7 @@ import { Navigation } from '@/components/layout/Navigation';
 import { NotificationProvider } from '@/components/notifications/NotificationProvider';
 import { NotificationToast } from '@/components/notifications/NotificationToast';
 import { ToastProvider } from '@/components/ui/toast';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata = {
   title: 'Hickory Help Desk',
@@ -45,7 +46,9 @@ export default function RootLayout({
             <QueryProvider>
               <NotificationProvider>
                 <Navigation />
-                <main id="main-content">{children}</main>
+                <ErrorBoundary>
+                  <main id="main-content">{children}</main>
+                </ErrorBoundary>
                 <NotificationToast />
               </NotificationProvider>
             </QueryProvider>
