@@ -13,7 +13,7 @@ public static class EmailTemplates
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>{title}</title>
+                <title>{Sanitize(title)}</title>
             </head>
             <body style="margin:0; padding:0; background-color:#f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7; padding:24px 0;">
@@ -31,7 +31,7 @@ public static class EmailTemplates
                                     <td style="padding:32px;">
                                         {bodyContent}
                                         <div style="margin-top:24px;">
-                                            <a href="{ticketUrl}" style="display:inline-block; background-color:#1a56db; color:#ffffff; text-decoration:none; padding:10px 24px; border-radius:6px; font-size:14px; font-weight:500;">View Ticket</a>
+                                            <a href="{System.Net.WebUtility.HtmlEncode(ticketUrl)}" style="display:inline-block; background-color:#1a56db; color:#ffffff; text-decoration:none; padding:10px 24px; border-radius:6px; font-size:14px; font-weight:500;">View Ticket</a>
                                         </div>
                                     </td>
                                 </tr>

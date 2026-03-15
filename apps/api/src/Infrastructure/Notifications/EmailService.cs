@@ -145,7 +145,7 @@ public class EmailService : IEmailService
     {
         if (!_smtpSettings.Enabled)
         {
-            _logger.LogInformation("Email sending is disabled. Would have sent to {Email}: {Subject}", toEmail, subject);
+            _logger.LogInformation("Email sending is disabled. Would have sent email with subject: {Subject}", subject);
             return;
         }
 
@@ -164,9 +164,7 @@ public class EmailService : IEmailService
         {
             using var client = new SmtpClient();
 
-            var secureSocketOptions = _smtpSettings.UseSsl
-                ? SecureSocketOptions.StartTls
-                : SecureSocketOptions.None;
+            var secureSocketOptions = ParseSecureSocketOption(_smtpSettings.SecureSocketOption);
 
             await client.ConnectAsync(_smtpSettings.Host, _smtpSettings.Port, secureSocketOptions, cancellationToken);
 
@@ -179,14 +177,28 @@ public class EmailService : IEmailService
             await client.SendAsync(message, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
 
-            _logger.LogInformation("Email sent successfully to {Email}: {Subject}", toEmail, subject);
+            _logger.LogInformation("Email sent successfully. Subject: {Subject}", subject);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {Email}: {Subject}. SMTP Host: {Host}:{Port}",
-                toEmail, subject, _smtpSettings.Host, _smtpSettings.Port);
+            _logger.LogError(ex, "Failed to send email. Subject: {Subject}. SMTP Host: {Host}:{Port}",
+                subject, _smtpSettings.Host, _smtpSettings.Port);
             throw;
         }
+    }
+
+    private static SecureSocketOptions ParseSecureSocketOption(string option)
+    {
+        return option.ToLowerInvariant() switch
+        {
+            "none" => SecureSocketOptions.None,
+            "sslonconnect" => SecureSocketOptions.SslOnConnect,
+            "starttls" => SecureSocketOptions.StartTls,
+            "starttlswhenavailable" => SecureSocketOptions.StartTlsWhenAvailable,
+            "auto" => SecureSocketOptions.Auto,
+            _ => throw new ArgumentException(
+                $"Invalid SecureSocketOption: '{option}'. Valid values are: None, SslOnConnect, StartTls, StartTlsWhenAvailable, Auto.")
+        };
     }
 
     private string GetTicketUrl(string ticketNumber)

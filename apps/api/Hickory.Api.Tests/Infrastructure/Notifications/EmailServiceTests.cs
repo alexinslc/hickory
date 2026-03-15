@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Hickory.Api.Infrastructure.Notifications;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -167,8 +166,15 @@ public class EmailServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task SendEmailAsync_WhenSmtpConnectionFails_ThrowsAndLogsError()
     {
+        // NOTE: This test relies on a real TCP connection attempt to localhost:19999.
+        // It is marked as an integration test because it can be flaky if the port
+        // is in use and is slower than pure unit tests due to network I/O.
+        // Consider abstracting the SMTP client behind an interface/factory for
+        // proper unit-test mocking.
+
         // Arrange - Enable sending but point to a port with nothing listening
         var settings = new SmtpSettings
         {

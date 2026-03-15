@@ -38,9 +38,12 @@ public class SmtpSettings
     public string FromName { get; set; } = "Hickory Help Desk";
 
     /// <summary>
-    /// Whether to use SSL/TLS for the SMTP connection.
+    /// Secure socket option for the SMTP connection.
+    /// Valid values: None, StartTls, StartTlsWhenAvailable, SslOnConnect, Auto.
+    /// Defaults to None for MailHog development. Use SslOnConnect for port 465 (implicit TLS)
+    /// or StartTls for port 587 (explicit TLS).
     /// </summary>
-    public bool UseSsl { get; set; } = false;
+    public string SecureSocketOption { get; set; } = "None";
 
     /// <summary>
     /// Whether email sending is enabled. When false, emails are logged but not sent.
