@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -25,6 +25,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps): void {
+    if (this.state.hasError && prevProps.children !== this.props.children) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
@@ -90,6 +96,7 @@ export function ErrorFallback({ error, section, onReset }: ErrorFallbackProps) {
         </CardContent>
         <CardFooter className="gap-3">
           <Button onClick={onReset}>Try again</Button>
+          {/* Intentional hard navigation to fully reset app state after an error */}
           <Button variant="outline" asChild>
             <a href="/">Go to home page</a>
           </Button>

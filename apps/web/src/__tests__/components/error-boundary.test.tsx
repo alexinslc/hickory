@@ -107,6 +107,12 @@ describe('ErrorBoundary', () => {
 });
 
 describe('ErrorFallback', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalNodeEnv, configurable: true });
+  });
+
   it('renders with default title', () => {
     render(<ErrorFallback error={null} onReset={jest.fn()} />);
 
@@ -133,15 +139,12 @@ describe('ErrorFallback', () => {
   });
 
   it('shows error details in development mode', () => {
-    const originalEnv = process.env.NODE_ENV;
     Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
 
     const error = new Error('Detailed error message');
     render(<ErrorFallback error={error} onReset={jest.fn()} />);
 
     expect(screen.getByText('Error details')).toBeTruthy();
-
-    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
   });
 
   it('has accessible alert role', () => {

@@ -31,6 +31,7 @@ export default function AuthError({
         </CardContent>
         <CardFooter className="gap-3">
           <Button onClick={reset}>Try again</Button>
+          {/* Intentional hard navigation to fully reset app state after an auth error */}
           <Button variant="outline" asChild>
             <a href="/auth/login">Go to login</a>
           </Button>

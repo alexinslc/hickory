@@ -31,6 +31,7 @@ export default function TicketsError({
         </CardContent>
         <CardFooter className="gap-3">
           <Button onClick={reset}>Try again</Button>
+          {/* Intentional hard navigation to fully reset app state after an error */}
           <Button variant="outline" asChild>
             <a href="/">Go to home page</a>
           </Button>
