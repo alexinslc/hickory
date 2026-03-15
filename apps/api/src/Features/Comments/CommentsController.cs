@@ -3,13 +3,15 @@ using Hickory.Api.Features.Comments.List;
 using Hickory.Api.Features.Tickets.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Hickory.Api.Features.Comments;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/tickets/{ticketId}/comments")]
+[Route("api/v{version:apiVersion}/tickets/{ticketId}/comments")]
 [Authorize]
 public class CommentsController : ControllerBase
 {

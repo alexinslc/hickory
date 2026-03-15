@@ -520,23 +520,23 @@ class ApiClient {
 
   // Ticket endpoints
   async createTicket(request: CreateTicketRequest): Promise<CreateTicketResponse> {
-    const response = await this.client.post<CreateTicketResponse>('/api/tickets', request);
+    const response = await this.client.post<CreateTicketResponse>('/api/v1/tickets', request);
     return response.data;
   }
 
   async getTicketById(id: string): Promise<TicketDto> {
-    const response = await this.client.get<TicketDto>(`/api/tickets/${id}`);
+    const response = await this.client.get<TicketDto>(`/api/v1/tickets/${id}`);
     return response.data;
   }
 
   async getMyTickets(params?: PaginationParams): Promise<PaginatedResult<TicketDto>> {
-    const response = await this.client.get<PaginatedResult<TicketDto>>('/api/tickets', { params });
+    const response = await this.client.get<PaginatedResult<TicketDto>>('/api/v1/tickets', { params });
     return response.data;
   }
 
   async addComment(ticketId: string, request: AddCommentRequest): Promise<CommentDto> {
     const response = await this.client.post<CommentDto>(
-      `/api/tickets/${ticketId}/comments`,
+      `/api/v1/tickets/${ticketId}/comments`,
       request
     );
     return response.data;
@@ -544,35 +544,35 @@ class ApiClient {
 
   async getComments(ticketId: string): Promise<CommentDto[]> {
     const response = await this.client.get<CommentDto[]>(
-      `/api/tickets/${ticketId}/comments`
+      `/api/v1/tickets/${ticketId}/comments`
     );
     return response.data;
   }
 
   // Agent endpoints
   async getAgentQueue(params?: PaginationParams): Promise<PaginatedResult<TicketDto>> {
-    const response = await this.client.get<PaginatedResult<TicketDto>>('/api/tickets/queue', { params });
+    const response = await this.client.get<PaginatedResult<TicketDto>>('/api/v1/tickets/queue', { params });
     return response.data;
   }
 
   async assignTicket(ticketId: string, request: AssignTicketRequest): Promise<void> {
-    await this.client.put(`/api/tickets/${ticketId}/assign`, request);
+    await this.client.put(`/api/v1/tickets/${ticketId}/assign`, request);
   }
 
   async updateTicketStatus(ticketId: string, request: UpdateTicketStatusRequest): Promise<void> {
-    await this.client.put(`/api/tickets/${ticketId}/status`, request);
+    await this.client.put(`/api/v1/tickets/${ticketId}/status`, request);
   }
 
   async updateTicketPriority(ticketId: string, request: UpdateTicketPriorityRequest): Promise<void> {
-    await this.client.put(`/api/tickets/${ticketId}/priority`, request);
+    await this.client.put(`/api/v1/tickets/${ticketId}/priority`, request);
   }
 
   async closeTicket(ticketId: string, request: CloseTicketRequest): Promise<void> {
-    await this.client.post(`/api/tickets/${ticketId}/close`, request);
+    await this.client.post(`/api/v1/tickets/${ticketId}/close`, request);
   }
 
   async reassignTicket(ticketId: string, request: ReassignTicketRequest): Promise<void> {
-    await this.client.put(`/api/tickets/${ticketId}/reassign`, request);
+    await this.client.put(`/api/v1/tickets/${ticketId}/reassign`, request);
   }
 
   // Category endpoints
@@ -602,7 +602,7 @@ class ApiClient {
 
   // Attachment endpoints
   async getTicketDetails(ticketId: string): Promise<TicketDetailsResponse> {
-    const response = await this.client.get<TicketDetailsResponse>(`/api/tickets/${ticketId}/details`);
+    const response = await this.client.get<TicketDetailsResponse>(`/api/v1/tickets/${ticketId}/details`);
     return response.data;
   }
 
@@ -611,7 +611,7 @@ class ApiClient {
     formData.append('file', file);
 
     const response = await this.client.post<UploadAttachmentResponse>(
-      `/api/attachments/tickets/${ticketId}`,
+      `/api/v1/attachments/tickets/${ticketId}`,
       formData,
       {
         headers: {
@@ -624,7 +624,7 @@ class ApiClient {
   }
 
   async downloadAttachment(attachmentId: string, fileName: string): Promise<void> {
-    const response = await this.client.get(`/api/attachments/${attachmentId}`, {
+    const response = await this.client.get(`/api/v1/attachments/${attachmentId}`, {
       responseType: 'blob',
     });
 
@@ -640,7 +640,7 @@ class ApiClient {
   }
 
   async deleteAttachment(attachmentId: string): Promise<void> {
-    await this.client.delete(`/api/attachments/${attachmentId}`);
+    await this.client.delete(`/api/v1/attachments/${attachmentId}`);
   }
 
   // Search endpoints
@@ -673,33 +673,33 @@ class ApiClient {
 
   // Knowledge Base endpoints
   async searchArticles(request: SearchArticlesRequest): Promise<SearchArticlesResult> {
-    const response = await this.client.get<SearchArticlesResult>('/api/knowledge', {
+    const response = await this.client.get<SearchArticlesResult>('/api/v1/knowledge', {
       params: request,
     });
     return response.data;
   }
 
   async getArticleById(id: string): Promise<ArticleDto> {
-    const response = await this.client.get<ArticleDto>(`/api/knowledge/${id}`);
+    const response = await this.client.get<ArticleDto>(`/api/v1/knowledge/${id}`);
     return response.data;
   }
 
   async createArticle(request: CreateArticleRequest): Promise<ArticleDto> {
-    const response = await this.client.post<ArticleDto>('/api/knowledge', request);
+    const response = await this.client.post<ArticleDto>('/api/v1/knowledge', request);
     return response.data;
   }
 
   async updateArticle(id: string, request: UpdateArticleRequest): Promise<ArticleDto> {
-    const response = await this.client.put<ArticleDto>(`/api/knowledge/${id}`, request);
+    const response = await this.client.put<ArticleDto>(`/api/v1/knowledge/${id}`, request);
     return response.data;
   }
 
   async rateArticle(id: string, request: RateArticleRequest): Promise<void> {
-    await this.client.post(`/api/knowledge/${id}/rate`, request);
+    await this.client.post(`/api/v1/knowledge/${id}/rate`, request);
   }
 
   async getSuggestedArticles(request: GetSuggestedArticlesRequest): Promise<ArticleListItemDto[]> {
-    const response = await this.client.get<ArticleListItemDto[]>('/api/knowledge/suggested', {
+    const response = await this.client.get<ArticleListItemDto[]>('/api/v1/knowledge/suggested', {
       params: request,
     });
     return response.data;

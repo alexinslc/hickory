@@ -147,7 +147,7 @@ export async function login(options: { email?: string; password?: string }) {
 
     console.log('Authenticating...');
 
-    const response = await axios.post<LoginResponse>(`${API_BASE_URL}/api/auth/login`, {
+    const response = await axios.post<LoginResponse>(`${API_BASE_URL}/api/v1/auth/login`, {
       email,
       password,
     });

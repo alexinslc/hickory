@@ -190,7 +190,7 @@ export async function createTicket() {
     console.log('\nCreating ticket...');
     
     const response = await axios.post<{ data: TicketDto }>(
-      `${API_BASE_URL}/api/tickets`,
+      `${API_BASE_URL}/api/v1/tickets`,
       {
         title,
         description,
@@ -242,7 +242,7 @@ export async function viewTicket(ticketIdentifier: string) {
 
   try {
     const response = await axios.get<{ data: TicketDto }>(
-      `${API_BASE_URL}/api/tickets/${ticketIdentifier}`,
+      `${API_BASE_URL}/api/v1/tickets/${ticketIdentifier}`,
       {
         headers: {
           Authorization: authHeader,
@@ -311,7 +311,7 @@ export async function listTickets() {
 
   try {
     const response = await axios.get<{ data: TicketDto[] }>(
-      `${API_BASE_URL}/api/tickets/my`,
+      `${API_BASE_URL}/api/v1/tickets/my`,
       {
         headers: {
           Authorization: authHeader,

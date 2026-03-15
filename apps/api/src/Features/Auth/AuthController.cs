@@ -6,14 +6,16 @@ using Hickory.Api.Features.Auth.Register;
 using Hickory.Api.Features.Auth.TwoFactor;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Hickory.Api.Features.Auth;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/v1/auth")]
+[Route("api/v{version:apiVersion}/auth")]
 [EnableRateLimiting("auth")] // Stricter rate limit for auth endpoints
 public class AuthController : ControllerBase
 {

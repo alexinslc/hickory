@@ -14,13 +14,15 @@ using Hickory.Api.Features.Tickets.UpdateStatus;
 using Hickory.Api.Infrastructure.Data.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Hickory.Api.Features.Tickets;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/tickets")]
+[Route("api/v{version:apiVersion}/tickets")]
 [Authorize]
 public class TicketsController : ControllerBase
 {

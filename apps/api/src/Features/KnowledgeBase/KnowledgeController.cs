@@ -9,13 +9,15 @@ using Hickory.Api.Infrastructure.Data.Entities;
 using Hickory.Api.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Hickory.Api.Features.KnowledgeBase;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/knowledge")]
+[Route("api/v{version:apiVersion}/knowledge")]
 [Authorize]
 public class KnowledgeController : ControllerBase
 {

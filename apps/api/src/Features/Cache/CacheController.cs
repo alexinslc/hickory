@@ -1,11 +1,13 @@
 using Hickory.Api.Infrastructure.Caching;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hickory.Api.Features.Cache;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/cache")]
+[Route("api/v{version:apiVersion}/cache")]
 [Authorize(Roles = "Admin")]
 public class CacheController : ControllerBase
 {
