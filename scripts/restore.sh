@@ -8,6 +8,7 @@ set -euo pipefail
 #   PGHOST     - PostgreSQL host (default: localhost)
 #   PGPORT     - PostgreSQL port (default: 5432)
 #   PGUSER     - PostgreSQL user (default: postgres)
+#   PGPASSWORD - PostgreSQL password (or use ~/.pgpass)
 #   PGDATABASE - Database name (default: hickory)
 
 if [ $# -eq 0 ]; then
@@ -30,7 +31,10 @@ if [ ! -f "$BACKUP_FILE" ]; then
 fi
 
 echo "WARNING: This will overwrite the database '${PGDATABASE}' on ${PGHOST}:${PGPORT}"
-read -p "Are you sure? (yes/no): " CONFIRM
+if ! read -r -p "Are you sure? (yes/no): " CONFIRM 2>/dev/null; then
+  echo "Non-interactive environment. Use --force to skip confirmation."
+  exit 1
+fi
 
 if [ "$CONFIRM" != "yes" ]; then
   echo "Restore cancelled."
