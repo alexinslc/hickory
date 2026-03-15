@@ -57,7 +57,7 @@ export function CommentForm({
   const validationError = getValidationMessage();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" aria-busy={isSubmitting || undefined}>
       {/* Internal Note Toggle (Agents only) */}
       {isAgent && allowInternalNotes && (
         <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">

@@ -9,6 +9,7 @@ import { useTicketDetails } from '@/hooks/use-tickets';
 import { AuthGuard } from '@/components/auth-guard';
 import { FileUpload } from '@/components/attachments/FileUpload';
 import { AttachmentList } from '@/components/attachments/AttachmentList';
+import { Spinner } from '@/components/ui/spinner';
 
 // Utility functions for status and priority colors
 function getStatusColor(status: string): string {
@@ -198,19 +199,25 @@ export default function TicketDetailPage() {
                   {ticket.priority}
                 </span>
                 {isAgent ? (
-                  <select
-                    value={ticket.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    disabled={updateStatusMutation.isPending}
-                    className={`px-3 py-1 text-sm font-semibold rounded-full border-0 cursor-pointer ${getStatusColor(ticket.status)}`}
-                  >
-                    <option value="Open">Open</option>
-                    <option value="InProgress">In Progress</option>
-                    <option value="OnHold">On Hold</option>
-                    <option value="Resolved">Resolved</option>
-                    <option value="Closed">Closed</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+                  <div className="relative inline-flex items-center">
+                    <select
+                      value={ticket.status}
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      disabled={updateStatusMutation.isPending}
+                      aria-busy={updateStatusMutation.isPending || undefined}
+                      className={`px-3 py-1 text-sm font-semibold rounded-full border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${getStatusColor(ticket.status)}`}
+                    >
+                      <option value="Open">Open</option>
+                      <option value="InProgress">In Progress</option>
+                      <option value="OnHold">On Hold</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Closed">Closed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                    {updateStatusMutation.isPending && (
+                      <Spinner size="sm" className="text-gray-500 ml-2" />
+                    )}
+                  </div>
                 ) : (
                   <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
                     {ticket.status}
@@ -309,9 +316,17 @@ export default function TicketDetailPage() {
                     <button
                       type="submit"
                       disabled={addCommentMutation.isPending || !commentContent.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-busy={addCommentMutation.isPending || undefined}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                     >
-                      {addCommentMutation.isPending ? 'Posting...' : 'Post Comment'}
+                      {addCommentMutation.isPending ? (
+                        <>
+                          <Spinner size="sm" className="text-white" />
+                          Posting...
+                        </>
+                      ) : (
+                        'Post Comment'
+                      )}
                     </button>
                   </div>
                 </form>
@@ -425,9 +440,17 @@ export default function TicketDetailPage() {
                       <button
                         type="submit"
                         disabled={addInternalNoteMutation.isPending || !internalNoteContent.trim()}
-                        className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-busy={addInternalNoteMutation.isPending || undefined}
+                        className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                       >
-                        {addInternalNoteMutation.isPending ? 'Adding...' : 'Add Internal Note'}
+                        {addInternalNoteMutation.isPending ? (
+                          <>
+                            <Spinner size="sm" className="text-white" />
+                            Adding...
+                          </>
+                        ) : (
+                          'Add Internal Note'
+                        )}
                       </button>
                     </div>
                   </form>
@@ -576,7 +599,8 @@ export default function TicketDetailPage() {
                   value={selectedAgentId}
                   onChange={(e) => setSelectedAgentId(e.target.value)}
                   placeholder="Enter agent ID"
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                  disabled={assignTicketMutation.isPending}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-500 mt-1">Note: Agent selection dropdown will be implemented in Phase 5</p>
               </div>
@@ -584,16 +608,25 @@ export default function TicketDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowAssignDialog(false)}
-                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
+                  disabled={assignTicketMutation.isPending}
+                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={assignTicketMutation.isPending || !selectedAgentId}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-busy={assignTicketMutation.isPending || undefined}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                 >
-                  {assignTicketMutation.isPending ? 'Assigning...' : 'Assign'}
+                  {assignTicketMutation.isPending ? (
+                    <>
+                      <Spinner size="sm" className="text-white" />
+                      Assigning...
+                    </>
+                  ) : (
+                    'Assign'
+                  )}
                 </button>
               </div>
             </form>
@@ -619,8 +652,9 @@ export default function TicketDetailPage() {
                   minLength={10}
                   maxLength={5000}
                   required
+                  disabled={closeTicketMutation.isPending}
                   placeholder="Describe how this ticket was resolved..."
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-500 mt-1">{resolutionNotes.length}/5,000 characters (min 10)</p>
               </div>
@@ -633,16 +667,25 @@ export default function TicketDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowCloseDialog(false)}
-                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
+                  disabled={closeTicketMutation.isPending}
+                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={closeTicketMutation.isPending || resolutionNotes.trim().length < 10}
-                  className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-busy={closeTicketMutation.isPending || undefined}
+                  className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                 >
-                  {closeTicketMutation.isPending ? 'Closing...' : 'Close Ticket'}
+                  {closeTicketMutation.isPending ? (
+                    <>
+                      <Spinner size="sm" className="text-white" />
+                      Closing...
+                    </>
+                  ) : (
+                    'Close Ticket'
+                  )}
                 </button>
               </div>
             </form>

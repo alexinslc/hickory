@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNotificationPreferences, useUpdateNotificationPreferences } from '@/lib/queries/notification-preferences';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function NotificationSettingsPage() {
   const { data: preferences, isLoading, isError } = useNotificationPreferences();
@@ -123,7 +124,15 @@ export default function NotificationSettingsPage() {
         Customize how and when you receive notifications about ticket activity.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8" aria-busy={updatePreferences.isPending || undefined}>
+        {/* Loading overlay */}
+        {updatePreferences.isPending && (
+          <div className="rounded-md bg-blue-50 border border-blue-200 p-3 flex items-center gap-2">
+            <Spinner size="sm" className="text-blue-600" />
+            <p className="text-sm text-blue-800">Saving your preferences...</p>
+          </div>
+        )}
+        <fieldset disabled={updatePreferences.isPending}>
         {/* Notification Channels */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Notification Channels</h2>
@@ -368,6 +377,7 @@ export default function NotificationSettingsPage() {
           </div>
         </section>
 
+        </fieldset>
         {/* Save Button */}
         <div className="flex justify-end gap-3">
           <button
@@ -380,9 +390,17 @@ export default function NotificationSettingsPage() {
           <button
             type="submit"
             disabled={updatePreferences.isPending}
-            className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-busy={updatePreferences.isPending || undefined}
+            className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
-            {updatePreferences.isPending ? 'Saving...' : 'Save Preferences'}
+            {updatePreferences.isPending ? (
+              <>
+                <Spinner size="sm" className="text-white" />
+                Saving...
+              </>
+            ) : (
+              'Save Preferences'
+            )}
           </button>
         </div>
 
