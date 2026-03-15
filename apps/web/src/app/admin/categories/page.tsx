@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useGetAllCategories, useCreateCategory } from '@/lib/queries/categories';
 import { CreateCategoryCommand } from '@/lib/api-client';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function CategoriesPage() {
   const { data: categories, isLoading } = useGetAllCategories();
@@ -97,6 +98,8 @@ export default function CategoriesPage() {
               </div>
             )}
 
+            <fieldset disabled={createCategory.isPending}>
+            <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Name *
@@ -106,7 +109,7 @@ export default function CategoriesPage() {
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={createCategory.isPending}
+
                 className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
                   formErrors.name ? 'border-red-300' : ''
                 }`}
@@ -126,7 +129,7 @@ export default function CategoriesPage() {
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={createCategory.isPending}
+
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Optional description for this category"
               />
@@ -141,7 +144,7 @@ export default function CategoriesPage() {
                 id="displayOrder"
                 value={formData.displayOrder}
                 onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 })}
-                disabled={createCategory.isPending}
+
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 min="0"
               />
@@ -177,27 +180,23 @@ export default function CategoriesPage() {
               )}
             </div>
 
+            </div>
             <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
                 onClick={handleCancel}
-                disabled={createCategory.isPending}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={createCategory.isPending}
                 aria-busy={createCategory.isPending || undefined}
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed inline-flex items-center gap-2"
               >
                 {createCategory.isPending ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <Spinner size="sm" className="text-white" />
                     Creating...
                   </>
                 ) : (
@@ -205,6 +204,7 @@ export default function CategoriesPage() {
                 )}
               </button>
             </div>
+            </fieldset>
           </form>
         </div>
       )}
