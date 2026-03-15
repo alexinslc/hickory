@@ -5,7 +5,9 @@ using FluentValidation;
 namespace Hickory.Api.Infrastructure.Middleware;
 
 /// <summary>
-/// Global exception handling middleware
+/// Global exception handling middleware.
+/// The correlation ID is automatically included in logs via Serilog's LogContext
+/// (enriched by CorrelationIdMiddleware, which runs before this middleware).
 /// </summary>
 public class ExceptionHandlingMiddleware
 {
@@ -64,8 +66,7 @@ public class ExceptionHandlingMiddleware
 
                 _logger.LogWarning(
                     exception,
-                    "Validation error [CorrelationId: {CorrelationId}]: {ValidationErrors}",
-                    correlationId,
+                    "Validation error: {ValidationErrors}",
                     string.Join("; ", validationException.Errors.Select(e => $"{e.PropertyName}: {e.ErrorMessage}")));
                 break;
 
@@ -75,10 +76,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Title = "Unauthorized";
                 errorResponse.Detail = exception.Message;
 
-                _logger.LogWarning(
-                    exception,
-                    "Unauthorized access attempt [CorrelationId: {CorrelationId}]",
-                    correlationId);
+                _logger.LogWarning(exception, "Unauthorized access attempt");
                 break;
 
             case InvalidOperationException invalidOperationException:
@@ -87,11 +85,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Title = "Operation Failed";
                 errorResponse.Detail = invalidOperationException.Message;
 
-                _logger.LogWarning(
-                    exception,
-                    "Invalid operation [CorrelationId: {CorrelationId}]: {Message}",
-                    correlationId,
-                    exception.Message);
+                _logger.LogWarning(exception, "Invalid operation: {Message}", exception.Message);
                 break;
 
             case KeyNotFoundException:
@@ -100,10 +94,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Title = "Resource Not Found";
                 errorResponse.Detail = exception.Message;
 
-                _logger.LogWarning(
-                    exception,
-                    "Resource not found [CorrelationId: {CorrelationId}]",
-                    correlationId);
+                _logger.LogWarning(exception, "Resource not found");
                 break;
 
             default:
@@ -112,10 +103,7 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Title = "Internal Server Error";
                 errorResponse.Detail = "An unexpected error occurred";
 
-                _logger.LogError(
-                    exception,
-                    "Unhandled exception occurred [CorrelationId: {CorrelationId}]",
-                    correlationId);
+                _logger.LogError(exception, "Unhandled exception occurred");
                 break;
         }
 
