@@ -5,22 +5,25 @@ using Hickory.Api.Infrastructure.Data.Entities;
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Hickory.Api.Features.Tickets.UpdateStatus;
 
-public record UpdateTicketStatusCommand(Guid TicketId, TicketStatus NewStatus, Guid UpdatedById = default) : IRequest<Unit>;
+public record UpdateTicketStatusCommand(Guid TicketId, TicketStatus NewStatus, Guid UpdatedById) : IRequest<Unit>;
 
 public class UpdateTicketStatusHandler : IRequestHandler<UpdateTicketStatusCommand, Unit>
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ICacheService _cacheService;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<UpdateTicketStatusHandler> _logger;
 
-    public UpdateTicketStatusHandler(ApplicationDbContext dbContext, ICacheService cacheService, IPublishEndpoint publishEndpoint)
+    public UpdateTicketStatusHandler(ApplicationDbContext dbContext, ICacheService cacheService, IPublishEndpoint publishEndpoint, ILogger<UpdateTicketStatusHandler> logger)
     {
         _dbContext = dbContext;
         _cacheService = cacheService;
         _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(UpdateTicketStatusCommand command, CancellationToken cancellationToken)
@@ -57,25 +60,25 @@ public class UpdateTicketStatusHandler : IRequestHandler<UpdateTicketStatusComma
         }
 
         // Publish event for email notifications
-        if (command.UpdatedById != default)
+        var submitter = await _dbContext.Users
+            .Where(u => u.Id == ticket.SubmitterId)
+            .Select(u => new { u.FirstName, u.LastName, u.Email })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var updatedBy = await _dbContext.Users
+            .Where(u => u.Id == command.UpdatedById)
+            .Select(u => new { u.FirstName, u.LastName, u.Email })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var assignedTo = ticket.AssignedToId.HasValue
+            ? await _dbContext.Users
+                .Where(u => u.Id == ticket.AssignedToId.Value)
+                .Select(u => new { u.FirstName, u.LastName, u.Email })
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+        try
         {
-            var submitter = await _dbContext.Users
-                .Where(u => u.Id == ticket.SubmitterId)
-                .Select(u => new { u.FirstName, u.LastName, u.Email })
-                .FirstOrDefaultAsync(cancellationToken);
-
-            var updatedBy = await _dbContext.Users
-                .Where(u => u.Id == command.UpdatedById)
-                .Select(u => new { u.FirstName, u.LastName, u.Email })
-                .FirstOrDefaultAsync(cancellationToken);
-
-            User? assignedTo = null;
-            if (ticket.AssignedToId.HasValue)
-            {
-                assignedTo = await _dbContext.Users
-                    .FirstOrDefaultAsync(u => u.Id == ticket.AssignedToId.Value, cancellationToken);
-            }
-
             await _publishEndpoint.Publish(new TicketUpdatedEvent
             {
                 TicketId = ticket.Id,
@@ -93,9 +96,13 @@ public class UpdateTicketStatusHandler : IRequestHandler<UpdateTicketStatusComma
                 UpdatedById = command.UpdatedById,
                 UpdatedByName = updatedBy != null ? $"{updatedBy.FirstName} {updatedBy.LastName}" : "Unknown",
                 UpdatedByEmail = updatedBy?.Email ?? "",
-                UpdatedAt = DateTime.UtcNow,
+                UpdatedAt = ticket.UpdatedAt,
                 ChangedFields = new List<string> { $"Status: {oldStatus} -> {command.NewStatus}" }
             }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish TicketUpdatedEvent for ticket {TicketId}", ticket.Id);
         }
 
         return Unit.Value;

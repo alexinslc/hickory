@@ -11,7 +11,7 @@ public class MockPublishEndpoint : IPublishEndpoint
     public List<object> PublishedMessages { get; } = new();
 
     public ConnectHandle ConnectPublishObserver(IPublishObserver observer) =>
-        throw new NotImplementedException();
+        new DummyConnectHandle();
 
     public Task Publish<T>(T message, CancellationToken cancellationToken = default) where T : class
     {
@@ -59,5 +59,11 @@ public class MockPublishEndpoint : IPublishEndpoint
     {
         PublishedMessages.Add(values);
         return Task.CompletedTask;
+    }
+
+    private class DummyConnectHandle : ConnectHandle
+    {
+        public void Disconnect() { }
+        public void Dispose() { }
     }
 }

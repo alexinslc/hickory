@@ -3,6 +3,7 @@ using Hickory.Api.Infrastructure.Data;
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Hickory.Api.Features.Tickets.Assign;
 
@@ -12,11 +13,13 @@ public class AssignTicketHandler : IRequestHandler<AssignTicketCommand, Unit>
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<AssignTicketHandler> _logger;
 
-    public AssignTicketHandler(ApplicationDbContext dbContext, IPublishEndpoint publishEndpoint)
+    public AssignTicketHandler(ApplicationDbContext dbContext, IPublishEndpoint publishEndpoint, ILogger<AssignTicketHandler> logger)
     {
         _dbContext = dbContext;
         _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(AssignTicketCommand command, CancellationToken cancellationToken)
@@ -74,22 +77,29 @@ public class AssignTicketHandler : IRequestHandler<AssignTicketCommand, Unit>
             .Select(u => new { u.FirstName, u.LastName, u.Email })
             .FirstOrDefaultAsync(cancellationToken);
 
-        await _publishEndpoint.Publish(new TicketAssignedEvent
+        try
         {
-            TicketId = ticket.Id,
-            TicketNumber = ticket.TicketNumber,
-            Title = ticket.Title,
-            SubmitterId = ticket.SubmitterId,
-            SubmitterName = submitter != null ? $"{submitter.FirstName} {submitter.LastName}" : "Unknown",
-            SubmitterEmail = submitter?.Email ?? "",
-            AssignedToId = agent.Id,
-            AssignedToName = $"{agent.FirstName} {agent.LastName}",
-            AssignedToEmail = agent.Email,
-            AssignedById = command.AssignedById,
-            AssignedByName = assignedBy != null ? $"{assignedBy.FirstName} {assignedBy.LastName}" : "Unknown",
-            AssignedByEmail = assignedBy?.Email ?? "",
-            AssignedAt = DateTime.UtcNow
-        }, cancellationToken);
+            await _publishEndpoint.Publish(new TicketAssignedEvent
+            {
+                TicketId = ticket.Id,
+                TicketNumber = ticket.TicketNumber,
+                Title = ticket.Title,
+                SubmitterId = ticket.SubmitterId,
+                SubmitterName = submitter != null ? $"{submitter.FirstName} {submitter.LastName}" : "Unknown",
+                SubmitterEmail = submitter?.Email ?? "",
+                AssignedToId = agent.Id,
+                AssignedToName = $"{agent.FirstName} {agent.LastName}",
+                AssignedToEmail = agent.Email,
+                AssignedById = command.AssignedById,
+                AssignedByName = assignedBy != null ? $"{assignedBy.FirstName} {assignedBy.LastName}" : "Unknown",
+                AssignedByEmail = assignedBy?.Email ?? "",
+                AssignedAt = DateTime.UtcNow
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish TicketAssignedEvent for ticket {TicketId}", ticket.Id);
+        }
 
         return Unit.Value;
     }
