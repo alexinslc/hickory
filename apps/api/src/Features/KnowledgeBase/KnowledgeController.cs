@@ -1,6 +1,7 @@
 using Hickory.Api.Features.KnowledgeBase.Create;
 using Hickory.Api.Features.KnowledgeBase.GetById;
 using Hickory.Api.Features.KnowledgeBase.GetSuggested;
+using Hickory.Api.Features.KnowledgeBase.IncrementViewCount;
 using Hickory.Api.Features.KnowledgeBase.Models;
 using Hickory.Api.Features.KnowledgeBase.Rate;
 using Hickory.Api.Features.KnowledgeBase.Search;
@@ -94,12 +95,10 @@ public class KnowledgeController : ControllerBase
             }
         }
 
-        // Now increment view count if requested and authorized
+        // Increment view count in a fire-and-forget style (separate command, no re-fetch)
         if (incrementViewCount)
         {
-            // TODO: Implement IncrementArticleViewCountCommand
-            // Increment view count in a separate command, do not re-fetch the article
-            // await _mediator.Send(new IncrementArticleViewCountCommand(id), cancellationToken);
+            await _mediator.Send(new IncrementArticleViewCountCommand(id), cancellationToken);
         }
 
         return Ok(article);
