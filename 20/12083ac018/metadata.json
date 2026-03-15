@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "2012083ac018",
+  "strategy": "manual-commit",
+  "branch": "feature/cli-colors",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/20/12083ac018/0/metadata.json",
+      "transcript": "/20/12083ac018/0/full.jsonl",
+      "content_hash": "/20/12083ac018/0/content_hash.txt",
+      "prompt": "/20/12083ac018/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1065,
+    "cache_creation_tokens": 984639,
+    "cache_read_tokens": 47149197,
+    "output_tokens": 79736,
+    "api_call_count": 359
+  }
+}
