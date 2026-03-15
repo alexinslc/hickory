@@ -14,12 +14,13 @@ let apiClient: AxiosInstance;
 
 async function authenticate(): Promise<void> {
   const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, {
-    email: process.env.TEST_AGENT_EMAIL || 'agent@example.com',
-    password: process.env.TEST_AGENT_PASSWORD || 'TestPassword123!',
+    email: process.env.TEST_AGENT_EMAIL || 'admin@hickory.local',
+    password: process.env.TEST_AGENT_PASSWORD || 'Admin123!',
   });
   apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: { Authorization: `Bearer ${response.data.accessToken}` },
+    timeout: 10000,
   });
 }
 

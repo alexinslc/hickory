@@ -30,6 +30,7 @@ async function authenticate(): Promise<void> {
   apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: { Authorization: `Bearer ${TEST_USER.accessToken}` },
+    timeout: 10000,
   });
 }
 

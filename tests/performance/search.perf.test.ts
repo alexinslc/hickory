@@ -32,6 +32,7 @@ async function authenticate(): Promise<void> {
   apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: { Authorization: `Bearer ${TEST_USER.accessToken}` },
+    timeout: 10000,
   });
 }
 
@@ -58,7 +59,7 @@ describe('Search Performance', () => {
 
     for (let i = 0; i < TEST_ITERATIONS; i++) {
       const start = Date.now();
-      await apiClient.get('/api/v1/search/tickets', {
+      await apiClient.get('/api/v1/search', {
         params: { q: 'password reset', page: 1, pageSize: 20 },
       });
       durations.push(Date.now() - start);
@@ -74,7 +75,7 @@ describe('Search Performance', () => {
 
     for (let i = 0; i < TEST_ITERATIONS; i++) {
       const start = Date.now();
-      await apiClient.get('/api/v1/search/tickets', {
+      await apiClient.get('/api/v1/search', {
         params: {
           q: 'login issue',
           status: 'Open',
@@ -99,7 +100,7 @@ describe('Search Performance', () => {
 
       for (let i = 0; i < 10; i++) {
         const start = Date.now();
-        await apiClient.get('/api/v1/search/tickets', {
+        await apiClient.get('/api/v1/search', {
           params: { q: 'ticket', page: 1, pageSize },
         });
         durations.push(Date.now() - start);
