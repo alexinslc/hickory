@@ -24,19 +24,36 @@ public class IncrementArticleViewCountHandler : IRequestHandler<IncrementArticle
 
     public async Task<Unit> Handle(IncrementArticleViewCountCommand command, CancellationToken cancellationToken)
     {
-        // Use ExecuteUpdateAsync for an atomic increment that avoids race conditions.
-        // This translates to: UPDATE "KnowledgeArticles" SET "ViewCount" = "ViewCount" + 1 WHERE "Id" = @id
-        var rowsAffected = await _dbContext.KnowledgeArticles
-            .Where(a => a.Id == command.ArticleId)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(
-                    a => a.ViewCount,
-                    a => a.ViewCount + 1),
-                cancellationToken);
-
-        if (rowsAffected == 0)
+        if (_dbContext.Database.IsRelational())
         {
-            throw new KeyNotFoundException($"Article with ID {command.ArticleId} not found");
+            // Use ExecuteUpdateAsync for an atomic increment that avoids race conditions.
+            // This translates to: UPDATE "KnowledgeArticles" SET "ViewCount" = "ViewCount" + 1 WHERE "Id" = @id
+            var rowsAffected = await _dbContext.KnowledgeArticles
+                .Where(a => a.Id == command.ArticleId)
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(
+                        a => a.ViewCount,
+                        a => a.ViewCount + 1),
+                    cancellationToken);
+
+            if (rowsAffected == 0)
+            {
+                throw new KeyNotFoundException($"Article with ID {command.ArticleId} not found");
+            }
+        }
+        else
+        {
+            // Fallback for non-relational providers (e.g., InMemory used in tests)
+            var article = await _dbContext.KnowledgeArticles
+                .FirstOrDefaultAsync(a => a.Id == command.ArticleId, cancellationToken);
+
+            if (article == null)
+            {
+                throw new KeyNotFoundException($"Article with ID {command.ArticleId} not found");
+            }
+
+            article.ViewCount += 1;
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         // Invalidate the cached article so the next read picks up the new view count

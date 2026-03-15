@@ -30,8 +30,9 @@ public class IncrementArticleViewCountHandlerTests
         // Act
         await handler.Handle(command, CancellationToken.None);
 
-        // Assert
+        // Assert - use AsNoTracking to ensure we read the persisted value, not the tracked entity
         var updatedArticle = await dbContext.KnowledgeArticles
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == article.Id);
         updatedArticle.Should().NotBeNull();
         updatedArticle!.ViewCount.Should().Be(6);
@@ -59,8 +60,9 @@ public class IncrementArticleViewCountHandlerTests
         // Act
         await handler.Handle(command, CancellationToken.None);
 
-        // Assert
+        // Assert - use AsNoTracking to ensure we read the persisted value, not the tracked entity
         var updatedArticle = await dbContext.KnowledgeArticles
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == article.Id);
         updatedArticle.Should().NotBeNull();
         updatedArticle!.ViewCount.Should().Be(1);
@@ -106,8 +108,9 @@ public class IncrementArticleViewCountHandlerTests
         await handler.Handle(new IncrementArticleViewCountCommand(article.Id), CancellationToken.None);
         await handler.Handle(new IncrementArticleViewCountCommand(article.Id), CancellationToken.None);
 
-        // Assert
+        // Assert - use AsNoTracking to ensure we read the persisted value, not the tracked entity
         var updatedArticle = await dbContext.KnowledgeArticles
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == article.Id);
         updatedArticle.Should().NotBeNull();
         updatedArticle!.ViewCount.Should().Be(3);
@@ -138,10 +141,12 @@ public class IncrementArticleViewCountHandlerTests
         // Act
         await handler.Handle(new IncrementArticleViewCountCommand(article1.Id), CancellationToken.None);
 
-        // Assert
+        // Assert - use AsNoTracking to ensure we read the persisted values, not tracked entities
         var updatedArticle1 = await dbContext.KnowledgeArticles
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == article1.Id);
         var updatedArticle2 = await dbContext.KnowledgeArticles
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == article2.Id);
 
         updatedArticle1!.ViewCount.Should().Be(11);
