@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tanstack/react-query';
-import { apiClient, TicketDto, CreateTicketRequest, CreateTicketResponse, TicketDetailsResponse } from '@/lib/api-client';
+import { apiClient, TicketDto, CreateTicketRequest, CreateTicketResponse, TicketDetailsResponse, PaginatedResult, PaginationParams } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 
@@ -15,11 +15,11 @@ export const ticketKeys = {
   detailsFull: (id: string) => [...ticketKeys.details(), id, 'full'] as const,
 };
 
-// Get all user's tickets
-export function useMyTickets() {
+// Get user's tickets with pagination
+export function useMyTickets(params?: PaginationParams): UseQueryResult<PaginatedResult<TicketDto>, Error> {
   return useQuery({
-    queryKey: ticketKeys.list(),
-    queryFn: () => apiClient.getMyTickets(),
+    queryKey: ticketKeys.list({ ...params }),
+    queryFn: () => apiClient.getMyTickets(params),
     staleTime: 30000, // 30 seconds
   });
 }

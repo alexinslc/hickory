@@ -1,20 +1,20 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { useMutation, useQuery, useQueryClient, UseQueryResult } from '@tanstack/react-query';
+import { apiClient, PaginatedResult, PaginationParams, TicketDto } from '@/lib/api-client';
 import { ticketKeys } from './use-tickets';
 
 // Query keys for agent-specific queries
 export const agentKeys = {
   all: ['agent'] as const,
-  queue: () => [...agentKeys.all, 'queue'] as const,
+  queue: (params?: PaginationParams) => [...agentKeys.all, 'queue', params] as const,
 };
 
-// Get agent queue
-export function useAgentQueue() {
+// Get agent queue with pagination
+export function useAgentQueue(params?: PaginationParams): UseQueryResult<PaginatedResult<TicketDto>, Error> {
   return useQuery({
-    queryKey: agentKeys.queue(),
-    queryFn: () => apiClient.getAgentQueue(),
+    queryKey: agentKeys.queue(params),
+    queryFn: () => apiClient.getAgentQueue(params),
     staleTime: 10000, // 10 seconds - more frequent updates for agent queue
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });

@@ -1,3 +1,4 @@
+using Hickory.Api.Common;
 using Hickory.Api.Features.Tickets.Models;
 using Hickory.Api.Infrastructure.Data;
 using MediatR;
@@ -8,10 +9,12 @@ namespace Hickory.Api.Features.Tickets.GetBySubmitter;
 public record GetTicketsBySubmitterQuery(
     Guid UserId, 
     Guid? CategoryId = null,
-    List<string>? Tags = null
-) : IRequest<List<TicketDto>>;
+    List<string>? Tags = null,
+    int Page = 1,
+    int PageSize = 10
+) : IRequest<PaginatedResult<TicketDto>>;
 
-public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitterQuery, List<TicketDto>>
+public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitterQuery, PaginatedResult<TicketDto>>
 {
     private readonly ApplicationDbContext _dbContext;
 
@@ -20,7 +23,7 @@ public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitte
         _dbContext = dbContext;
     }
 
-    public async Task<List<TicketDto>> Handle(GetTicketsBySubmitterQuery query, CancellationToken cancellationToken)
+    public async Task<PaginatedResult<TicketDto>> Handle(GetTicketsBySubmitterQuery query, CancellationToken cancellationToken)
     {
         var ticketsQuery = _dbContext.Tickets
             .Where(t => t.SubmitterId == query.UserId);
@@ -39,9 +42,19 @@ public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitte
                 t.TicketTags.Any(tt => normalizedTags.Contains(tt.Tag.Name.ToLower())));
         }
 
+        // Get total count before pagination
+        var totalCount = await ticketsQuery.CountAsync(cancellationToken);
+
+        // Apply pagination with bounds checking
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+        var page = Math.Max(query.Page, 1);
+        var skip = (page - 1) * pageSize;
+
         // Use projection to avoid loading unnecessary data and prevent N+1 queries
         var tickets = await ticketsQuery
             .OrderByDescending(t => t.CreatedAt)
+            .Skip(skip)
+            .Take(pageSize)
             .Select(t => new TicketDto
             {
                 Id = t.Id,
@@ -68,6 +81,6 @@ public class GetTicketsBySubmitterHandler : IRequestHandler<GetTicketsBySubmitte
             })
             .ToListAsync(cancellationToken);
 
-        return tickets;
+        return PaginatedResult<TicketDto>.Create(tickets, totalCount, page, pageSize);
     }
 }
