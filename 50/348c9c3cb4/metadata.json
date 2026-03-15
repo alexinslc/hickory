@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "50348c9c3cb4",
+  "strategy": "manual-commit",
+  "branch": "feature/email-to-ticket",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/50/348c9c3cb4/0/metadata.json",
+      "transcript": "/50/348c9c3cb4/0/full.jsonl",
+      "content_hash": "/50/348c9c3cb4/0/content_hash.txt",
+      "prompt": "/50/348c9c3cb4/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 830,
+    "cache_creation_tokens": 360585,
+    "cache_read_tokens": 14987561,
+    "output_tokens": 47488,
+    "api_call_count": 188
+  }
+}

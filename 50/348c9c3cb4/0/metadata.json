@@ -1,0 +1,19 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "50348c9c3cb4",
+  "session_id": "f72cff64-efaa-4708-a5ee-c7c8e75d7844",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-15T17:28:19.231136Z",
+  "branch": "feature/email-to-ticket",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "turn_id": "914fbae7b172",
+  "token_usage": {
+    "input_tokens": 830,
+    "cache_creation_tokens": 360585,
+    "cache_read_tokens": 14987561,
+    "output_tokens": 47488,
+    "api_call_count": 188
+  }
+}
