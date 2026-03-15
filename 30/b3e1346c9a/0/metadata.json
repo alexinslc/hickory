@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "30b3e1346c9a",
+  "session_id": "f72cff64-efaa-4708-a5ee-c7c8e75d7844",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-15T17:27:22.891787Z",
+  "branch": "feature/correlation-ids",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/api/Program.cs"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "914fbae7b172",
+  "token_usage": {
+    "input_tokens": 822,
+    "cache_creation_tokens": 358076,
+    "cache_read_tokens": 13863577,
+    "output_tokens": 46207,
+    "api_call_count": 180
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-15T17:27:22.650057Z",
+    "agent_lines": 3,
+    "human_added": 191,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 194,
+    "agent_percentage": 1.5463917525773196
+  }
+}
