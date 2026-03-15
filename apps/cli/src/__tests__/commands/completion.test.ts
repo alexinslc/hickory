@@ -25,7 +25,8 @@ describe('CLI Completion Commands', () => {
       const output = stdoutWriteSpy.mock.calls[0][0] as string;
       expect(output).toContain('_hickory_completions');
       expect(output).toContain('complete -F _hickory_completions hickory');
-      expect(output).toContain('login logout whoami ticket agent completion help');
+      expect(output).toContain('login logout whoami ticket agent completion');
+      expect(output).not.toContain('help');
     });
 
     it('should output zsh completion script', () => {
@@ -33,9 +34,12 @@ describe('CLI Completion Commands', () => {
 
       expect(stdoutWriteSpy).toHaveBeenCalledTimes(1);
       const output = stdoutWriteSpy.mock.calls[0][0] as string;
-      expect(output).toContain('#compdef hickory');
+      expect(output).toContain('compdef _hickory hickory');
+      expect(output).not.toContain('#compdef');
+      expect(output).not.toContain('_hickory "$@"');
       expect(output).toContain('_hickory');
       expect(output).toContain('login:Authenticate with the Hickory API');
+      expect(output).not.toContain('help:Display help for a command');
     });
 
     it('should include all top-level commands in bash script', () => {
@@ -85,6 +89,40 @@ describe('CLI Completion Commands', () => {
       expect(output).toContain("'all:Show all tickets'");
       expect(output).toContain("'unassigned:Show only unassigned tickets'");
       expect(output).toContain("'mine:Show only tickets assigned to me'");
+    });
+
+    it('should include global options in bash script', () => {
+      generateCompletion('bash');
+
+      const output = stdoutWriteSpy.mock.calls[0][0] as string;
+      expect(output).toContain('-h --help -V --version');
+    });
+
+    it('should include global options in zsh script', () => {
+      generateCompletion('zsh');
+
+      const output = stdoutWriteSpy.mock.calls[0][0] as string;
+      expect(output).toContain('--help');
+      expect(output).toContain('--version');
+    });
+
+    it('should register zsh completion via compdef', () => {
+      generateCompletion('zsh');
+
+      const output = stdoutWriteSpy.mock.calls[0][0] as string;
+      // Must register via compdef for eval-based installation
+      expect(output).toContain('compdef _hickory hickory');
+      // Must not invoke the completion function on load
+      expect(output).not.toContain('_hickory "$@"');
+    });
+
+    it('should use correct zsh word dispatch with _arguments context reset', () => {
+      generateCompletion('zsh');
+
+      const output = stdoutWriteSpy.mock.calls[0][0] as string;
+      // _arguments -C with '*::arg:->args' resets $words so $words[1] is the subcommand
+      expect(output).toContain("case \"$words[1]\"");
+      expect(output).toContain("'*::arg:->args'");
     });
 
     it('should error for unsupported shell', () => {

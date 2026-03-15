@@ -103,11 +103,12 @@ Installation:
     # or
     hickory completion bash > ~/.local/share/bash-completion/completions/hickory
 
-  Zsh:
+  Zsh (file-based):
     hickory completion zsh > ~/.zsh/completions/_hickory
     # Then ensure ~/.zsh/completions is in your fpath (add to ~/.zshrc before compinit):
     #   fpath=(~/.zsh/completions $fpath)
     #   autoload -Uz compinit && compinit
+    # Note: when using the file-based approach, add #compdef hickory as the first line
 `);
 
 completion

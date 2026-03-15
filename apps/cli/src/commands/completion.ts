@@ -11,6 +11,10 @@
  *
  *   # Zsh (add to ~/.zshrc)
  *   eval "$(hickory completion zsh)"
+ *
+ *   # Alternatively, for zsh you can save to an fpath directory:
+ *   hickory completion zsh > ~/.zsh/completions/_hickory
+ *   # Then ensure ~/.zsh/completions is in your fpath before compinit
  */
 
 const BASH_COMPLETION_SCRIPT = `#!/usr/bin/env bash
@@ -20,7 +24,10 @@ _hickory_completions() {
   _init_completion || return
 
   # Top-level commands
-  local commands="login logout whoami ticket agent completion help"
+  local commands="login logout whoami ticket agent completion"
+
+  # Global options
+  local global_options="-h --help -V --version"
 
   # Subcommands
   local ticket_commands="create view list"
@@ -34,7 +41,7 @@ _hickory_completions() {
 
   case "\${cword}" in
     1)
-      COMPREPLY=( $(compgen -W "\${commands}" -- "\${cur}") )
+      COMPREPLY=( $(compgen -W "\${commands} \${global_options}" -- "\${cur}") )
       return
       ;;
     2)
@@ -99,7 +106,8 @@ _hickory_completions() {
 complete -F _hickory_completions hickory
 `;
 
-const ZSH_COMPLETION_SCRIPT = `#compdef hickory
+const ZSH_COMPLETION_SCRIPT = `# Zsh completion for hickory
+# Install: eval "$(hickory completion zsh)"
 
 _hickory() {
   local -a commands ticket_commands agent_commands completion_commands
@@ -112,7 +120,6 @@ _hickory() {
     'ticket:Manage support tickets'
     'agent:Agent commands for managing support tickets'
     'completion:Generate shell completion scripts'
-    'help:Display help for a command'
   )
 
   ticket_commands=(
@@ -139,6 +146,8 @@ _hickory() {
   )
 
   _arguments -C \\
+    '(- *)'{-h,--help}'[Show help]' \\
+    '(- *)'{-V,--version}'[Show version]' \\
     '1:command:->command' \\
     '*::arg:->args'
 
@@ -204,7 +213,7 @@ _hickory() {
   esac
 }
 
-_hickory "\$@"
+compdef _hickory hickory
 `;
 
 export function generateCompletion(shell: string): void {
