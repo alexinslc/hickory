@@ -192,7 +192,7 @@ static string GetRateLimitPartitionKey(HttpContext context, string limitType, IS
     var ipAddress = context.Connection.RemoteIpAddress?.ToString();
     var partitionKey = userId ?? ipAddress ?? "anonymous";
     
-    // Log warning when falling back to "anonymous" (security concern)
+    // Log warning when falling back to \"anonymous\" (security concern)
     if (partitionKey == "anonymous")
     {
         var logger = (services ?? context.RequestServices).GetRequiredService<ILogger<Program>>();
@@ -333,7 +333,7 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 
 builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 {
-    options.Level = CompressionLevel.SmallestSize;
+    options.Level = CompressionLevel.Optimal;
 });
 
 builder.Services.AddControllers();
@@ -393,7 +393,9 @@ app.UseCorrelationId();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Response compression - placed early so responses from all downstream middleware are compressed
+// MinimumSizeCompressionMiddleware strips compression for responses under 1 KB to avoid unnecessary overhead
 app.UseResponseCompression();
+app.UseMiddleware<MinimumSizeCompressionMiddleware>(1024L);
 
 // Security headers
 app.Use(async (context, next) =>
