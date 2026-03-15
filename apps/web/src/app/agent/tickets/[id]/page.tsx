@@ -186,16 +186,27 @@ export default function AgentTicketDetailPage() {
                 <button
                   onClick={handleAssignToMe}
                   disabled={assignTicket.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  aria-busy={assignTicket.isPending || undefined}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                 >
-                  Assign to Me
+                  {assignTicket.isPending ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Assigning...
+                    </>
+                  ) : (
+                    'Assign to Me'
+                  )}
                 </button>
               )}
               {isAssignedToMe && !isClosed && (
                 <button
                   onClick={() => setShowCloseDialog(true)}
                   disabled={closeTicket.isPending}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Close Ticket
                 </button>
@@ -205,13 +216,14 @@ export default function AgentTicketDetailPage() {
 
           {/* Status and Priority selectors */}
           <div className="grid grid-cols-2 gap-4 mt-4">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
                 value={ticket.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
                 disabled={isClosed || updateStatus.isPending}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100"
+                aria-busy={updateStatus.isPending || undefined}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
@@ -219,14 +231,23 @@ export default function AgentTicketDetailPage() {
                   </option>
                 ))}
               </select>
+              {updateStatus.isPending && (
+                <div className="absolute right-8 top-8 pointer-events-none">
+                  <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
             </div>
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
               <select
                 value={ticket.priority}
                 onChange={(e) => handlePriorityChange(e.target.value)}
                 disabled={isClosed || updatePriority.isPending}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100"
+                aria-busy={updatePriority.isPending || undefined}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 {PRIORITY_OPTIONS.map((priority) => (
                   <option key={priority} value={priority}>
@@ -234,6 +255,14 @@ export default function AgentTicketDetailPage() {
                   </option>
                 ))}
               </select>
+              {updatePriority.isPending && (
+                <div className="absolute right-8 top-8 pointer-events-none">
+                  <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
 
@@ -338,9 +367,20 @@ export default function AgentTicketDetailPage() {
                   <button
                     type="submit"
                     disabled={!commentContent.trim() || addComment.isPending}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-busy={addComment.isPending || undefined}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                   >
-                    {addComment.isPending ? 'Adding...' : 'Add Comment'}
+                    {addComment.isPending ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Comment'
+                    )}
                   </button>
                 </div>
               </div>
@@ -359,10 +399,11 @@ export default function AgentTicketDetailPage() {
               <textarea
                 value={resolutionNotes}
                 onChange={(e) => setResolutionNotes(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 rows={6}
                 placeholder="Describe how the issue was resolved..."
                 maxLength={5000}
+                disabled={closeTicket.isPending}
               />
               <p className="mt-1 text-sm text-gray-500">{resolutionNotes.length}/5,000 characters (minimum 10)</p>
               
@@ -386,9 +427,20 @@ export default function AgentTicketDetailPage() {
                 <button
                   onClick={handleCloseTicket}
                   disabled={resolutionNotes.trim().length < 10 || closeTicket.isPending}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-busy={closeTicket.isPending || undefined}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                 >
-                  {closeTicket.isPending ? 'Closing...' : 'Close Ticket'}
+                  {closeTicket.isPending ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Closing...
+                    </>
+                  ) : (
+                    'Close Ticket'
+                  )}
                 </button>
               </div>
             </div>

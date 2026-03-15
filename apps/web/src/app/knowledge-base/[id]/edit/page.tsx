@@ -174,7 +174,7 @@ export default function ArticleEditorPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate aria-busy={createArticle.isPending || updateArticle.isPending || undefined}>
           {/* Title */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium mb-2">
@@ -187,10 +187,11 @@ export default function ArticleEditorPage() {
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => handleBlur('title')}
               required
+              disabled={createArticle.isPending || updateArticle.isPending}
               aria-required="true"
               aria-invalid={!!displayTitleError || undefined}
               aria-describedby={displayTitleError ? 'article-title-error' : undefined}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed ${
                 displayTitleError
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
@@ -216,11 +217,12 @@ export default function ArticleEditorPage() {
               onChange={(e) => setCategory(e.target.value)}
               onBlur={() => handleBlur('category')}
               required
+              disabled={createArticle.isPending || updateArticle.isPending}
               aria-required="true"
               aria-invalid={!!displayCategoryError || undefined}
               aria-describedby={displayCategoryError ? 'article-category-error' : 'article-category-hint'}
               placeholder="e.g., Billing, Technical, Account"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed ${
                 displayCategoryError
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
@@ -248,8 +250,9 @@ export default function ArticleEditorPage() {
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
+              disabled={createArticle.isPending || updateArticle.isPending}
               placeholder="e.g., password, reset, security"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -264,12 +267,13 @@ export default function ArticleEditorPage() {
               onChange={(e) => setContent(e.target.value)}
               onBlur={() => handleBlur('content')}
               required
+              disabled={createArticle.isPending || updateArticle.isPending}
               rows={20}
               aria-required="true"
               aria-invalid={!!displayContentError || undefined}
               aria-describedby={displayContentError ? 'article-content-error' : undefined}
               placeholder="Write your article content using Markdown formatting..."
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 font-mono text-sm ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 font-mono text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${
                 displayContentError
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
@@ -293,8 +297,9 @@ export default function ArticleEditorPage() {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               required
+              disabled={createArticle.isPending || updateArticle.isPending}
               aria-required="true"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="Draft">Draft</option>
               <option value="Published">Published</option>
@@ -310,13 +315,22 @@ export default function ArticleEditorPage() {
             <button
               type="submit"
               disabled={createArticle.isPending || updateArticle.isPending}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-busy={createArticle.isPending || updateArticle.isPending || undefined}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
             >
-              {createArticle.isPending || updateArticle.isPending
-                ? 'Saving...'
-                : isNewArticle
-                ? 'Create Article'
-                : 'Save Changes'}
+              {createArticle.isPending || updateArticle.isPending ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : isNewArticle ? (
+                'Create Article'
+              ) : (
+                'Save Changes'
+              )}
             </button>
             <Link
               href={isNewArticle ? '/knowledge-base' : `/knowledge-base/${articleId}`}

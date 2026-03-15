@@ -89,7 +89,7 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
   const hasGeneralError = createTicket.isError && !serverFieldErrors;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" aria-busy={createTicket.isPending || undefined}>
       {/* Title Field */}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-gray-700">
