@@ -1,10 +1,10 @@
 # CLAUDE.md - Hickory Help Desk
 
 ## What is this?
-Hickory is a modern help desk ticket management system built with a .NET 9 backend and Next.js 15 frontend. Uses PostgreSQL for data storage and Redis for caching/messaging.
+Hickory is a modern help desk ticket management system built with a .NET 10 backend and Next.js 15 frontend. Uses PostgreSQL for data storage and Redis for caching/messaging.
 
 ## Tech Stack
-- **Backend**: .NET 9 / ASP.NET Core, Entity Framework Core, MediatR (CQRS), FluentValidation
+- **Backend**: .NET 10 / ASP.NET Core, Entity Framework Core, MediatR (CQRS), FluentValidation
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
 - **Database**: PostgreSQL (via Npgsql)
 - **Caching/Messaging**: Redis (MassTransit)
@@ -17,7 +17,7 @@ Hickory is a modern help desk ticket management system built with a .NET 9 backe
 ```
 hickory/
 ├── apps/
-│   ├── api/              # .NET 9 ASP.NET Core API
+│   ├── api/              # .NET 10 ASP.NET Core API
 │   │   ├── Controllers/  # API endpoints
 │   │   ├── src/          # Core logic
 │   │   └── Hickory.Api.Tests/  # Unit tests
@@ -34,7 +34,7 @@ hickory/
 ## Development
 
 ### Prerequisites
-- .NET 9 SDK
+- .NET 10 SDK
 - Node.js 20+
 - PostgreSQL 16
 - Redis 7

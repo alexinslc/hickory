@@ -41,7 +41,7 @@ Complete Docker configuration for local development and production deployment of
 
 1. **PostgreSQL** (postgres:16-alpine) - Primary database
 2. **Redis** (redis:7-alpine) - Caching and session storage
-3. **API** (.NET 9.0) - ASP.NET Core backend
+3. **API** (.NET 10.0) - ASP.NET Core backend
 4. **Web** (Node 25) - Next.js frontend
 5. **MailHog** (optional) - Email testing during development
 
@@ -126,7 +126,7 @@ docker compose -f docker/docker-compose.yml exec api \
 All services include Docker health checks to ensure proper orchestration and monitoring:
 
 ### API Health Check
-- **Endpoint**: `/health`
+- **Endpoint**: `/health/ready`
 - **Method**: HTTP GET via curl
 - **Interval**: Every 30 seconds
 - **Timeout**: 10 seconds
@@ -222,7 +222,7 @@ docker compose -f docker/docker-compose.yml exec redis redis-cli
 
 ### .NET API Backend
 
-- **Base Image**: .NET 9.0 SDK (build) / Runtime (production)
+- **Base Image**: .NET 10.0 SDK (build) / Runtime (production)
 - **Port**: 5000 → 8080 (internal)
 - **Health Endpoint**: http://localhost:5000/health
 - **Dependencies**: PostgreSQL, Redis

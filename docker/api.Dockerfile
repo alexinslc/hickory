@@ -20,6 +20,9 @@ RUN dotnet publish Hickory.Api.csproj -c Release -o /app/publish \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # Create non-root user for security
 RUN groupadd -r dotnet && useradd -r -g dotnet dotnet && \
     chown -R dotnet:dotnet /app
@@ -33,15 +36,14 @@ USER dotnet
 # Expose port
 EXPOSE 8080
 
-# Health check using /health/live endpoint (liveness only - no external dependency checks)
+# Health check using /health/ready endpoint (checks DB + Redis connectivity)
 # The API provides multiple health endpoints:
 # - /health: Overall health status (checks DB + Redis)
 # - /health/ready: Readiness check (database and cache connections)
 # - /health/live: Liveness check (application responsiveness)
-# Using /health/live for Docker liveness - the compose file can override for readiness
-# Note: curl is available in the Ubuntu-based aspnet:10.0 image
+# Using /health/ready so the container is only marked healthy when dependencies are reachable
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/health/live || exit 1
+  CMD curl -f http://localhost:8080/health/ready || exit 1
 
 # Set entry point
 ENTRYPOINT ["dotnet", "Hickory.Api.dll"]
