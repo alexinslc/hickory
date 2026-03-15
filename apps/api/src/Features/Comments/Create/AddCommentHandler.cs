@@ -1,8 +1,11 @@
+using Hickory.Api.Common.Events;
 using Hickory.Api.Features.Tickets.Models;
 using Hickory.Api.Infrastructure.Data;
 using Hickory.Api.Infrastructure.Data.Entities;
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Hickory.Api.Features.Comments.Create;
 
@@ -17,10 +20,14 @@ public record AddCommentCommand(Guid TicketId, AddCommentRequest Request, Guid U
 public class AddCommentHandler : IRequestHandler<AddCommentCommand, CommentDto>
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<AddCommentHandler> _logger;
 
-    public AddCommentHandler(ApplicationDbContext dbContext)
+    public AddCommentHandler(ApplicationDbContext dbContext, IPublishEndpoint publishEndpoint, ILogger<AddCommentHandler> logger)
     {
         _dbContext = dbContext;
+        _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     public async Task<CommentDto> Handle(AddCommentCommand command, CancellationToken cancellationToken)
@@ -52,6 +59,47 @@ public class AddCommentHandler : IRequestHandler<AddCommentCommand, CommentDto>
 
         // Load author for response
         var author = await _dbContext.Users.FindAsync(new object[] { command.UserId }, cancellationToken);
+        var authorName = author != null ? $"{author.FirstName} {author.LastName}" : "Unknown";
+
+        // Load submitter and assigned agent info for the event
+        var submitter = await _dbContext.Users
+            .Where(u => u.Id == ticket.SubmitterId)
+            .Select(u => new { u.FirstName, u.LastName, u.Email })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        User? assignedTo = null;
+        if (ticket.AssignedToId.HasValue)
+        {
+            assignedTo = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == ticket.AssignedToId.Value, cancellationToken);
+        }
+
+        try
+        {
+            await _publishEndpoint.Publish(new CommentAddedEvent
+            {
+                CommentId = comment.Id,
+                TicketId = ticket.Id,
+                TicketNumber = ticket.TicketNumber,
+                TicketTitle = ticket.Title,
+                CommentContent = comment.Content,
+                AuthorId = command.UserId,
+                AuthorName = authorName,
+                AuthorEmail = author?.Email ?? "",
+                IsInternal = isInternal,
+                SubmitterId = ticket.SubmitterId,
+                SubmitterName = submitter != null ? $"{submitter.FirstName} {submitter.LastName}" : "Unknown",
+                SubmitterEmail = submitter?.Email ?? "",
+                AssignedToId = ticket.AssignedToId,
+                AssignedToName = assignedTo != null ? $"{assignedTo.FirstName} {assignedTo.LastName}" : null,
+                AssignedToEmail = assignedTo?.Email,
+                CreatedAt = comment.CreatedAt
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish CommentAddedEvent for comment {CommentId} on ticket {TicketId}", comment.Id, ticket.Id);
+        }
 
         return new CommentDto
         {
@@ -59,7 +107,7 @@ public class AddCommentHandler : IRequestHandler<AddCommentCommand, CommentDto>
             Content = comment.Content,
             IsInternal = comment.IsInternal,
             AuthorId = comment.AuthorId,
-            AuthorName = author != null ? $"{author.FirstName} {author.LastName}" : "Unknown",
+            AuthorName = authorName,
             CreatedAt = comment.CreatedAt,
             UpdatedAt = comment.UpdatedAt
         };

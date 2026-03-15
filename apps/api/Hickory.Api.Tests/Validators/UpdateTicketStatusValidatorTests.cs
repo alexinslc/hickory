@@ -23,7 +23,8 @@ public class UpdateTicketStatusValidatorTests
         // Arrange
         var command = new UpdateTicketStatusCommand(
             TicketId: Guid.NewGuid(),
-            NewStatus: status
+            NewStatus: status,
+            UpdatedById: Guid.NewGuid()
         );
 
         // Act
@@ -40,7 +41,8 @@ public class UpdateTicketStatusValidatorTests
         // Arrange
         var command = new UpdateTicketStatusCommand(
             TicketId: Guid.Empty,
-            NewStatus: TicketStatus.InProgress
+            NewStatus: TicketStatus.InProgress,
+            UpdatedById: Guid.NewGuid()
         );
 
         // Act
@@ -57,7 +59,8 @@ public class UpdateTicketStatusValidatorTests
         // Arrange
         var command = new UpdateTicketStatusCommand(
             TicketId: Guid.NewGuid(),
-            NewStatus: TicketStatus.Closed
+            NewStatus: TicketStatus.Closed,
+            UpdatedById: Guid.NewGuid()
         );
 
         // Act
@@ -74,7 +77,8 @@ public class UpdateTicketStatusValidatorTests
         // Arrange
         var command = new UpdateTicketStatusCommand(
             TicketId: Guid.Empty,
-            NewStatus: TicketStatus.Closed
+            NewStatus: TicketStatus.Closed,
+            UpdatedById: Guid.NewGuid()
         );
 
         // Act
