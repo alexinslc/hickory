@@ -21,14 +21,14 @@ class SignalRService {
   private reconnectDelay = 1000;
   private isReconnecting = false;
   private accessToken: string | null = null;
+  private callbackWrappers = new Map<Function, Function>();
 
   // Reactive connection state
   private _connectionState: ConnectionState = 'disconnected';
   private stateListeners: Set<ConnectionStateListener> = new Set();
 
-  // Offline message queue
-  private messageQueue: NotificationMessage[] = [];
-  private maxQueueSize = 100;
+  // Notification buffer for messages received while handlers are being re-registered
+  private pendingNotifications: NotificationMessage[] = [];
 
   // Missed message tracking
   private lastReceivedTimestamp: string | null = null;
@@ -57,11 +57,11 @@ class SignalRService {
   }
 
   async connect(accessToken: string): Promise<void> {
+    this.accessToken = accessToken;
+
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       return;
     }
-
-    this.accessToken = accessToken;
     this.setConnectionState('connecting');
     this.connectStartTime = Date.now();
 
@@ -137,10 +137,11 @@ class SignalRService {
   }
 
   async disconnect(): Promise<void> {
-    if (this.connection) {
-      await this.connection.stop();
+    const conn = this.connection;
+    if (conn) {
       this.connection = null;
       this.setConnectionState('disconnected');
+      await conn.stop();
     }
   }
 
@@ -155,31 +156,20 @@ class SignalRService {
       return;
     }
 
-    this.connection.on('notification', (msg: NotificationMessage) => {
+    const wrapper = (msg: NotificationMessage) => {
       this.lastReceivedTimestamp = msg.timestamp;
       callback(msg);
-    });
+    };
+    this.callbackWrappers.set(callback, wrapper);
+    this.connection.on('notification', wrapper);
   }
 
   offNotification(callback: (notification: NotificationMessage) => void): void {
     if (this.connection) {
-      this.connection.off('notification', callback);
+      const wrapper = this.callbackWrappers.get(callback) || callback;
+      this.connection.off('notification', wrapper as (notification: NotificationMessage) => void);
+      this.callbackWrappers.delete(callback);
     }
-  }
-
-  /** Queue a message for delivery when reconnected. */
-  queueMessage(message: NotificationMessage): void {
-    if (this.messageQueue.length >= this.maxQueueSize) {
-      this.messageQueue.shift(); // Drop oldest
-    }
-    this.messageQueue.push(message);
-  }
-
-  /** Flush queued messages to a callback. */
-  flushQueue(callback: (message: NotificationMessage) => void): void {
-    const messages = [...this.messageQueue];
-    this.messageQueue = [];
-    messages.forEach(callback);
   }
 
   /** Request missed messages since last received timestamp. */
@@ -202,7 +192,7 @@ class SignalRService {
       state: this._connectionState,
       totalReconnects: this.totalReconnects,
       lastConnectedAt: this.lastConnectedAt,
-      queuedMessages: this.messageQueue.length,
+      pendingNotifications: this.pendingNotifications.length,
       lastReceivedTimestamp: this.lastReceivedTimestamp,
     };
   }
