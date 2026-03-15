@@ -1,3 +1,6 @@
+// Disable colors in tests for predictable output matching
+process.env['NO_COLOR'] = '1';
+
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';

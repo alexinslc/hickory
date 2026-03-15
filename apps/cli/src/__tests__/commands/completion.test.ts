@@ -25,8 +25,9 @@ describe('CLI Completion Commands', () => {
       const output = stdoutWriteSpy.mock.calls[0][0] as string;
       expect(output).toContain('_hickory_completions');
       expect(output).toContain('complete -F _hickory_completions hickory');
-      expect(output).toContain('login logout whoami ticket agent completion');
-      expect(output).not.toContain('help');
+      expect(output).toContain('login logout whoami ticket agent completion config');
+      // Verify 'help' is not a standalone command (--help is fine as a global option)
+      expect(output).not.toMatch(/commands="[^"]*\bhelp\b/);
     });
 
     it('should output zsh completion script', () => {
