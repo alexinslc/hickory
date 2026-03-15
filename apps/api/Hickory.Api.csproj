@@ -16,17 +16,17 @@
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.3" />
     <PackageReference Include="MassTransit" Version="9.0.1" />
     <PackageReference Include="MassTransit.Redis" Version="9.0.1" />
     <PackageReference Include="MediatR" Version="14.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.3" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.4.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="NSwag.MSBuild" Version="14.6.3">
