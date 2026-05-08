@@ -274,16 +274,27 @@ jobs:
       
       - name: Start API (Background)
         run: |
-          dotnet apps/api/bin/Release/net10.0/Hickory.Api.dll &
-          echo $! > api.pid
+          # Run from the API project directory so appsettings.json (and JWT:Secret default) is picked up.
+          cd apps/api
+          dotnet bin/Release/net10.0/Hickory.Api.dll > "$GITHUB_WORKSPACE/api.log" 2>&1 &
+          echo $! > "$GITHUB_WORKSPACE/api.pid"
         env:
           ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5000
           ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=hickory;Username=hickory;Password=hickory_dev_password
           ConnectionStrings__Redis: localhost:6379
+          JWT__Secret: ci-test-secret-key-at-least-32-characters-long-for-testing-only
+          JWT__Issuer: hickory-api
+          JWT__Audience: hickory-web
+          EmailIntegration__WebhookSecret: ci-test-webhook-secret
       
       - name: Wait for API
         run: |
-          timeout 60 bash -c 'until curl -f http://localhost:5000/health 2>/dev/null; do sleep 2; done' || exit 1
+          if ! timeout 60 bash -c 'until curl -f http://localhost:5000/health 2>/dev/null; do sleep 2; done'; then
+            echo "API failed to start within 60s. API log:"
+            cat api.log || true
+            exit 1
+          fi
       
       - name: Run E2E Tests
         run: npx nx e2e web-e2e
