@@ -13,6 +13,7 @@ export interface NotificationMessage {
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
 type ConnectionStateListener = (state: ConnectionState) => void;
+type NotificationCallback = (notification: NotificationMessage) => void;
 
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
@@ -21,7 +22,7 @@ class SignalRService {
   private reconnectDelay = 1000;
   private isReconnecting = false;
   private accessToken: string | null = null;
-  private callbackWrappers = new Map<Function, Function>();
+  private callbackWrappers = new Map<NotificationCallback, NotificationCallback>();
 
   // Reactive connection state
   private _connectionState: ConnectionState = 'disconnected';
