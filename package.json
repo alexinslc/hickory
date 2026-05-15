@@ -74,11 +74,9 @@
   },
   "nx": {},
   "overrides": {
-    "minimatch@<9.0.7": "^9.0.7",
-    "minimatch@<3.1.4": "^3.1.4",
-    "minimatch@<5.1.8": "^5.1.8",
-    "postcss@<8.5.10": "^8.5.10",
-    "yaml@<2.8.3": "^2.8.3"
+    "minimatch": "^9.0.9",
+    "postcss": "^8.5.10",
+    "yaml": "^2.8.3"
   },
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
