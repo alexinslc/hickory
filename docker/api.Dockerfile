@@ -17,7 +17,7 @@ RUN dotnet publish Hickory.Api.csproj -c Release -o /app/publish \
 
 # Runtime stage
 # Note: .NET 10 images use Ubuntu by default (previously Debian)
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 WORKDIR /app
 
 # Install curl for health checks
